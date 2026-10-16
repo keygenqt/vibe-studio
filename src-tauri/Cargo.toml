@@ -1,0 +1,23 @@
+[package]
+name = "vibe-studio"
+version = "0.0.1"
+description = "Vibe Studio — desktop client for LLM. Rust core, thin React client."
+authors = ["keygenqt@gmail.com"]
+edition = "2024"
+
+[lib]
+name = "vibe_studio"
+crate-type = ["rlib"]
+
+[dependencies]
+tauri = { version = "2.12.4", features = ["macos-private-api"] }
+tauri-plugin-log = "2.10.1"
+tauri-plugin-dialog = "2.8.3"
+tauri-plugin-opener = "2.7.2"
+log = "0.4"
+serde = { version = "1.0.229", features = ["derive"] }
+anyhow = "1.0.104"
+vibe-core = { path = "../crates/core" }
+
+[build-dependencies]
+tauri-build = { version = "2.7.3", features = [] }

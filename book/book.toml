@@ -1,0 +1,22 @@
+[book]
+authors = ["Vitaliy Zarubin"]
+language = "en"
+src = "src"
+title = "Vibe Studio"
+description = "@todo"
+
+[build]
+build-dir = "public"
+create-missing = false
+
+[output.html.fold]
+enable = true
+
+[output.html.playground]
+runnable = false
+
+[output.html]
+default-theme = "navy"
+preferred-dark-theme = "navy"
+smart-punctuation = true
+additional-css = ["src/assets/css/book.css"]

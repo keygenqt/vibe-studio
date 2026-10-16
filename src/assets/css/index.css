@@ -1,0 +1,26 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  font-family: "Ubuntu", "Segoe UI", sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+.select {
+  user-select: text;
+}
+.MainBox {
+  transition: opacity 200ms ease;
+}
+.WindowUnfocus {
+  opacity: 0.85;
+}
+.AppScroll {
+  height: calc(100% - 45px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 0 22px 22px;
+}

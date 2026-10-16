@@ -1,0 +1,20 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+import { useTranslation } from "react-i18next";
+import { Box, Typography } from "@mui/material";
+
+export function ErrorPage() {
+  const { t } = useTranslation();
+  return (
+    <Box
+      height={1}
+      sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+    >
+      <Typography variant={"body1"} color={"text.secondary"}>
+        {t("error.t_text")}
+      </Typography>
+    </Box>
+  );
+}
