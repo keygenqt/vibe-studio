@@ -10,7 +10,11 @@ export const enLocalization = {
       t_not_found: 'Nothing found.',
     },
     main: {
-      t_theme: 'Switch theme',
+      t_theme: 'Theme',
+      t_new_chat: 'New chat',
+      t_sidebar: 'Toggle sidebar',
+      t_settings: 'Settings',
+      t_placeholder: 'Type a message...',
     },
     error: {
       t_text: 'Hmm, this page does not exist.',

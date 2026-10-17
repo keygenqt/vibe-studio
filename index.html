@@ -10,23 +10,6 @@
       window.isTauri = '__TAURI_INTERNALS__' in window
     </script>
     <div id="root"></div>
-    <script>
-      // show uncaught errors right on screen (debug only)
-      window.addEventListener('error', function (e) {
-        var div = document.createElement('pre')
-        div.textContent = 'ERR: ' + e.message + '\n' + e.filename + ':' + e.lineno + ':' + e.colno
-        div.style.cssText =
-          'position:fixed;top:0;left:0;z-index:9999;background:#fff;color:#c00;padding:10px;font-size:13px;max-width:100%;white-space:pre-wrap;'
-        document.body.appendChild(div)
-      })
-      window.addEventListener('unhandledrejection', function (e) {
-        var div = document.createElement('pre')
-        div.textContent = 'REJ: ' + e.reason
-        div.style.cssText =
-          'position:fixed;bottom:0;left:0;z-index:9999;background:#fff;color:#c00;padding:10px;font-size:13px;max-width:100%;white-space:pre-wrap;'
-        document.body.appendChild(div)
-      })
-    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

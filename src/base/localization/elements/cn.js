@@ -11,6 +11,10 @@ export const cnLocalization = {
     },
     main: {
       t_theme: '切换主题',
+      t_new_chat: '新建聊天',
+      t_sidebar: '切换侧边栏',
+      t_settings: '设置',
+      t_placeholder: '输入消息...',
     },
     error: {
       t_text: '嗯，此页面不存在。',

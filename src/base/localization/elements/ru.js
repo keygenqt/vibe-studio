@@ -10,7 +10,11 @@ export const ruLocalization = {
       t_not_found: 'Ничего не найдено.',
     },
     main: {
-      t_theme: 'Сменить тему',
+      t_theme: 'Тема',
+      t_new_chat: 'Новый чат',
+      t_sidebar: 'Свернуть панель',
+      t_settings: 'Настройки',
+      t_placeholder: 'Введите сообщение...',
     },
     error: {
       t_text: 'Хм, такой страницы не существует.',

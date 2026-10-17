@@ -4,9 +4,11 @@
  */
 import { BrowserRouter, Route, Routes } from 'react-router'
 
-import { ActionBack } from './base'
-import { AppBarLayout } from './layouts'
+import { ActionBack, RailView } from './base'
+import { AppBarLayout, ShellLayout, SidebarLayout } from './layouts'
 import { ErrorPage, MainPage } from './pages'
+// @todo
+import { SidebarView } from './pages/main/elements/sidebar/SidebarView'
 
 export function AppRoute() {
   return (
