@@ -5,7 +5,7 @@
 // theme/elements/dark/palette.jsx
 export const palette = {
   mode: 'dark',
-  background: { default: '#0f1a1b', paper: '#152122' },
+  background: { default: '#333333', paper: '#1e1e1e' },
   primary: { main: '#2dd4bf', contrastText: '#0f2a2c' },
   secondary: { main: '#14b8a6', contrastText: '#fff' },
   success: { main: '#23a076' },

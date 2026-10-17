@@ -1,4 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-pub const SETTINGS_FILE: &str = "settings.json";
+diesel::table! {
+    states (key) {
+        key -> Text,
+        value -> Text,
+    }
+}

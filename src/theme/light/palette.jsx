@@ -5,7 +5,7 @@
 // theme/elements/light/palette.jsx
 export const palette = {
   mode: 'light',
-  background: { default: '#eef4f2', paper: '#f9fbfa' },
+  background: { default: '#dddddd', paper: '#f9fbfa' },
   primary: { main: '#0c2a2a', contrastText: '#fff' },
   secondary: { main: '#0e9488', contrastText: '#fff' },
   success: { main: '#1e8e67' },

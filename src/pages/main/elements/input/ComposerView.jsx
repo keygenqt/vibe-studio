@@ -24,10 +24,11 @@ export function ComposerView() {
         sx={{
           flexGrow: 1,
           minWidth: 0,
-          borderRadius: '8px',
+          borderRadius: 2,
           backgroundColor: 'background.paper',
-          paddingX: 2,
           paddingY: 1,
+          paddingLeft: 2,
+          paddingRight: 1,
         }}
       >
         <TextField

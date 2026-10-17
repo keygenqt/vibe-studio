@@ -4,23 +4,16 @@
 use tauri::Emitter;
 use tauri::WebviewWindow;
 
-use vibe_core::state::AppState;
-use vibe_core::state::StateView;
-use vibe_core::state::Theme;
+use vibe_core::AppState;
+use vibe_core::StateView;
+use vibe_core::resolve_theme;
 
-fn system_theme(window: &WebviewWindow) -> Theme {
-    match window.theme() {
-        Ok(tauri::Theme::Dark) => Theme::Dark,
-        _ => Theme::Light,
-    }
-}
-
-/// Full state view. Main thread only: window.theme() dispatches
-/// to the macOS main loop and hangs from other threads.
-pub fn view(window: &WebviewWindow, state: &AppState) -> StateView {
+/// Full state view with the persisted choice resolved to a concrete
+/// theme.
+pub fn view(state: &AppState) -> StateView {
     let settings = state.settings.lock().unwrap().clone();
     StateView {
-        theme: vibe_core::theme::resolve(settings.theme, system_theme(window)),
+        theme: resolve_theme(settings.theme),
         settings,
     }
 }

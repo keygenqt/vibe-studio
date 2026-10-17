@@ -22,17 +22,32 @@ export function RailView(props) {
       }}
     >
       <Box
-        component="img"
-        src={AppData.images.app_icon}
-        alt="Vibe Studio"
-        sx={{ width: 48, height: 48, mb: 1 }}
-      />
+        sx={{
+          flexShrink: 0,
+          borderRadius: 2,
+          backgroundColor: 'background.paper',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          boxSizing: 'border-box',
+          p: 1,
+          marginBottom: 1,
+        }}
+      >
+        <Box
+          component="img"
+          src={AppData.images.app_icon}
+          alt="Vibe Studio"
+          sx={{ width: 30, height: 30 }}
+        />
+      </Box>
 
-      <Box
+      <Stack
+        spacing={0.5}
         sx={{
           flexGrow: 1,
           flexShrink: 0,
-          borderRadius: '8px',
+          borderRadius: 2,
           backgroundColor: 'background.paper',
           display: 'flex',
           flexDirection: 'column',
@@ -41,17 +56,17 @@ export function RailView(props) {
           p: '6px',
         }}
       >
-        <RailButton title={t('main.t_new_chat')} onClick={props.onNewChat}>
-          <Add />
-        </RailButton>
         <RailButton title={t('main.t_sidebar')} onClick={props.onToggleSidebar}>
           <ViewSidebar />
+        </RailButton>
+        <RailButton title={t('main.t_new_chat')} onClick={props.onNewChat}>
+          <Add />
         </RailButton>
         <Box sx={{ flexGrow: 1 }} />
         <RailButton title={t('main.t_settings')} onClick={props.onSettings}>
           <Settings />
         </RailButton>
-      </Box>
+      </Stack>
     </Stack>
   )
 }

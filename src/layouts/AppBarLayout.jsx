@@ -19,7 +19,7 @@ export function AppBarLayout(props) {
   const themeOverride = useSelector(state => state.appState.settings.theme)
 
   const cycleTheme = () => {
-    const next = themeOverride === 'light' ? 'dark' : themeOverride === 'dark' ? null : 'light'
+    const next = themeOverride === 'light' ? 'dark' : themeOverride === 'dark' ? 'system' : 'light'
     Methods.settings_set_theme(next)
   }
 

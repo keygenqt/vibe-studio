@@ -10,7 +10,7 @@ export function ChatContent() {
       sx={{
         flexGrow: 1,
         minHeight: 0,
-        borderRadius: '8px',
+        borderRadius: 2,
         backgroundColor: 'background.paper',
       }}
     />

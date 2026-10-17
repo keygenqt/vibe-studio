@@ -7,7 +7,7 @@ import { Card, ListItemButton, ListItemText } from '@mui/material'
 
 export function SidebarItem(props) {
   return (
-    <Card elevation={0} sx={{ mx: '8px', mb: '4px', borderRadius: '8px', overflow: 'hidden' }}>
+    <Card elevation={0} sx={{ mx: '8px', mb: '4px', borderRadius: 2, overflow: 'hidden' }}>
       <ListItemButton selected={props.chat.active} sx={{ px: '8px', py: '6px' }}>
         <ListItemText primary={props.chat.title} slotProps={{ primary: { noWrap: true } }} />
       </ListItemButton>

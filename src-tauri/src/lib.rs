@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use tauri::Manager;
-use tauri::WindowEvent;
 
-use vibe_core::state::AppState;
+use vibe_core::AppState;
+use vibe_core::ThemeChoice;
+use vibe_core::listen_system_theme;
+use vibe_core::settings_load;
 
-mod feature;
+mod states;
 mod tools;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -18,32 +20,32 @@ pub fn run() {
         .manage(AppState::default())
         .setup(|app| {
             // Restore state from disk — single source of truth
-            let loaded = tools::storage::load(app.handle());
-            *app.state::<AppState>().settings.lock().unwrap() = loaded;
+            let store = states::storage::store(app.handle())?;
+            let settings = settings_load(&store);
+            app.manage(store);
+            *app.state::<AppState>().settings.lock().unwrap() = settings;
 
-            // System theme changed — re-emit resolved theme.
-            // Guarded: with a manual override the resolved theme doesn't change,
-            // and a full-state emit would still swap the settings object in Redux
-            // and re-render selectors holding object references.
-            let window = app.get_webview_window("main").unwrap();
-            let listener = window.clone();
+            // OS theme changed — re-emit only while the choice is
+            // `system`: a manual override ignores OS changes.
+            let listener = app.get_webview_window("main").unwrap();
             let handle = app.handle().clone();
-            window.on_window_event(move |event| {
-                if let WindowEvent::ThemeChanged(_) = event {
-                    let state = handle.state::<AppState>();
-                    if state.settings.lock().unwrap().theme.is_none() {
-                        let view = tools::theme::view(&listener, &state);
-                        tools::theme::emit_state(&listener, view);
-                    }
+            listen_system_theme(move |_theme| {
+                let state = handle.state::<AppState>();
+                if state.settings.lock().unwrap().theme == ThemeChoice::System {
+                    let view = states::view::view(&state);
+                    states::view::emit_state(&listener, view);
                 }
-            });
+            })?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            // core
-            feature::app_info::app_info,
-            feature::settings::state_snapshot,
-            feature::settings::settings_set_theme,
+            // states
+            states::settings::state_snapshot,
+            states::settings::settings_set_theme,
+            states::sidebar::sidebar_get,
+            states::sidebar::sidebar_set,
+            // tools
+            tools::app_info::app_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
