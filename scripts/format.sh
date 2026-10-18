@@ -11,5 +11,4 @@ rustup run nightly cargo fmt
 print_pretty "Format JS..." "info"
 npx prettier --write src --log-level warn
 
-# License headers
-./scripts/license.sh
+print_pretty "Done" "success"

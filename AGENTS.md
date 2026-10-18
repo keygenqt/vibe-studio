@@ -2,62 +2,46 @@
 
 ## Project
 
-Vibe Studio — a fast, lightweight desktop client for working with LLMs.
-Thin React UI over a Rust backend, built for speed. Pre-alpha.
+Vibe Studio — a fast, lightweight desktop client for working with
+LLMs.
 
 ## Stack
 
-- Tauri 2 — desktop shell (Rust + system webview)
-- Rust — backend
-- React 19 + MUI 7 — UI
-- Redux Toolkit, React Router, i18next (ru / en / cn)
-
-## Commands
-
-```bash
-npm install          # install frontend deps
-npm run tauri dev    # run the app in dev mode
-cargo build          # build the Rust workspace
-./scripts/format.sh  # format Rust code
-```
+- Tauri 2 — a thin layer bridging js and rust
+- Rust — the main business logic and all the rest of the project
+  logic
+- React + MUI — a thin top layer, responsible for UI only
 
 ## Architecture
 
-Rust owns the state; the UI mirrors it.
-
 ```
-src/  (React)  →  src-tauri  →  crates/core  →  crates/states
-  thin layer       shell         facade         DB owner
+src (React, thin layer) → src-tauri (UI layer) → crates/core (facade)
+  → crates/states (SQLite owner)
 ```
 
-- `crates/states` — embedded SQLite storage: schema, migrations,
-  state structures. Leaf dependency, no knowledge of the shell.
-- `crates/core` — facade over sub-crates: domain types + flat API
-  functions. UI shells (Tauri now, FFI later) talk only to this crate.
-- `src-tauri` — Tauri commands and setup. Depends on `vibe-core` only.
-- `src` — React app. Thin layer: Rust is the source of truth, JS
-  holds copies only for rendering.
+- Dependencies point strictly down this chain. Nothing imports
+  `vibe-states` outside of `vibe-core`.
+- Data flow: React invokes commands, the UI layer calls flat
+  functions of `vibe-core`, persisted state lives in `vibe-states`;
+  any state mutation ends with the `event-state` emit back to the UI.
 
-Dependencies point strictly down this chain. Nothing imports
-`vibe-states` outside of `vibe-core`.
+## Rule files (agents/)
 
-## AGENTS.md files
+One file per root directory — a project fragment; the first line of
+each file is its passport. When work touches a fragment, its file is
+given to the session.
 
-Each directory keeps its own AGENTS.md (`crates/`, `src-tauri/`,
-`src/`). Rules for updating them:
-
-- General facts only — principles, contracts, boundaries. No
-  implementation details: exact values, file lists, signatures and
-  literals are conveyed by the tree and the code itself.
-- If a fact can be seen from the tree or the files — it does not
-  belong here.
-- When a change alters the architecture or a contract, update the
-  affected AGENTS.md in the same change. A stale rule is worse
-  than a missing one.
-
-## Conventions
-
-- Every file starts with the SPDX header (copy from any existing file).
-- Comments, identifiers, doc text — English.
-- Directory-specific rules live in `AGENTS.md` in `crates/`, `src/`
-  and `src-tauri/`; the nearest one up the tree wins.
+- `agents.md` — rules of the agents/ directory itself: how the rule
+  files are written and maintained
+- `book.md` — user-facing documentation of the project, built with
+  mdBook
+- `context.md` — tag system: file paths by task
+- `crates.md` — rules of the Rust workspace
+- `data.md` — files that belong to the repository or the project as
+  a whole, but are not part of it directly
+- `scripts.md` — shell utilities of the project; a tool for humans,
+  not application logic
+- `src.md` — React frontend, a thin layer: Rust is the source of
+  truth, JS holds copies only for rendering
+- `src-tauri.md` — the UI layer on Tauri: a middleman between Rust
+  and JS, a thin translator of core

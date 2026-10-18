@@ -1,0 +1,18 @@
+# AGENTS.md — scripts
+
+Shell utilities of the project. A tool for humans — not application
+logic.
+
+## Rules
+
+- A script starts with `source common.sh` and `setup_root`: the work
+  always happens from the repository root, no matter where the
+  script was launched from.
+
+## List
+
+- `common.sh` — common base: shared features for the other scripts.
+- `format.sh` — formats the project, rust & js.
+- `run.sh` — quick launch of the dev application.
+- `stats.sh` — code statistics with filters.
+- `tree.sh` — project tree without ignored files.

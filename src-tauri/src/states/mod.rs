@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
+// TAGS: ['states']
 
 //! Application states relay: commands, store bootstrap and the
 //! event channel to the UI.

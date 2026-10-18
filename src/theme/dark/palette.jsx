@@ -1,8 +1,8 @@
 /*
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ * TAGS: ['theme']
  */
-// theme/elements/dark/palette.jsx
 export const palette = {
   mode: 'dark',
   background: { default: '#333333', paper: '#1e1e1e' },
