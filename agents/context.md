@@ -24,14 +24,14 @@ project slice it needs instead of the whole tree; the scanner is
 
 ### Catalog
 
-- `states` — add or change a persisted state structure
-- `i18n` — where localization lives and where to add a translation
-- `theme` — theme changes and the files that define it
+- `states` — add or change a persisted state structure, or the UI that uses it
+- `i18n` — add or change a translation
+- `theme` — change the theme or the files that define it
 - `deps` — update or add package dependencies
-- `components` — components and layouts
-- `hooks` — every file where hooks are used, and the hooks themselves
-- `context` — files behind the tag system and the LLM contracts
-- `facts` — app versions, constants and platform facts
+- `components` — add or change a component or layout
+- `hooks` — add or change a hook
+- `context` — work on the tag system and the LLM contracts
+- `facts` — add or change app versions, constants and platform facts
 - `misc` — work not covered by any task above
 
 ## Format
@@ -57,6 +57,5 @@ project slice it needs instead of the whole tree; the scanner is
 ```bash
 node context/tags.js --tags        # tag catalog: tag and file count
 node context/tags.js <tags...>     # file tree for files with any of these tags
-node context/tags.js --and <tags...>  # file tree for files with all of these tags
 node context/tags.js --check       # fails on untagged files, conflicts, dead entries
 ```

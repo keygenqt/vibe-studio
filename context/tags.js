@@ -8,8 +8,6 @@
 // Usage:
 //   node context/tags.js --tags        list tags with file counts
 //   node context/tags.js t1 [t2 ...]   print tree of files with any of the tags
-//   node context/tags.js --or t1 ...   same as above, explicit
-//   node context/tags.js --and t1 ...  print tree of files with all of the tags
 //   node context/tags.js --check       fail on untagged files, conflicts, headers without SPDX
 
 import { execSync } from 'node:child_process'
@@ -124,22 +122,12 @@ if (command === '--tags') {
     process.exit(1)
   }
   console.log('OK')
-} else if (command === '--and' || command === '--or') {
-  const wanted = new Set(args)
-  const matched = [...index.entries()]
-    .filter(([, tags]) => {
-      if (!tags) return false
-      const hits = [...wanted].filter(t => tags.includes(t)).length
-      return command === '--and' ? hits === wanted.size : hits > 0
-    })
-    .map(([f]) => f)
-    .sort()
-  if (matched.length) {
-    printTree(matched)
-  } else {
-    console.log(`no files for tags: ${[...wanted].join(', ')}`)
-  }
 } else if (command) {
+  const unknown = [command, ...args].filter(a => a.startsWith('--'))
+  if (unknown.length) {
+    console.log(`error: unknown option(s): ${unknown.join(', ')}`)
+    process.exit(1)
+  }
   const wanted = new Set([command, ...args])
   const matched = [...index.entries()]
     .filter(([, tags]) => tags?.some(t => wanted.has(t)))
@@ -151,7 +139,5 @@ if (command === '--tags') {
     console.log(`no files for tags: ${[...wanted].join(', ')}`)
   }
 } else {
-  console.log(
-    'usage: node context/tags.js [--tags | --check | --and t1 [t2 ...] | --or t1 [t2 ...] | t1 [t2 ...]]'
-  )
+  console.log('usage: node context/tags.js [--tags | --check | t1 [t2 ...]]')
 }
