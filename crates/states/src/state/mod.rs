@@ -14,15 +14,15 @@
 //!   place that knows the storage schema.
 //! - `settings` — `ThemeChoice` (persisted choice), `Settings` with
 //!   `Default` and its `Storable` impl (key `"settings"`).
-//! - `sidebar` — `Sidebar` state, width bounds (`SIDEBAR_WIDTH_*`) and
-//!   its `Storable` impl (key `"sidebar"`).
 //! - `storable` — `Storable` trait: typed `load` (falls back to
 //!   `Default`) and `save` over the KV layer.
+//! - `workspace` — `Workspace` state, user panel sizes as `Option`
+//!   (`None` = untouched) and its `Storable` impl (key `"workspace"`).
 //!
 //! Everything here is `pub(crate)`; the public surface is re-exported
 //! in `lib.rs`.
 
 pub(crate) mod schema;
 pub(crate) mod settings;
-pub(crate) mod sidebar;
 pub(crate) mod storable;
+pub(crate) mod workspace;

@@ -11,13 +11,14 @@
 //! - `app` — `AppState`: runtime state mirror, and `StateView`, the
 //!   snapshot emitted to the UI.
 //! - `settings` — `settings_load` / `settings_save` over the store.
-//! - `sidebar` — `sidebar_load` / `sidebar_save` over the store.
 //! - `store` — `store_open`: opens (or creates) the database inside
 //!   the given app data directory.
+//! - `workspace` — `workspace_load` / `workspace_save` over the
+//!   store.
 
 pub(crate) mod app;
 pub(crate) mod settings;
-pub(crate) mod sidebar;
 pub(crate) mod store;
+pub(crate) mod workspace;
 
 pub mod api;

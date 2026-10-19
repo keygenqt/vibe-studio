@@ -3,16 +3,12 @@
 // TAGS: ['states']
 
 //! State features: persisted application state over the store.
-//!
-//! Exposed surface: `store_open`, `Store`, `settings_load`,
-//! `settings_save`, `sidebar`, `sidebar_load`, `sidebar_save`,
-//! `AppState`, `StateView`, `Settings`, `Sidebar`.
 
 use anyhow::Result;
 use std::path::Path;
 
 pub use super::app::{AppState, StateView};
-pub use vibe_states::{Settings, Sidebar, Store};
+pub use vibe_states::{Settings, Store, Workspace};
 
 /// Opens (or creates) the database in the given app data directory.
 /// The file name lives in `vibe-states` — the shell never knows it.
@@ -30,18 +26,13 @@ pub fn settings_save(store: &Store, settings: &Settings) -> Result<()> {
     super::settings::settings_save(store, settings)
 }
 
-/// Sidebar constructor. Width is clamped to the allowed range.
-pub fn sidebar(collapsed: bool, width: u32) -> Sidebar {
-    super::sidebar::sidebar(collapsed, width)
+/// Loads workspace state; missing or malformed data falls back to
+/// `Default` — untouched values stay `None`.
+pub fn workspace_load(store: &Store) -> Workspace {
+    super::workspace::workspace_load(store)
 }
 
-/// Loads sidebar state; missing or malformed data falls back to
-/// `Default`.
-pub fn sidebar_load(store: &Store) -> Sidebar {
-    super::sidebar::sidebar_load(store)
-}
-
-/// Persists sidebar state.
-pub fn sidebar_save(store: &Store, sidebar: &Sidebar) -> Result<()> {
-    super::sidebar::sidebar_save(store, sidebar)
+/// Persists workspace state.
+pub fn workspace_save(store: &Store, workspace: &Workspace) -> Result<()> {
+    super::workspace::workspace_save(store, workspace)
 }

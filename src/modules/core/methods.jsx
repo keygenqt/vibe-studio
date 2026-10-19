@@ -7,12 +7,12 @@ import { debug } from '@tauri-apps/plugin-log'
 
 import { app_info } from './feature/app_info'
 import { settings } from './feature/settings'
-import { sidebar } from './feature/sidebar'
+import { workspace } from './feature/workspace'
 
 export const MethodsCore = {
   ...app_info,
   ...settings,
-  ...sidebar,
+  ...workspace,
   log: function (message) {
     debug(message)
   },

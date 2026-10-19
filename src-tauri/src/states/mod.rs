@@ -10,11 +10,12 @@
 //! - `storage` — `store()`: opens the state store in the app data
 //!   directory for `app.manage()`.
 //! - `settings` — `state_snapshot`, `settings_set_theme` commands.
-//! - `sidebar` — `sidebar_get`, `sidebar_set` commands.
 //! - `view` — `view()`: builds the `StateView`; `emit_state()`: the
 //!   single event channel to the UI.
+//! - `workspace` — `workspace_get`, `workspace_set_chat_input_size`,
+//!   `workspace_set_side_bar` commands.
 
 pub(crate) mod settings;
-pub(crate) mod sidebar;
 pub(crate) mod storage;
 pub(crate) mod view;
+pub(crate) mod workspace;

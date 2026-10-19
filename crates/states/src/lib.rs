@@ -14,6 +14,6 @@ pub(crate) mod state;
 pub(crate) mod store;
 
 pub use state::settings::{Settings, ThemeChoice};
-pub use state::sidebar::{SIDEBAR_WIDTH_DEFAULT, SIDEBAR_WIDTH_MAX, SIDEBAR_WIDTH_MIN, Sidebar};
 pub use state::storable::Storable;
+pub use state::workspace::Workspace;
 pub use store::store::Store;

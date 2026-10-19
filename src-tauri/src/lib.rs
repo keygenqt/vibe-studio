@@ -43,8 +43,9 @@ pub fn run() {
             // states
             states::settings::state_snapshot,
             states::settings::settings_set_theme,
-            states::sidebar::sidebar_get,
-            states::sidebar::sidebar_set,
+            states::workspace::workspace_get,
+            states::workspace::workspace_set_chat_input_size,
+            states::workspace::workspace_set_side_bar,
             // tools
             tools::app_info::app_info,
         ])
