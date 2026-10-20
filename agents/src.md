@@ -5,7 +5,7 @@ copies only for rendering.
 
 ## Principles
 
-Product invariants — the core principles.
+Product invariants — the main principles.
 
 - Simplicity and maximum quality.
 - The absence of a feature is also a feature.
