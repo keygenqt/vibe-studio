@@ -4,11 +4,13 @@
 
 use crate::state::storable::Storable;
 
-/// User arrangement of the UI shell: panel sizes and collapsed flag.
-/// `None` means the value was never touched — the UI shell resolves
-/// its own default.
+/// User arrangement of the UI shell: window size, panel sizes and
+/// collapsed flag. `None` means the value was never touched — the
+/// UI shell resolves its own default.
 #[derive(Debug, Clone, Copy, Default, serde::Serialize, serde::Deserialize)]
 pub struct Workspace {
+    pub window_width: Option<u32>,
+    pub window_height: Option<u32>,
     pub chat_input_size: Option<u32>,
     pub side_bar_size: Option<u32>,
     pub side_bar_collapsed: bool,

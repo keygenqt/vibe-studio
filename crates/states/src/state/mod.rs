@@ -16,8 +16,9 @@
 //!   `Default` and its `Storable` impl (key `"settings"`).
 //! - `storable` — `Storable` trait: typed `load` (falls back to
 //!   `Default`) and `save` over the KV layer.
-//! - `workspace` — `Workspace` state, user panel sizes as `Option`
-//!   (`None` = untouched) and its `Storable` impl (key `"workspace"`).
+//! - `workspace` — `Workspace` state, user window and panel sizes as
+//!   `Option` (`None` = untouched) and its `Storable` impl (key
+//!   `"workspace"`).
 //!
 //! Everything here is `pub(crate)`; the public surface is re-exported
 //! in `lib.rs`.

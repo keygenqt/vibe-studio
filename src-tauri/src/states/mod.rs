@@ -2,20 +2,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states']
 
-//! Application states relay: commands, store bootstrap and the
-//! event channel to the UI.
+//! Application states relay: the JS mirror, the store bootstrap and
+//! the Tauri-internal window features.
 //!
 //! # Submodules
 //!
+//! - `react` — the JS mirror: state commands, the `StateView`
+//!   snapshot and the `event-state` channel.
 //! - `storage` — `store()`: opens the state store in the app data
 //!   directory for `app.manage()`.
-//! - `settings` — `state_snapshot`, `settings_set_theme` commands.
-//! - `view` — `view()`: builds the `StateView`; `emit_state()`: the
-//!   single event channel to the UI.
-//! - `workspace` — `workspace_get`, `workspace_set_chat_input_size`,
-//!   `workspace_set_side_bar` commands.
+//! - `tauri` — Tauri-internal features with no JS surface: the
+//!   window size persistence.
 
-pub(crate) mod settings;
+pub(crate) mod react;
 pub(crate) mod storage;
-pub(crate) mod view;
-pub(crate) mod workspace;
+pub(crate) mod tauri;

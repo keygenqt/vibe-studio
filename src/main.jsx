@@ -7,10 +7,26 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 
-import './base/localization/Localization'
-import store from './store/configure.jsx'
+import './localization'
+import store from './store/configure.js'
 import './assets/css/index.css'
 import App from './App.jsx'
+import { DURATION_DEFAULT } from './constants/AppDefault'
+import { initStateSync, initScrollArea } from './init'
+
+// app init: not tied to any component lifetime, runs once, never cleans up
+initStateSync(store)
+initScrollArea()
+document.documentElement.style.setProperty('--duration-default', `${DURATION_DEFAULT}ms`)
+
+// MUI TextareaAutosize's internal ResizeObserver overflows WebKit's loop
+// depth during window drag-resize; the layout converges next frame. Harmless.
+window.addEventListener('error', e => {
+  if (e.message?.startsWith('ResizeObserver loop')) {
+    e.preventDefault()
+    e.stopImmediatePropagation()
+  }
+})
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

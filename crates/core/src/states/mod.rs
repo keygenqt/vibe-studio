@@ -14,7 +14,7 @@
 //! - `store` — `store_open`: opens (or creates) the database inside
 //!   the given app data directory.
 //! - `workspace` — `workspace_load` / `workspace_save` over the
-//!   store.
+//!   store: window size and panel sizes.
 
 pub(crate) mod app;
 pub(crate) mod settings;

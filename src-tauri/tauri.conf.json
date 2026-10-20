@@ -20,6 +20,8 @@
         "height": 700,
         "minWidth": 900,
         "minHeight": 500,
+        "visible": false,
+        "create": false,
         "fullscreen": false,
         "decorations": true,
         "titleBarStyle": "Overlay",

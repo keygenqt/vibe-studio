@@ -11,3 +11,6 @@ translator of core. Features do not live here.
 - Command errors are `String`.
 - The layout mirrors core: `states/` — state, `tools/` — facts with
   no state behind them. Module conventions — `agents/crates.md`.
+- Inside `states/` two consumers are separated: `react/` — the JS
+  mirror (commands, snapshot, `event-state`); `tauri/` — Tauri
+  features with no JS surface (window lifecycle).
