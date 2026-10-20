@@ -3,6 +3,15 @@
 React frontend. A thin layer: Rust is the source of truth, JS holds
 copies only for rendering.
 
+## Principles
+
+Product invariants — the core principles.
+
+- Simplicity and maximum quality.
+- The absence of a feature is also a feature.
+- Transparent context for the user.
+- Speed. Rust does the heavy lifting; the UI is a temporary solution.
+
 ## Rules
 
 - All Rust calls go through `Methods` (`src/modules`): one method —
