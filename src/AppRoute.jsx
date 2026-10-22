@@ -1,29 +1,49 @@
-/*
- * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
- * SPDX-License-Identifier: AGPL-3.0-or-later
- * TAGS: ['components']
- */
 import * as React from 'react'
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router'
+import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router'
 import { Box } from '@mui/material'
 
-import { ErrorPage, MainPage, SettingsPage } from './pages'
+import {
+  ErrorPage,
+  GeneralPage,
+  MainPage,
+  ModelPage,
+  ProviderPage,
+  ProvidersPage,
+  SettingsPage,
+} from './pages'
+
+const router = createBrowserRouter([
+  {
+    element: (
+      <PageFade>
+        <Outlet />
+      </PageFade>
+    ),
+    children: [
+      { index: true, element: <MainPage /> },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
+        children: [
+          { index: true, element: <Navigate replace to="/settings/general" /> },
+          { path: 'general', element: <GeneralPage /> },
+          { path: 'providers', element: <ProvidersPage /> },
+          { path: 'provider/add', element: <ProviderPage /> },
+          { path: 'provider/:providerId', element: <ProviderPage /> },
+          { path: 'model/:modelId', element: <ModelPage /> },
+        ],
+      },
+      { path: '*', element: <ErrorPage /> },
+    ],
+  },
+])
 
 export function AppRoute() {
-  return (
-    <BrowserRouter>
-      <PageFade>
-        <Routes>
-          <Route index element={<MainPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="*" element={<ErrorPage />} />
-        </Routes>
-      </PageFade>
-    </BrowserRouter>
-  )
+  return <RouterProvider router={router} />
 }
 
-// remounts on every route change, so the fade-in plays each time
+// remounts on section change; the fade-in is the fallback for
+// webviews without view transitions
 // the first mount (app start) renders without the fade
 function PageFade(props) {
   const location = useLocation()
@@ -31,12 +51,12 @@ function PageFade(props) {
   React.useEffect(() => {
     mounted.current = true
   }, [])
+  const fade = typeof document.startViewTransition !== 'function'
+  // one key per top-level section: internal settings navigation
+  // keeps the shell mounted — no flicker on back
+  const key = location.pathname.startsWith('/settings') ? '/settings' : location.pathname
   return (
-    <Box
-      key={location.pathname}
-      className={mounted.current ? 'PageFade' : undefined}
-      sx={{ height: 1 }}
-    >
+    <Box key={key} className={fade && mounted.current ? 'PageFade' : undefined} sx={{ height: 1 }}>
       {props.children}
     </Box>
   )

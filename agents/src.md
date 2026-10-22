@@ -3,21 +3,14 @@
 React frontend. A thin layer: Rust is the source of truth, JS holds
 copies only for rendering.
 
-## Principles
-
-Product invariants — the fundamental principles.
-
-- Simplicity and maximum quality.
-- The absence of a feature is also a feature.
-- Transparent context for the user.
-- Speed. Rust does the heavy lifting; the UI is a temporary solution.
-
 ## Rules
 
 - All Rust calls go through `Methods` (`src/modules`): one method —
   one command.
 - Rust validates and clamps; what it returns is what gets applied
   after `invoke` — the local optimistic value is only a preview.
+- Forms are Formik + Yup. Client validation is UX only — Rust
+  re-validates on commit, its error is the submit error.
 - Two theme contracts, never mix: the UI applies the stored choice
   (`settings.theme`, may be `system`) and renders from the resolved
   `theme`.
@@ -36,6 +29,8 @@ Product invariants — the fundamental principles.
   unit that lives its own life, even while used by a single page.
 - A page is `pages/<page>/<Page>.jsx`: the route entry and its
   composition; its parts live in the page `elements/`.
+- A page may be a layout: it hosts child routes through `Outlet`;
+  the children are pages in their own right.
 - Init modules live in `src/init/<initName>.js`: run once at startup
   from `main.jsx`, global side effects only, nothing else exported —
   no cleanup, no remount semantics.

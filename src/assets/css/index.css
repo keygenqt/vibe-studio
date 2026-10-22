@@ -23,6 +23,7 @@ body {
 /* scroll areas: thin scrollbar, right padding only while content overflows */
 .ScrollArea {
   overflow-y: auto;
+  position: relative;
 }
 .ScrollAreaPadded {
   padding-right: 8px;
@@ -42,6 +43,30 @@ body {
   background-color: transparent;
 }
 
+/* framed scroll panel: the border overlays the clip edge, content cuts under it */
+.ScrollFrame {
+  position: relative;
+}
+.ScrollFrame::before,
+.ScrollFrame::after {
+  content: '';
+  position: absolute;
+  height: 10px;
+  width: calc(100% - 32px);
+  left: 16px;
+  right: 16px;
+  z-index: 1;
+  pointer-events: none;
+}
+.ScrollFrame::before {
+  bottom: 8px;
+  background: linear-gradient(to bottom, transparent, var(--app-paper));
+}
+.ScrollFrame::after {
+  top: 8px;
+  background: linear-gradient(to top, transparent, var(--app-paper));
+}
+
 /* page transitions: fade the page in on every route change */
 @keyframes page-fade-in {
   from {
@@ -53,4 +78,18 @@ body {
 }
 .PageFade {
   animation: var(--duration-default) ease both page-fade-in;
+}
+
+/* page transitions: fade-in fallback for webviews without view transitions */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--duration-default);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }

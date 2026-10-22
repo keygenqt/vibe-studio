@@ -5,6 +5,15 @@
 Vibe Studio — a fast, lightweight desktop client for working with
 LLMs.
 
+## Principles
+
+Product invariants — the fundamental principles.
+
+- Simplicity and maximum quality.
+- The absence of a feature is also a feature.
+- Transparent context for the user.
+- Speed. Rust does the heavy lifting; the UI is a temporary solution.
+
 ## Stack
 
 - Tauri 2 — a thin layer bridging js and rust

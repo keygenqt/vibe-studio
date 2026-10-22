@@ -19,9 +19,17 @@ export const ruLocalization = {
     },
     settings: {
       t_providers: 'Провайдеры',
+      t_providers_description: 'API-провайдеры и модели',
+      t_providers_subtitle:
+        'Подключите облачные API или локальные среды выполнения для их моделей.',
+      t_provider_add: 'Добавить провайдера',
+      t_provider_local: 'Локальный',
+      t_provider_cloud: 'Облачный API',
+      t_configure: 'Настроить',
       t_models: 'Модели',
       t_prompts: 'Промпты',
       t_general: 'Общие',
+      t_general_description: 'Основное поведение приложения',
       t_appearance: 'Оформление',
       t_about: 'О программе и отзыв',
     },

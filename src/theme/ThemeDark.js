@@ -17,6 +17,7 @@ export const ThemeDark = createTheme({
     success: { main: '#23a076' },
     error: { main: '#ef5350' },
     inherit: { main: '#f7f7f7', light: '#4a4a55' },
+    panel: { main: 'rgba(255, 255, 255, 0.03)' },
   },
   transitions: {
     duration: { standard: DURATION_DEFAULT },

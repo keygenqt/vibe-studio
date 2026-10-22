@@ -3,29 +3,29 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'hooks']
  */
-import * as React from 'react'
-import { Box } from '@mui/material'
-
+import { Outlet } from 'react-router'
+import { useTranslation } from 'react-i18next'
+import { Typography } from '@mui/material'
 import { useWorkspace } from '../../hooks'
 import { ShellLayout, SidebarLayout } from '../../components/layouts'
 import { BackIconButton } from '../../components/buttons'
-
 import { SidebarView } from './elements/SidebarView'
-import { ProvidersTab } from './elements/ProvidersTab'
-import { ModelsTab } from './elements/ModelsTab'
-import { PromptsTab } from './elements/PromptsTab'
-import { GeneralTab } from './elements/GeneralTab'
-import { AppearanceTab } from './elements/AppearanceTab'
-import { AboutTab } from './elements/AboutTab'
 
 export function SettingsPage() {
   const workspace = useWorkspace()
-  const [tab, setTab] = React.useState('providers')
+  const { t } = useTranslation()
   // no render until the stored truth arrives — no startup animation
   if (!workspace.ready) return null
   return (
     <ShellLayout railActions={<BackIconButton />}>
       <SidebarLayout
+        scrollPageKey={'settings.content'}
+        scrollSidebarKey={'settings.nav'}
+        sidebarTitle={
+          <Typography variant={'h5'} fontWeight={500} color={'text.primary'}>
+            {t('main.t_settings')}
+          </Typography>
+        }
         sidebar={{
           // collapse is a chat-shell feature; settings sidebar is always open
           collapsed: false,
@@ -33,27 +33,9 @@ export function SettingsPage() {
           dragging: workspace.dragging,
           onHandlePointerDown: workspace.onSidebarHandlePointerDown,
         }}
-        sidebarView={<SidebarView tab={tab} onTab={setTab} />}
+        sidebarView={<SidebarView />}
       >
-        <Box
-          className="ScrollArea"
-          data-scroll-key="settings.content"
-          sx={{
-            flexGrow: 1,
-            minHeight: 0,
-            borderRadius: 2,
-            backgroundColor: 'background.paper',
-            boxSizing: 'border-box',
-            p: 1,
-          }}
-        >
-          {tab === 'providers' && <ProvidersTab />}
-          {tab === 'models' && <ModelsTab />}
-          {tab === 'prompts' && <PromptsTab />}
-          {tab === 'general' && <GeneralTab />}
-          {tab === 'appearance' && <AppearanceTab />}
-          {tab === 'about' && <AboutTab />}
-        </Box>
+        <Outlet />
       </SidebarLayout>
     </ShellLayout>
   )

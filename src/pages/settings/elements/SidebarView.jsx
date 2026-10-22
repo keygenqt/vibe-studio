@@ -4,39 +4,55 @@
  * TAGS: ['components']
  */
 import PropTypes from 'prop-types'
+import { useLocation, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Box, List } from '@mui/material'
+import { List } from '@mui/material'
+import HubOutlined from '@mui/icons-material/HubOutlined'
+import TuneOutlined from '@mui/icons-material/TuneOutlined'
 
-import { SidebarItem } from '../../../components/views'
+import { SettingsSidebarItem } from './SettingsSidebarItem'
 
-const TABS = [
-  { id: 'providers', title: 'settings.t_providers' },
-  { id: 'models', title: 'settings.t_models' },
-  { id: 'prompts', title: 'settings.t_prompts' },
-  { id: 'general', title: 'settings.t_general' },
-  { id: 'appearance', title: 'settings.t_appearance' },
-  { id: 'about', title: 'settings.t_about' },
+// draft: providers only; a section returns with its feature
+const ITEMS = [
+  {
+    path: '/settings/general',
+    title: 'settings.t_general',
+    description: 'settings.t_general_description',
+    icon: <TuneOutlined />,
+    match: ['/settings/general'],
+  },
+  {
+    path: '/settings/providers',
+    title: 'settings.t_providers',
+    description: 'settings.t_providers_description',
+    icon: <HubOutlined />,
+    // active across the whole provider section, including model pages
+    match: ['/settings/provider', '/settings/model'],
+  },
 ]
 
-export function SidebarView(props) {
+export function SidebarView() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   return (
-    <Box className="ScrollArea" data-scroll-key="settings.nav" height={1}>
-      <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {TABS.map(item => (
-          <SidebarItem
-            key={item.id}
+    <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+      {ITEMS.map(item => {
+        const active = item.match.some(prefix => pathname.startsWith(prefix))
+        return (
+          <SettingsSidebarItem
+            key={item.path}
             title={t(item.title)}
-            active={props.tab === item.id}
-            onClick={() => props.onTab(item.id)}
+            description={t(item.description)}
+            icon={item.icon}
+            active={active}
+            onClick={() => {
+              // active section: no navigation, no duplicate history entries
+              if (!active) navigate(item.path)
+            }}
           />
-        ))}
-      </List>
-    </Box>
+        )
+      })}
+    </List>
   )
-}
-
-SidebarView.propTypes = {
-  tab: PropTypes.string.isRequired,
-  onTab: PropTypes.func.isRequired,
 }

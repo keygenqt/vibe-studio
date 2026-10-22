@@ -6,7 +6,6 @@
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import ViewSidebar from '@mui/icons-material/ViewSidebar'
-import Add from '@mui/icons-material/Add'
 import Settings from '@mui/icons-material/Settings'
 
 import { useWorkspace } from '../../hooks'
@@ -14,6 +13,7 @@ import { ShellLayout, SidebarLayout } from '../../components/layouts'
 import { TooltipIconButton } from '../../components/buttons'
 import { HandleView } from '../../components/views'
 
+import { SidebarTitle } from './elements/SidebarTitle'
 import { SidebarView } from './elements/SidebarView'
 import { ChatContent } from './elements/ChatContent'
 import { ComposerView } from './elements/ComposerView'
@@ -31,24 +31,27 @@ export function MainPage() {
           <TooltipIconButton title={t('main.t_sidebar')} onClick={workspace.toggleSidebar}>
             <ViewSidebar />
           </TooltipIconButton>
-          <TooltipIconButton title={t('main.t_new_chat')}>
-            <Add />
-          </TooltipIconButton>
         </>
       }
       railFooter={
-        <TooltipIconButton title={t('main.t_settings')} onClick={() => navigate('/settings')}>
+        <TooltipIconButton
+          title={t('main.t_settings')}
+          onClick={() => navigate('/settings', { viewTransition: true })}
+        >
           <Settings />
         </TooltipIconButton>
       }
     >
       <SidebarLayout
+        scrollSidebarKey={'main.nav'}
+        scrollPage={false}
         sidebar={{
           collapsed: workspace.sideBarCollapsed,
           width: workspace.sideBarSize,
           dragging: workspace.dragging,
           onHandlePointerDown: workspace.onSidebarHandlePointerDown,
         }}
+        sidebarTitle={<SidebarTitle />}
         sidebarView={<SidebarView />}
       >
         <ChatContent />

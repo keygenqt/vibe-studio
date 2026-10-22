@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux'
 import { AppRoute } from './AppRoute'
 import { ThemeDark, ThemeLight } from './theme'
 import { useEffectFocus } from './hooks'
+import { DURATION_DEFAULT } from './constants/AppDefault'
 
 function App() {
   // theme comes only from Rust state
@@ -23,9 +24,12 @@ function App() {
       <Box
         className={isFocus ? 'WindowFocus' : 'WindowUnfocus'}
         height={1}
-        sx={{
+        sx={theme => ({
           backgroundColor: 'background.default',
-        }}
+          // bridge for plain CSS: styles.css reads the theme through these vars
+          '--app-paper': theme.palette.background.paper,
+          '--duration-default': `${DURATION_DEFAULT}ms`,
+        })}
       >
         <AppRoute />
       </Box>

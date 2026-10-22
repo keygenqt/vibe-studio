@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import { Box, List } from '@mui/material'
+import { List } from '@mui/material'
 
 import { SidebarItem } from '../../../components/views'
 
@@ -19,12 +19,10 @@ const DEMO_CHATS = [
 
 export function SidebarView() {
   return (
-    <Box className="ScrollArea" data-scroll-key="main.nav" height={1}>
-      <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {DEMO_CHATS.map(chat => (
-          <SidebarItem key={chat.id} title={chat.title} active={chat.active} />
-        ))}
-      </List>
-    </Box>
+    <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      {DEMO_CHATS.map(chat => (
+        <SidebarItem key={chat.id} title={chat.title} active={chat.active} />
+      ))}
+    </List>
   )
 }

@@ -7,6 +7,7 @@ import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 
 import { HandleView } from '../views'
+import { ScrollPanel } from './ScrollPanel'
 
 export function SidebarLayout(props) {
   const { collapsed, width, dragging, onHandlePointerDown } = props.sidebar
@@ -17,23 +18,39 @@ export function SidebarLayout(props) {
         sx={theme => ({
           width: width,
           flexShrink: 0,
-          borderRadius: 2,
-          backgroundColor: 'background.paper',
-          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
           opacity: collapsed ? 0 : 1,
           boxSizing: 'border-box',
-          p: 1,
           // fade leads the slide by 100ms and trails it by 100ms
           transition: dragging
             ? 'none'
             : theme.transitions.create(['opacity'], {
-                duration: theme.transitions.duration.standard + 200,
+                duration: theme.transitions.duration.standard + 100,
                 easing: theme.transitions.easing.sharp,
-                delay: -100,
               }),
         })}
       >
-        {props.sidebarView}
+        <Box
+          sx={{
+            flexShrink: 0,
+            minHeight: 45,
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: 2,
+            backgroundColor: 'background.paper',
+            boxSizing: 'border-box',
+            p: 1,
+          }}
+        >
+          {props.sidebarTitle}
+        </Box>
+        {props.scrollSidebar === false ? (
+          props.sidebarView
+        ) : (
+          <ScrollPanel scrollKey={props.scrollSidebarKey}>{props.sidebarView}</ScrollPanel>
+        )}
       </Box>
       <HandleView orientation="vertical" onPointerDown={onPointerDownGuard(props)} />
       <Box
@@ -56,7 +73,11 @@ export function SidebarLayout(props) {
               }),
         })}
       >
-        {props.children}
+        {props.scrollPage === false ? (
+          props.children
+        ) : (
+          <ScrollPanel scrollKey={props.scrollPageKey}>{props.children}</ScrollPanel>
+        )}
       </Box>
     </>
   )
@@ -73,6 +94,10 @@ SidebarLayout.propTypes = {
     dragging: PropTypes.bool.isRequired,
     onHandlePointerDown: PropTypes.func.isRequired,
   }).isRequired,
+  scrollPage: PropTypes.bool,
+  scrollPageKey: PropTypes.string,
+  scrollSidebar: PropTypes.bool,
+  scrollSidebarKey: PropTypes.string,
   sidebarView: PropTypes.element.isRequired,
   children: PropTypes.node,
 }

@@ -15,7 +15,14 @@ export function ErrorPage() {
     <ShellLayout railActions={<BackIconButton />}>
       <Box
         height={1}
-        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexGrow: 1,
+          borderRadius: 2,
+          backgroundColor: 'background.paper',
+        }}
       >
         <Typography variant={'body1'} color={'text.secondary'}>
           {t('error.t_text')}

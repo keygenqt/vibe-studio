@@ -26,17 +26,16 @@ export function ThemeAction() {
       <IconButton
         onClick={cycleTheme}
         size="small"
-        color="primary"
         sx={{
           p: '2px',
         }}
       >
         {themeOverride === 'light' ? (
-          <LightMode color="primary" sx={{ fontSize: 16 }} />
+          <LightMode sx={{ fontSize: 16 }} />
         ) : themeOverride === 'dark' ? (
-          <DarkMode color="primary" sx={{ fontSize: 16 }} />
+          <DarkMode sx={{ fontSize: 16 }} />
         ) : (
-          <DesktopWindows color="primary" sx={{ fontSize: 16 }} />
+          <DesktopWindows sx={{ fontSize: 16 }} />
         )}
       </IconButton>
     </Tooltip>

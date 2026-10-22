@@ -5,3 +5,4 @@
  */
 export * from './HandleView'
 export * from './SidebarItem'
+export * from './PageHeader'

@@ -5,3 +5,4 @@
  */
 export * from './BackIconButton'
 export * from './TooltipIconButton'
+export * from './DashedButton'

@@ -12,11 +12,12 @@ export const ThemeLight = createTheme({
   palette: {
     mode: 'light',
     background: { default: '#dddddd', paper: '#f9fbfa' },
-    primary: { main: '#0c2a2a', contrastText: '#fff' },
-    secondary: { main: '#0e9488', contrastText: '#fff' },
+    primary: { main: '#0d9488', contrastText: '#fff' },
+    secondary: { main: '#115e59', contrastText: '#fff' },
     success: { main: '#1e8e67' },
     error: { main: '#d32f2f' },
     inherit: { main: '#1f1f29', light: '#dcd9ec' },
+    panel: { main: 'rgba(0, 0, 0, 0.04)' },
   },
   transitions: {
     duration: { standard: DURATION_DEFAULT },

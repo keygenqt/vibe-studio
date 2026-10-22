@@ -11,13 +11,11 @@ import './localization'
 import store from './store/configure.js'
 import './assets/css/index.css'
 import App from './App.jsx'
-import { DURATION_DEFAULT } from './constants/AppDefault'
 import { initStateSync, initScrollArea } from './init'
 
 // app init: not tied to any component lifetime, runs once, never cleans up
 initStateSync(store)
 initScrollArea()
-document.documentElement.style.setProperty('--duration-default', `${DURATION_DEFAULT}ms`)
 
 // MUI TextareaAutosize's internal ResizeObserver overflows WebKit's loop
 // depth during window drag-resize; the layout converges next frame. Harmless.

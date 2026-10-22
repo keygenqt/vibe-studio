@@ -6,3 +6,4 @@
 
 export * from './ShellLayout/ShellLayout'
 export * from './SidebarLayout'
+export * from './ScrollPanel'
