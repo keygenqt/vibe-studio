@@ -1,7 +1,13 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * TAGS: ['components']
+ */
 import * as React from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router'
 import { Box } from '@mui/material'
 
+import { AppRoutes } from './constants/AppRoutes'
 import {
   ErrorPage,
   GeneralPage,
@@ -22,15 +28,15 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <MainPage /> },
       {
-        path: 'settings',
+        path: AppRoutes.settings(),
         element: <SettingsPage />,
         children: [
-          { index: true, element: <Navigate replace to="/settings/general" /> },
-          { path: 'general', element: <GeneralPage /> },
-          { path: 'providers', element: <ProvidersPage /> },
-          { path: 'provider/add', element: <ProviderPage /> },
-          { path: 'provider/:providerId', element: <ProviderPage /> },
-          { path: 'model/:modelId', element: <ModelPage /> },
+          { index: true, element: <Navigate replace to={AppRoutes.settingsGeneral()} /> },
+          { path: AppRoutes.settingsGeneral(), element: <GeneralPage /> },
+          { path: AppRoutes.settingsProviders(), element: <ProvidersPage /> },
+          { path: AppRoutes.providerAdd(), element: <ProviderPage /> },
+          { path: AppRoutes.provider(), element: <ProviderPage /> },
+          { path: AppRoutes.model(), element: <ModelPage /> },
         ],
       },
       { path: '*', element: <ErrorPage /> },
@@ -54,7 +60,9 @@ function PageFade(props) {
   const fade = typeof document.startViewTransition !== 'function'
   // one key per top-level section: internal settings navigation
   // keeps the shell mounted — no flicker on back
-  const key = location.pathname.startsWith('/settings') ? '/settings' : location.pathname
+  const key = location.pathname.startsWith(AppRoutes.settings())
+    ? AppRoutes.settings()
+    : location.pathname
   return (
     <Box key={key} className={fade && mounted.current ? 'PageFade' : undefined} sx={{ height: 1 }}>
       {props.children}

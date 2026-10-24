@@ -23,8 +23,6 @@ export const ruLocalization = {
       t_providers_subtitle:
         'Подключите облачные API или локальные среды выполнения для их моделей.',
       t_provider_add: 'Добавить провайдера',
-      t_provider_local: 'Локальный',
-      t_provider_cloud: 'Облачный API',
       t_configure: 'Настроить',
       t_models: 'Модели',
       t_prompts: 'Промпты',

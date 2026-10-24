@@ -22,8 +22,6 @@ export const cnLocalization = {
       t_providers_description: 'API 提供商与模型',
       t_providers_subtitle: '连接云端 API 或本地运行环境以使用其模型。',
       t_provider_add: '添加提供商',
-      t_provider_local: '本地',
-      t_provider_cloud: '云端 API',
       t_configure: '配置',
       t_models: '模型',
       t_prompts: '提示词',

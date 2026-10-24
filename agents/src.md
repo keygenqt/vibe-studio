@@ -7,56 +7,38 @@ copies only for rendering.
 
 - All Rust calls go through `Methods` (`src/modules`): one method —
   one command.
-- Rust validates and clamps; what it returns is what gets applied
-  after `invoke` — the local optimistic value is only a preview.
-- Forms are Formik + Yup. Client validation is UX only — Rust
-  re-validates on commit, its error is the submit error.
-- Two theme contracts, never mix: the UI applies the stored choice
-  (`settings.theme`, may be `system`) and renders from the resolved
-  `theme`.
-- Redux is only for UI-specific tasks; the application state lives in
-  Rust and arrives as a snapshot and `event-state`.
-- A single state listener: `initStateSync` (`src/init`) — snapshot +
-  `event-state`. Features only invoke.
-- Effect hooks are named `useEffect*`, state-owner hooks live next to
-  them (`src/hooks`). A hook is only for what is tied to a component
-  lifetime; app-wide startup code is not a hook.
-- i18n: a key is added to all locales at once (ru / en / cn).
+- Rust validates and clamps; after `invoke` what it returned is what
+  gets applied — the optimistic value is only a preview.
+- The application state lives in Rust and arrives as a snapshot and
+  `event-state` (`initStateSync`, `src/init`); Redux is only for
+  UI-specific tasks.
+- Forms are Formik + Yup: client validation is UX, Rust re-validates
+  on commit.
+- i18n: three locales — ru/en/cn.
+
+## Navigation
+
+- Page paths live in `constants/AppRoutes.js`: a call without
+  arguments gives the router pattern, with an id — the concrete URL.
+- All navigation goes through `AppNav` (`src/utils`): `open`,
+  `openWithReplace`, `back`, `backTo`. A bare `navigate(path)`
+  around it breaks the transition journal.
 
 ## Structure
 
-- Two essences. An element is a part of its parent; a component is a
-  unit that lives its own life, even while used by a single page.
+- An element is a part of its parent (`elements/`, nesting exactly
+  one level); a component is a unit that lives its own life
+  (`components/<type>/`). `views` is the nursery: a second instance
+  of a kind is the trigger to move it to its own folder.
 - A page is `pages/<page>/<Page>.jsx`: the route entry and its
-  composition; its parts live in the page `elements/`.
-- A page may be a layout: it hosts child routes through `Outlet`;
-  the children are pages in their own right.
-- Init modules live in `src/init/<initName>.js`: run once at startup
-  from `main.jsx`, global side effects only, nothing else exported —
-  no cleanup, no remount semantics.
-- Components live under `components/<type>/`. `views` is the nursery
-  for types with a population of one — a distinct kind that has not
-  multiplied yet. A second instance of the same kind is the trigger:
-  the type moves to its own folder. There is no "unclear type" state —
-  a type that lives alone is in its correct place.
-- A component with children: `<type>/<Name>/<Name>.jsx` plus its
-  `elements/`. A childless component is a bare file
-  `<type>/<Name>.jsx`. Folder name equals file name; the type is a
-  name suffix (`TooltipIconButton`, `EmptyState`, `ShellLayout`).
-- `elements/` holds the nodes of its parent; the nesting is exactly
-  one level — an element never gets its own `elements/`.
-- Every top-level zone has an `index.js` barrel. Consumers import
-  through the zone barrel; inside a zone — relative paths.
+  composition; a layout page hosts children through `Outlet`.
+- Every top-level zone has an `index.js` barrel; consumers import
+  through the zone barrel, inside a zone — relative paths.
 
 ## Style
 
-- `.jsx` only when the file itself contains JSX markup; everything
-  else (barrels, hooks, themes, store, modules, init) is `.js`.
-- Styling through `sx={{}}` on MUI components; colors are theme
-  tokens; spacing in theme units, not raw px.
-- Constants are the rare exception; inline literals by default.
-- Defaults are two worlds and are never synced: Rust defaults
-  (vibe-states `Default`) are the truth of the data; `constants/AppDefault.js`
-  is the truth of the UI before the first snapshot arrives. Do not
-  mirror one into the other.
-- PropTypes on components.
+- `.jsx` only for files with JSX markup; everything else — `.js`.
+- Styling: `sx={{}}` on MUI, colors as theme tokens, spacing in
+  theme units.
+- PropTypes on components; constants are the rare exception,
+  inline literals by default.

@@ -22,8 +22,6 @@ export const enLocalization = {
       t_providers_description: 'API providers and models',
       t_providers_subtitle: 'Connect cloud APIs or local runtimes to use their models.',
       t_provider_add: 'Connect another provider',
-      t_provider_local: 'Local',
-      t_provider_cloud: 'Cloud API',
       t_configure: 'Configure',
       t_models: 'Models',
       t_prompts: 'Prompts',

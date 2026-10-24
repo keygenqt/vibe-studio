@@ -9,10 +9,14 @@ LLMs.
 
 Product invariants — the fundamental principles.
 
-- Simplicity and maximum quality.
-- The absence of a feature is also a feature.
-- Transparent context for the user.
-- Speed. Rust does the heavy lifting; the UI is a temporary solution.
+- The human acts, the model helps. The model never acts on its own initiative.
+- Control by construction. The model initiates nothing — there is nothing to allow.
+- Ownership and code understanding over throughput.
+- Transparent context. The user curates what the model sees.
+- The absence of a feature is also a feature. The project follows
+  the contract, not feature sprawl for everyone.
+- Simplicity and maximum quality. Depth over breadth.
+- Speed. All business logic in Rust.
 
 ## Stack
 

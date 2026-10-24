@@ -41,7 +41,8 @@ export function SidebarLayout(props) {
             borderRadius: 2,
             backgroundColor: 'background.paper',
             boxSizing: 'border-box',
-            p: 1,
+            px: 2,
+            py: 1,
           }}
         >
           {props.sidebarTitle}

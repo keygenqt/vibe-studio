@@ -9,9 +9,11 @@ import ViewSidebar from '@mui/icons-material/ViewSidebar'
 import Settings from '@mui/icons-material/Settings'
 
 import { useWorkspace } from '../../hooks'
+import { AppRoutes } from '../../constants/AppRoutes'
 import { ShellLayout, SidebarLayout } from '../../components/layouts'
 import { TooltipIconButton } from '../../components/buttons'
 import { HandleView } from '../../components/views'
+import { AppNav } from '../../utils'
 
 import { SidebarTitle } from './elements/SidebarTitle'
 import { SidebarView } from './elements/SidebarView'
@@ -36,7 +38,7 @@ export function MainPage() {
       railFooter={
         <TooltipIconButton
           title={t('main.t_settings')}
-          onClick={() => navigate('/settings', { viewTransition: true })}
+          onClick={() => AppNav.open(navigate, AppRoutes.settings(), { viewTransition: true })}
         >
           <Settings />
         </TooltipIconButton>

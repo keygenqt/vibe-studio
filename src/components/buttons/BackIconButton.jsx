@@ -8,10 +8,16 @@ import { IconButton } from '@mui/material'
 import ArrowBack from '@mui/icons-material/ArrowBack'
 import { useNavigate } from 'react-router'
 
+import { AppNav } from '../../utils'
+
 export function BackIconButton(props) {
   const navigate = useNavigate()
   return (
-    <IconButton size="small" disabled={props.disabled} onClick={() => navigate(-1)}>
+    <IconButton
+      size="small"
+      disabled={props.disabled}
+      onClick={() => (props.to ? AppNav.backTo(navigate, props.to) : AppNav.back(navigate))}
+    >
       <ArrowBack />
     </IconButton>
   )
@@ -19,4 +25,5 @@ export function BackIconButton(props) {
 
 BackIconButton.propTypes = {
   disabled: PropTypes.bool,
+  to: PropTypes.string,
 }

@@ -33,10 +33,12 @@ export function ProviderForm(props) {
       enableReinitialize
       initialValues={{
         provider: props.provider ?? 'Ollama',
+        name: props.name ?? props.provider ?? 'Ollama',
         host: props.host ?? DEFAULT_HOSTS[props.provider ?? 'Ollama'] ?? '',
         apiKey: props.apiKey ?? '',
       }}
       validationSchema={Yup.object().shape({
+        name: Yup.string().required('Must not be null and not blank.'),
         host: Yup.string().required('Must not be null and not blank.').url('Must be a valid URL.'),
         apiKey: Yup.string().when('provider', {
           is: provider => CLOUD.includes(provider),
@@ -71,6 +73,10 @@ export function ProviderForm(props) {
           if (!values.host || values.host === DEFAULT_HOSTS[values.provider]) {
             setFieldValue('host', DEFAULT_HOSTS[e.target.value] ?? '')
           }
+          // prefill the provider title; keep a custom one
+          if (!values.name || values.name === values.provider) {
+            setFieldValue('name', e.target.value)
+          }
           handleChange(e)
         }
         return (
@@ -95,6 +101,20 @@ export function ProviderForm(props) {
               <TextField
                 fullWidth
                 required
+                label={'Name'}
+                name={'name'}
+                variant={'filled'}
+                value={values.name}
+                helperText={touched.name && errors.name ? errors.name : ''}
+                error={Boolean(touched.name && errors.name)}
+                disabled={isSubmitting}
+                onBlur={handleBlur}
+                onChange={handleChange}
+                slotProps={{ htmlInput: { autoComplete: 'off' } }}
+              />
+              <TextField
+                fullWidth
+                required
                 label={'Host'}
                 name={'host'}
                 variant={'filled'}
@@ -104,7 +124,7 @@ export function ProviderForm(props) {
                 disabled={isSubmitting}
                 onBlur={handleBlur}
                 onChange={handleChange}
-                inputProps={{ autoComplete: 'off' }}
+                slotProps={{ htmlInput: { autoComplete: 'off' } }}
               />
               {CLOUD.includes(values.provider) && (
                 <TextField
@@ -119,7 +139,7 @@ export function ProviderForm(props) {
                   disabled={isSubmitting}
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  inputProps={{ autoComplete: 'off' }}
+                  slotProps={{ htmlInput: { autoComplete: 'off' } }}
                 />
               )}
               {errors.submit && (
@@ -156,6 +176,7 @@ export function ProviderForm(props) {
 }
 
 ProviderForm.propTypes = {
+  name: PropTypes.string,
   provider: PropTypes.string,
   host: PropTypes.string,
   apiKey: PropTypes.string,

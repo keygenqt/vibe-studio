@@ -10,14 +10,16 @@ import { Stack } from '@mui/material'
 import { ProviderCard } from './elements/ProviderCard'
 import { DashedButton } from '../../components/buttons'
 import { PageHeader } from '../../components/views'
+import { AppRoutes } from '../../constants/AppRoutes'
+import { AppNav } from '../../utils'
 
 // draft: hardcoded until provider state lands in Rust
 const providers = [
-  { id: 1, name: 'DeepSeek', host: 'api.deepseek.com', isLocal: false },
-  { id: 2, name: 'Ollama', host: 'localhost:11434', isLocal: true },
-  { id: 3, name: 'Qwen', host: 'dashscope-intl.aliyuncs.com/compatible-mode/v1', isLocal: false },
-  { id: 4, name: 'Moonshot', host: 'api.moonshot.cn/v1', isLocal: false },
-  { id: 5, name: 'Zhipu', host: 'open.bigmodel.cn/api/paas/v4', isLocal: false },
+  { id: 1, name: 'DeepSeek', provider: 'DeepSeek', host: 'api.deepseek.com' },
+  { id: 2, name: 'Ollama', provider: 'Ollama', host: 'localhost:11434' },
+  { id: 3, name: 'Qwen', provider: 'Qwen', host: 'dashscope-intl.aliyuncs.com/compatible-mode/v1' },
+  { id: 4, name: 'Kimi', provider: 'Moonshot', host: 'api.moonshot.cn/v1' },
+  { id: 5, name: 'Zhipu', provider: 'Zhipu', host: 'open.bigmodel.cn/api/paas/v4' },
 ]
 
 export function ProvidersPage() {
@@ -26,14 +28,14 @@ export function ProvidersPage() {
   return (
     <Stack spacing={2}>
       <PageHeader title={t('settings.t_providers')} subtitle={t('settings.t_providers_subtitle')} />
-      <DashedButton onClick={() => navigate('/settings/provider/add')}>
+      <DashedButton onClick={() => AppNav.open(navigate, AppRoutes.providerAdd())}>
         {t('settings.t_provider_add')}
       </DashedButton>
       {providers.map(provider => (
         <ProviderCard
           key={`provider-${provider.id}`}
           provider={provider}
-          onConfigure={() => navigate(`/settings/provider/${provider.id}`)}
+          onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
         />
       ))}
     </Stack>

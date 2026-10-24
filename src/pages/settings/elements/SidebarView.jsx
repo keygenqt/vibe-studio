@@ -4,30 +4,32 @@
  * TAGS: ['components']
  */
 import PropTypes from 'prop-types'
-import { useLocation, useNavigate } from 'react-router'
+import { matchPath, useLocation, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { List } from '@mui/material'
 import HubOutlined from '@mui/icons-material/HubOutlined'
 import TuneOutlined from '@mui/icons-material/TuneOutlined'
 
 import { SettingsSidebarItem } from './SettingsSidebarItem'
+import { AppRoutes } from '../../../constants/AppRoutes'
+import { AppNav } from '../../../utils'
 
 // draft: providers only; a section returns with its feature
 const ITEMS = [
   {
-    path: '/settings/general',
+    path: AppRoutes.settingsGeneral(),
     title: 'settings.t_general',
     description: 'settings.t_general_description',
     icon: <TuneOutlined />,
-    match: ['/settings/general'],
+    match: [AppRoutes.settingsGeneral()],
   },
   {
-    path: '/settings/providers',
+    path: AppRoutes.settingsProviders(),
     title: 'settings.t_providers',
     description: 'settings.t_providers_description',
     icon: <HubOutlined />,
     // active across the whole provider section, including model pages
-    match: ['/settings/provider', '/settings/model'],
+    match: [AppRoutes.provider(), AppRoutes.model()],
   },
 ]
 
@@ -38,7 +40,7 @@ export function SidebarView() {
   return (
     <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
       {ITEMS.map(item => {
-        const active = item.match.some(prefix => pathname.startsWith(prefix))
+        const active = item.match.some(pattern => Boolean(matchPath(pattern, pathname)))
         return (
           <SettingsSidebarItem
             key={item.path}
@@ -48,7 +50,7 @@ export function SidebarView() {
             active={active}
             onClick={() => {
               // active section: no navigation, no duplicate history entries
-              if (!active) navigate(item.path)
+              if (!active) AppNav.openWithReplace(navigate, item.path, AppRoutes.settings())
             }}
           />
         )

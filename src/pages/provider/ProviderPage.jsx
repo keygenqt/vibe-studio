@@ -8,6 +8,8 @@ import { Box, Stack, Typography } from '@mui/material'
 
 import { ProviderForm } from './elements/ProviderForm'
 import { PageHeader } from '../../components/views'
+import { AppRoutes } from '../../constants/AppRoutes'
+import { AppNav } from '../../utils'
 
 // draft: hardcoded until provider state lands in Rust
 const provider = { id: 1, name: 'DeepSeek', url: 'https://api.deepseek.com/v1', key: 'sk-...' }
@@ -32,7 +34,12 @@ export function ProviderPage() {
       />
 
       {isEdit ? (
-        <ProviderForm provider={provider.name} host={provider.url} apiKey={provider.key} />
+        <ProviderForm
+          name={provider.name}
+          provider={provider.name}
+          host={provider.url}
+          apiKey={provider.key}
+        />
       ) : (
         <ProviderForm />
       )}
@@ -43,7 +50,7 @@ export function ProviderPage() {
           {models.map(model => (
             <Box
               key={`model-${model.id}`}
-              onClick={() => navigate(`/settings/model/${model.id}`)}
+              onClick={() => AppNav.open(navigate, AppRoutes.model(model.id))}
               sx={{
                 p: 1,
                 borderRadius: 2,

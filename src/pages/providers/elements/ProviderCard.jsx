@@ -17,8 +17,8 @@ export function ProviderCard(props) {
       <Stack direction={'row'} spacing={2} alignItems={'flex-start'} sx={{ p: 2 }}>
         <Avatar
           sx={{
-            bgcolor: AppData.providers[provider.name]?.color ?? 'action.selected',
-            color: '#fff',
+            bgcolor: AppData.providers[provider.provider]?.color ?? 'secondary.main',
+            color: 'secondary.contrastText',
             fontWeight: 600,
           }}
         >
@@ -31,13 +31,13 @@ export function ProviderCard(props) {
             <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
               {provider.name}
             </Typography>
-            <Chip
-              size={'small'}
-              label={t(
-                provider.isLocal ? 'settings.t_provider_local' : 'settings.t_provider_cloud'
-              )}
-              sx={{ backgroundColor: 'action.hover', height: 24 }}
-            />
+            {provider.name !== provider.provider && (
+              <Chip
+                size={'small'}
+                label={provider.provider}
+                sx={{ backgroundColor: 'action.hover', height: 24 }}
+              />
+            )}
           </Stack>
           <Typography variant={'body2'} noWrap sx={{ fontFamily: 'monospace' }}>
             {provider.host}
@@ -59,8 +59,8 @@ export function ProviderCard(props) {
 ProviderCard.propTypes = {
   provider: PropTypes.shape({
     name: PropTypes.string.isRequired,
+    provider: PropTypes.string.isRequired,
     host: PropTypes.string.isRequired,
-    isLocal: PropTypes.bool.isRequired,
   }).isRequired,
   onConfigure: PropTypes.func.isRequired,
 }
