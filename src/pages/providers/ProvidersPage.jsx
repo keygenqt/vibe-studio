@@ -1,8 +1,9 @@
 /*
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
- * TAGS: ['components']
+ * TAGS: ['components', 'hooks']
  */
+import * as React from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Stack } from '@mui/material'
@@ -12,29 +13,38 @@ import { DashedButton } from '../../components/buttons'
 import { PageHeader } from '../../components/views'
 import { AppRoutes } from '../../constants/AppRoutes'
 import { AppNav } from '../../utils'
-
-// draft: hardcoded until provider state lands in Rust
-const providers = [
-  { id: 1, name: 'DeepSeek', provider: 'DeepSeek', host: 'api.deepseek.com' },
-  { id: 2, name: 'Ollama', provider: 'Ollama', host: 'localhost:11434' },
-  { id: 3, name: 'Qwen', provider: 'Qwen', host: 'dashscope-intl.aliyuncs.com/compatible-mode/v1' },
-  { id: 4, name: 'Kimi', provider: 'Moonshot', host: 'api.moonshot.cn/v1' },
-  { id: 5, name: 'Zhipu', provider: 'Zhipu', host: 'open.bigmodel.cn/api/paas/v4' },
-]
+import { Methods } from '../../modules'
 
 export function ProvidersPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const [providers, setProviders] = React.useState(null)
+  const [catalog, setCatalog] = React.useState(null)
+
+  React.useEffect(() => {
+    Methods.providers_get().then(setProviders)
+    Methods.providers_catalog().then(setCatalog)
+  }, [])
+
+  // kind id -> catalog entry, for card colors
+  const catalogById = {}
+  if (catalog) {
+    catalog.forEach(info => {
+      catalogById[info.provider] = info
+    })
+  }
+
   return (
     <Stack spacing={2}>
       <PageHeader title={t('settings.t_providers')} subtitle={t('settings.t_providers_subtitle')} />
       <DashedButton onClick={() => AppNav.open(navigate, AppRoutes.providerAdd())}>
         {t('settings.t_provider_add')}
       </DashedButton>
-      {providers.map(provider => (
+      {(providers ?? []).map(provider => (
         <ProviderCard
           key={`provider-${provider.id}`}
           provider={provider}
+          color={catalogById[provider.provider]?.color}
           onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
         />
       ))}

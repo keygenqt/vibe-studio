@@ -9,9 +9,13 @@ copies only for rendering.
   one command.
 - Rust validates and clamps; after `invoke` what it returned is what
   gets applied — the optimistic value is only a preview.
-- The application state lives in Rust and arrives as a snapshot and
-  `event-state` (`initStateSync`, `src/init`); Redux is only for
-  UI-specific tasks.
+- The application state lives in Rust and is mirrored once —
+  `WorkspaceProvider` (`src/hooks`): a load on mount, live values
+  over events. Redux keeps only pure UI state.
+- The UI holds no copies of Rust facts — catalogs, defaults and
+  colors arrive from Rust; hardcoded data constants do not live here.
+- The wire format is snake_case; the resolution to camelCase happens
+  in one place, the provider.
 - Forms are Formik + Yup: client validation is UX, Rust re-validates
   on commit.
 - i18n: three locales — ru/en/cn.

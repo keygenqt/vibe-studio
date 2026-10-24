@@ -6,10 +6,10 @@ use anyhow::Result;
 use tauri::AppHandle;
 use tauri::Manager;
 
-use vibe_core::Store;
+use studio_core::Store;
 
 /// Opens (or creates) the state store in the app data directory.
 pub fn store(app: &AppHandle) -> Result<Store> {
     let dir = app.path().app_data_dir()?;
-    vibe_core::store_open(&dir)
+    studio_core::store_open(&dir)
 }

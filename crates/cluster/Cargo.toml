@@ -1,0 +1,13 @@
+[package]
+name = "studio-cluster"
+version = "0.0.1"
+description = "Vibe Studio cluster — provider catalog and LLM cluster features over vibe-cluster."
+edition = "2024"
+
+[lib]
+name = "studio_cluster"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
+vibe-cluster = { path = "../../../vibe-cluster" }

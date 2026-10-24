@@ -4,6 +4,8 @@
  * TAGS: ['components']
  */
 import PropTypes from 'prop-types'
+import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
 import {
@@ -15,35 +17,46 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import DoneOutlined from '@mui/icons-material/DoneOutlined'
 
-// draft: mirrors vibe_cluster::Provider
-const PROVIDERS = ['Ollama', 'DeepSeek', 'Qwen', 'Kimi', 'Zhipu']
-// draft: defaults from vibe-cluster docs; Qwen/Kimi/Zhipu pending source check
-const DEFAULT_HOSTS = {
-  Ollama: 'http://localhost:11434',
-  DeepSeek: 'https://api.deepseek.com/v1',
-}
-// draft: vibe-cluster — api_key not needed for Ollama
-const CLOUD = ['DeepSeek', 'Qwen', 'Kimi', 'Zhipu']
+import { Methods } from '../../../modules'
 
 export function ProviderForm(props) {
+  const { t } = useTranslation()
   const isEdit = Boolean(props.isEdit)
+  const [catalog, setCatalog] = React.useState(null)
+
+  React.useEffect(() => {
+    Methods.providers_catalog().then(setCatalog)
+  }, [])
+
+  if (!catalog) return null
+  // edit mode keeps the stored kind; add mode starts from the first catalog entry
+  const current = catalog.find(info => info.provider === props.provider) ?? catalog[0]
+
   return (
     <Formik
       enableReinitialize
       initialValues={{
-        provider: props.provider ?? 'Ollama',
-        name: props.name ?? props.provider ?? 'Ollama',
-        host: props.host ?? DEFAULT_HOSTS[props.provider ?? 'Ollama'] ?? '',
+        provider: current.provider,
+        name: props.name ?? current.name,
+        host: props.host ?? current.default_host ?? '',
         apiKey: props.apiKey ?? '',
       }}
       validationSchema={Yup.object().shape({
         name: Yup.string().required('Must not be null and not blank.'),
-        host: Yup.string().required('Must not be null and not blank.').url('Must be a valid URL.'),
+        host: Yup.string()
+          .required('Must not be null and not blank.')
+          // any scheme + host: Yup's .url() rejects localhost and IPs
+          .test('host', 'Must be a valid URL.', value => {
+            try {
+              return Boolean(new URL(value).hostname)
+            } catch {
+              return false
+            }
+          }),
         apiKey: Yup.string().when('provider', {
-          is: provider => CLOUD.includes(provider),
+          is: provider => catalog.find(info => info.provider === provider)?.cloud ?? false,
           then: schema => schema.required('Must not be null and not blank.'),
           otherwise: schema => schema.notRequired(),
         }),
@@ -70,14 +83,16 @@ export function ProviderForm(props) {
         handleSubmit,
         setFieldValue,
       }) => {
+        const infoOf = kind => catalog.find(info => info.provider === kind)
         const onProviderChange = e => {
+          const info = infoOf(e.target.value)
           // prefill the default host; keep a custom one
-          if (!values.host || values.host === DEFAULT_HOSTS[values.provider]) {
-            setFieldValue('host', DEFAULT_HOSTS[e.target.value] ?? '')
+          if (!values.host || values.host === (infoOf(values.provider)?.default_host ?? '')) {
+            setFieldValue('host', info.default_host ?? '')
           }
           // prefill the provider title; keep a custom one
-          if (!values.name || values.name === values.provider) {
-            setFieldValue('name', e.target.value)
+          if (!values.name || values.name === (infoOf(values.provider)?.name ?? '')) {
+            setFieldValue('name', info.name)
           }
           handleChange(e)
         }
@@ -88,16 +103,16 @@ export function ProviderForm(props) {
                 <TextField
                   select
                   fullWidth
-                  label={'Provider'}
+                  label={t('settings.t_provider')}
                   name={'provider'}
                   variant={'filled'}
                   value={values.provider}
                   onBlur={handleBlur}
                   onChange={onProviderChange}
                 >
-                  {PROVIDERS.map(item => (
-                    <MenuItem key={`provider-${item}`} value={item}>
-                      {item}
+                  {catalog.map(info => (
+                    <MenuItem key={`provider-${info.provider}`} value={info.provider}>
+                      {info.name}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -105,7 +120,7 @@ export function ProviderForm(props) {
               <TextField
                 fullWidth
                 required
-                label={'Name'}
+                label={t('settings.t_name')}
                 name={'name'}
                 variant={'filled'}
                 value={values.name}
@@ -119,7 +134,7 @@ export function ProviderForm(props) {
               <TextField
                 fullWidth
                 required
-                label={'Host'}
+                label={t('settings.t_host')}
                 name={'host'}
                 variant={'filled'}
                 value={values.host}
@@ -130,11 +145,11 @@ export function ProviderForm(props) {
                 onChange={handleChange}
                 slotProps={{ htmlInput: { autoComplete: 'off' } }}
               />
-              {CLOUD.includes(values.provider) && (
+              {infoOf(values.provider)?.cloud && (
                 <TextField
                   fullWidth
                   type={'password'}
-                  label={'API key'}
+                  label={t('settings.t_api_key')}
                   name={'apiKey'}
                   variant={'filled'}
                   value={values.apiKey}
@@ -154,7 +169,7 @@ export function ProviderForm(props) {
               <Stack direction={'row'} spacing={2}>
                 {isEdit && props.onDelete && (
                   <Button variant={'outlined'} color={'error'} onClick={props.onDelete}>
-                    Delete
+                    {t('settings.t_delete')}
                   </Button>
                 )}
                 <Box sx={{ flexGrow: 1 }} />
@@ -173,7 +188,7 @@ export function ProviderForm(props) {
                     )
                   }
                 >
-                  Save
+                  {t('settings.t_save')}
                 </Button>
               </Stack>
             </Stack>

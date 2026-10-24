@@ -4,7 +4,36 @@
 
 use anyhow::Result;
 
-use vibe_states::ThemeChoice;
+/// User's theme choice. Lives here — a platform fact, mirrored into
+/// `workspace.theme` as its lowercase string form.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ThemeChoice {
+    Light,
+    Dark,
+    #[default]
+    System,
+}
+
+impl ThemeChoice {
+    /// The string form stored in `workspace.theme`.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Light => "light",
+            Self::Dark => "dark",
+            Self::System => "system",
+        }
+    }
+
+    /// Parses the stored string; an unknown value falls back to `System`.
+    pub fn from_value(value: &str) -> Self {
+        match value {
+            "light" => Self::Light,
+            "dark" => Self::Dark,
+            _ => Self::System,
+        }
+    }
+}
 
 /// Detects the OS theme. Falls back to Light when the OS does not
 /// specify one.

@@ -5,22 +5,12 @@
  */
 import { createSlice } from '@reduxjs/toolkit'
 
+// Pure UI state only. Application state lives in Rust — the
+// WorkspaceProvider mirrors it, this store never holds a copy.
 export const appStateSlice = createSlice({
   name: 'appState',
-  initialState: {
-    ready: false,
-    theme: 'light',
-    settings: { locale: 'ru', theme: 'system' },
-  },
-  reducers: {
-    setAll: (state, data) => {
-      state.ready = true
-      state.theme = data.payload.theme
-      state.settings = data.payload.settings
-    },
-  },
+  initialState: {},
+  reducers: {},
 })
-
-export const { setAll } = appStateSlice.actions
 
 export default appStateSlice.reducer

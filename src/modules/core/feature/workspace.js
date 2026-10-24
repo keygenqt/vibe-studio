@@ -16,4 +16,8 @@ export const workspace = {
   workspace_set_side_bar: async function (size, collapsed) {
     return invoke('workspace_set_side_bar', { size, collapsed })
   },
+  // theme: 'light' | 'dark' | 'system' ('system' = follow the OS)
+  workspace_set_theme: async function (theme) {
+    return invoke('workspace_set_theme', { theme })
+  },
 }

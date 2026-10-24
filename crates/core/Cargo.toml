@@ -1,16 +1,16 @@
 [package]
-name = "vibe-core"
+name = "studio-core"
 version = "0.0.1"
 description = "Vibe Studio core — state facade and feature functions, no shell dependencies."
 edition = "2024"
 
 [lib]
-name = "vibe_core"
+name = "studio_core"
 path = "src/lib.rs"
 
 [dependencies]
-vibe-states = { path = "../states" }
+studio-states = { path = "../states" }
+studio-cluster = { path = "../cluster" }
 dark-light = "3"
 serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1.0.154"
 anyhow = "1.0.104"

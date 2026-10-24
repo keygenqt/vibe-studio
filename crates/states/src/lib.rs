@@ -4,16 +4,15 @@
 
 //! Application state persistence on SQLite.
 //!
-//! Owns the database (schema, migrations, KV store) and the state
-//! structures saved in it. UI shells talk to this crate through
-//! `vibe-core` only.
+//! Owns the database (schema, migrations) and the state structures
+//! saved in it. UI shells talk to this crate through `studio-core`
+//! only.
 
 pub mod constants;
 
 pub(crate) mod state;
 pub(crate) mod store;
 
-pub use state::settings::{Settings, ThemeChoice};
-pub use state::storable::Storable;
+pub use state::provider::{Provider, ProviderNew};
 pub use state::workspace::Workspace;
 pub use store::store::Store;

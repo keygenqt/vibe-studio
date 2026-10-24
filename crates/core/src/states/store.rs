@@ -6,11 +6,11 @@ use std::path::Path;
 
 use anyhow::Result;
 
-use vibe_states::Store;
-use vibe_states::constants::DB_FILE;
+use studio_states::Store;
+use studio_states::constants::DB_FILE;
 
 /// Opens (or creates) the database in the given app data directory.
-/// The file name lives in `vibe-states` — the shell never knows it.
+/// The file name lives in `studio-states` — the shell never knows it.
 pub(crate) fn store_open(dir: &Path) -> Result<Store> {
     Store::open(&dir.join(DB_FILE))
 }

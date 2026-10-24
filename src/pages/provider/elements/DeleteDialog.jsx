@@ -4,6 +4,7 @@
  * TAGS: ['components']
  */
 import PropTypes from 'prop-types'
+import { useTranslation } from 'react-i18next'
 import {
   Button,
   Dialog,
@@ -15,6 +16,7 @@ import {
 
 // generic confirm dialog for destructive actions
 export function DeleteDialog(props) {
+  const { t } = useTranslation()
   return (
     <Dialog open={props.open} onClose={props.onCancel}>
       <DialogTitle>{props.title}</DialogTitle>
@@ -22,9 +24,9 @@ export function DeleteDialog(props) {
         <DialogContentText>{props.text}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={props.onCancel}>Cancel</Button>
+        <Button onClick={props.onCancel}>{t('settings.t_cancel')}</Button>
         <Button color={'error'} variant={'contained'} onClick={props.onConfirm}>
-          Delete
+          {t('settings.t_delete')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -11,10 +11,9 @@ import './localization'
 import store from './store/configure.js'
 import './assets/css/index.css'
 import App from './App.jsx'
-import { initStateSync, initScrollArea } from './init'
+import { initScrollArea } from './init'
 
 // app init: not tied to any component lifetime, runs once, never cleans up
-initStateSync(store)
 initScrollArea()
 
 // MUI TextareaAutosize's internal ResizeObserver overflows WebKit's loop

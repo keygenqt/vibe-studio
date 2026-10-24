@@ -14,12 +14,9 @@
 //!   binary at compile time.
 //! - `open` — `Store::open`: create parent dirs, connect, WAL and
 //!   foreign keys pragmas, apply pending migrations.
-//! - `raw` — `get_raw`/`set_raw`: KV read and upsert over the
-//!   `states` table; only `Storable` impls may use it.
 //! - `store` — the `Store` struct itself; `conn` is `pub(crate)` so
 //!   nothing outside this crate touches the connection.
 
 pub(crate) mod migrations;
 pub(crate) mod open;
-pub(crate) mod raw;
 pub(crate) mod store;

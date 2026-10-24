@@ -7,32 +7,44 @@
 use anyhow::Result;
 use std::path::Path;
 
-pub use super::app::{AppState, StateView};
-pub use vibe_states::{Settings, Store, Workspace};
+pub use studio_cluster::ProviderInfo;
+pub use studio_states::{Provider, Store, Workspace};
 
 /// Opens (or creates) the database in the given app data directory.
-/// The file name lives in `vibe-states` — the shell never knows it.
+/// The file name lives in `studio-states` — the shell never knows it.
 pub fn store_open(dir: &Path) -> Result<Store> {
     super::store::store_open(dir)
 }
 
-/// Loads settings; missing or malformed data falls back to `Default`.
-pub fn settings_load(store: &Store) -> Settings {
-    super::settings::settings_load(store)
-}
-
-/// Persists settings.
-pub fn settings_save(store: &Store, settings: &Settings) -> Result<()> {
-    super::settings::settings_save(store, settings)
-}
-
-/// Loads workspace state; missing or malformed data falls back to
-/// `Default` — untouched values stay `None`.
+/// Loads the shell environment; a missing row falls back to `Default`
+/// — untouched values stay `None`.
 pub fn workspace_load(store: &Store) -> Workspace {
     super::workspace::workspace_load(store)
 }
 
-/// Persists workspace state.
+/// Persists the shell environment.
 pub fn workspace_save(store: &Store, workspace: &Workspace) -> Result<()> {
     super::workspace::workspace_save(store, workspace)
+}
+
+/// Catalog of supported provider types — the single source for the
+/// add form and for validation.
+pub fn providers_catalog() -> Vec<ProviderInfo> {
+    studio_cluster::providers()
+}
+
+/// All configured providers; a store error yields an empty list.
+pub fn providers_load(store: &Store) -> Vec<Provider> {
+    super::provider::providers_load(store)
+}
+
+/// Validates and persists the provider; insert on id = 0, update
+/// otherwise. Returns the stored row with its id.
+pub fn provider_save(store: &Store, provider: &Provider) -> Result<Provider> {
+    super::provider::provider_save(store, provider)
+}
+
+/// Deletes the provider by id.
+pub fn provider_delete(store: &Store, id: i32) -> Result<()> {
+    super::provider::provider_delete(store, id)
 }

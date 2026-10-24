@@ -5,26 +5,14 @@
 use tauri::Emitter;
 use tauri::WebviewWindow;
 
-use vibe_core::AppState;
-use vibe_core::StateView;
-use vibe_core::resolve_theme;
-
-/// Full state view with the persisted choice resolved to a concrete
-/// theme.
-pub fn view(state: &AppState) -> StateView {
-    let settings = state.settings.lock().unwrap().clone();
-    StateView {
-        theme: resolve_theme(settings.theme),
-        settings,
-    }
-}
+use studio_core::Workspace;
 
 /// Single state channel: any mutation ends with this emit.
 /// The emit is spawned: it waits for the main thread, so calling it
 /// from the main thread (command / window event) deadlocks.
-pub fn emit_state(window: &WebviewWindow, view: StateView) {
+pub fn emit_state(window: &WebviewWindow, workspace: Workspace) {
     let window = window.clone();
     tauri::async_runtime::spawn(async move {
-        let _ = window.emit("event-state", view);
+        let _ = window.emit("event-state", workspace);
     });
 }

@@ -4,14 +4,15 @@
 
 use anyhow::Result;
 
-use vibe_states::{Storable, Store, Workspace};
+use studio_states::{Store, Workspace};
 
-/// Loads workspace state; missing or malformed data falls back to
-/// `Default` — untouched values stay `None`.
+/// Loads the shell environment; a missing row falls back to `Default`
+/// — untouched values stay `None`.
 pub(crate) fn workspace_load(store: &Store) -> Workspace {
-    Workspace::load(store)
+    store.workspace_load().unwrap_or_default()
 }
 
+/// Persists the shell environment.
 pub(crate) fn workspace_save(store: &Store, workspace: &Workspace) -> Result<()> {
-    workspace.save(store)
+    store.workspace_save(workspace)
 }

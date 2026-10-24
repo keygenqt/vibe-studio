@@ -5,24 +5,33 @@
  */
 import React from 'react'
 import { ThemeProvider, Box } from '@mui/material'
-import { useSelector } from 'react-redux'
 
 import { AppRoute } from './AppRoute'
 import { ThemeDark, ThemeLight } from './theme'
-import { useEffectFocus } from './hooks'
+import { useEffectFocus, useWorkspace, WorkspaceProvider } from './hooks'
 import { DURATION_DEFAULT } from './constants/AppDefault'
 
 function App() {
-  // theme comes only from Rust state
-  const isReady = useSelector(state => state.appState.ready)
-  const themeMode = useSelector(state => state.appState.theme)
   const isFocus = useEffectFocus()
+  return (
+    <WorkspaceProvider>
+      <ThemedShell isFocus={isFocus} />
+    </WorkspaceProvider>
+  )
+}
 
-  if (!isReady) return null
+// lives inside the provider — reads the workspace from context
+function ThemedShell(props) {
+  const workspace = useWorkspace()
+  // the persisted choice with `system` resolved to the detected OS theme
+  const themeMode =
+    workspace.themeChoice === 'system' ? workspace.systemTheme : workspace.themeChoice
+
+  if (!workspace.ready) return null
   return (
     <ThemeProvider theme={themeMode === 'dark' ? ThemeDark : ThemeLight}>
       <Box
-        className={isFocus ? 'WindowFocus' : 'WindowUnfocus'}
+        className={props.isFocus ? 'WindowFocus' : 'WindowUnfocus'}
         height={1}
         sx={theme => ({
           backgroundColor: 'background.default',

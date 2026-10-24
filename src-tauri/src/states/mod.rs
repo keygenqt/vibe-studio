@@ -7,8 +7,8 @@
 //!
 //! # Submodules
 //!
-//! - `react` — the JS mirror: state commands, the `StateView`
-//!   snapshot and the `event-state` channel.
+//! - `react` — the JS mirror: workspace and provider commands and
+//!   the `event-state` channel.
 //! - `storage` — `store()`: opens the state store in the app data
 //!   directory for `app.manage()`.
 //! - `tauri` — Tauri-internal features with no JS surface: the

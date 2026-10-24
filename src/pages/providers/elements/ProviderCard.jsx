@@ -7,8 +7,6 @@ import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { Avatar, Box, Button, Card, Chip, Stack, Typography } from '@mui/material'
 
-import { AppData } from '../../../constants/AppData'
-
 export function ProviderCard(props) {
   const { provider } = props
   const { t } = useTranslation()
@@ -17,7 +15,7 @@ export function ProviderCard(props) {
       <Stack direction={'row'} spacing={2} alignItems={'flex-start'} sx={{ p: 2 }}>
         <Avatar
           sx={{
-            bgcolor: AppData.providers[provider.provider]?.color ?? 'secondary.main',
+            bgcolor: props.color ?? 'secondary.main',
             color: 'secondary.contrastText',
             fontWeight: 600,
           }}
@@ -62,5 +60,6 @@ ProviderCard.propTypes = {
     provider: PropTypes.string.isRequired,
     host: PropTypes.string.isRequired,
   }).isRequired,
+  color: PropTypes.string,
   onConfigure: PropTypes.func.isRequired,
 }

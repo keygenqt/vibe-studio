@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'theme']
  */
-import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import { IconButton, Tooltip } from '@mui/material'
 import DarkMode from '@mui/icons-material/DarkMode'
@@ -11,14 +10,16 @@ import DesktopWindows from '@mui/icons-material/DesktopWindows'
 import LightMode from '@mui/icons-material/LightMode'
 
 import { Methods } from '../../../../modules'
+import { useWorkspace } from '../../../../hooks'
 
 export function ThemeAction() {
   const { t } = useTranslation()
-  const themeOverride = useSelector(state => state.appState.settings.theme)
+  const { themeChoice } = useWorkspace()
 
   const cycleTheme = () => {
-    const next = themeOverride === 'light' ? 'dark' : themeOverride === 'dark' ? 'system' : 'light'
-    Methods.settings_set_theme(next)
+    const next = themeChoice === 'light' ? 'dark' : themeChoice === 'dark' ? 'system' : 'light'
+    // the answer comes back over event-state — no local mirror here
+    Methods.workspace_set_theme(next)
   }
 
   return (
@@ -30,9 +31,9 @@ export function ThemeAction() {
           p: '2px',
         }}
       >
-        {themeOverride === 'light' ? (
+        {themeChoice === 'light' ? (
           <LightMode sx={{ fontSize: 16 }} />
-        ) : themeOverride === 'dark' ? (
+        ) : themeChoice === 'dark' ? (
           <DarkMode sx={{ fontSize: 16 }} />
         ) : (
           <DesktopWindows sx={{ fontSize: 16 }} />

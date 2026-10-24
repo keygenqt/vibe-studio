@@ -7,12 +7,10 @@
 //!
 //! # Submodules
 //!
-//! - `settings` — `state_snapshot`, `settings_set_theme` commands.
-//! - `view` — `view()`: builds the `StateView`; `emit_state()`: the
-//!   single event channel to the UI.
-//! - `workspace` — `workspace_get`, `workspace_set_chat_input_size`,
-//!   `workspace_set_side_bar` commands.
+//! - `provider` — the provider catalog and CRUD commands.
+//! - `view` — the single `event-state` channel to the UI.
+//! - `workspace` — the shell environment commands.
 
-pub(crate) mod settings;
+pub(crate) mod provider;
 pub(crate) mod view;
 pub(crate) mod workspace;

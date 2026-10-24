@@ -9,7 +9,7 @@
 
 use anyhow::Result;
 
-pub use vibe_states::ThemeChoice;
+pub use super::theme::ThemeChoice;
 
 /// Detects the OS theme. Falls back to Light when the OS does not
 /// specify one.

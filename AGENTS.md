@@ -28,15 +28,18 @@ Product invariants — the fundamental principles.
 ## Architecture
 
 ```
-src (React, thin layer) → src-tauri (UI layer) → crates/core (facade)
-  → crates/states (SQLite owner)
+src (React, thin layer) → src-tauri (UI layer) → studio-core
+  → feature crates (states, cluster — new ones are added as tasks demand)
 ```
 
-- Dependencies point strictly down this chain. Nothing imports
-  `vibe-states` outside of `vibe-core`.
+- studio-core is the main entry point for the UI: it unifies the
+  feature crates and gives a single API; features not worthy of a
+  separate crate live in it.
+- Dependencies point strictly down: the UI layer knows only
+  studio-core.
 - Data flow: React invokes commands, the UI layer calls flat
-  functions of `vibe-core`, persisted state lives in `vibe-states`;
-  any state mutation ends with the `event-state` emit back to the UI.
+  functions of studio-core; any mutation ends with an event back
+  to the UI.
 
 ## Rule files (agents/)
 

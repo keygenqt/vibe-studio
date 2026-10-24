@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states', 'theme']
 
+use tauri::Emitter;
 use tauri::Manager;
 
-use vibe_core::AppState;
-use vibe_core::Store;
-use vibe_core::ThemeChoice;
-use vibe_core::listen_system_theme;
-use vibe_core::settings_load;
+use studio_core::Store;
+use studio_core::listen_system_theme;
 
 mod states;
 mod tools;
@@ -19,13 +17,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_log::Builder::new().build())
-        .manage(AppState::default())
         .setup(|app| {
             // Restore state from disk — single source of truth
             let store = states::storage::store(app.handle())?;
-            let settings = settings_load(&store);
             app.manage(store);
-            *app.state::<AppState>().settings.lock().unwrap() = settings;
 
             // The window is built by hand (`create: false` in the
             // config) to show it only when the page is loaded.
@@ -42,18 +37,14 @@ pub fn run() {
             let store = app.state::<Store>();
             states::tauri::workspace::restore(&window, &store);
 
-            // OS theme changed — re-emit only while the choice is
-            // `system`: a manual override ignores OS changes.
+            // OS theme changed — the system theme is a platform fact
+            // on its own channel; the UI resolves it against the
+            // persisted choice itself.
             let handle = app.handle().clone();
             listen_system_theme({
                 let handle = handle.clone();
-                let window = window.clone();
-                move |_theme| {
-                    let state = handle.state::<AppState>();
-                    if state.settings.lock().unwrap().theme == ThemeChoice::System {
-                        let view = states::react::view::view(&state);
-                        states::react::view::emit_state(&window, view);
-                    }
+                move |theme| {
+                    let _ = handle.emit("event-theme", theme.as_str());
                 }
             })?;
 
@@ -69,11 +60,14 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             // states
-            states::react::settings::state_snapshot,
-            states::react::settings::settings_set_theme,
             states::react::workspace::workspace_get,
             states::react::workspace::workspace_set_chat_input_size,
             states::react::workspace::workspace_set_side_bar,
+            states::react::workspace::workspace_set_theme,
+            states::react::provider::providers_catalog,
+            states::react::provider::providers_get,
+            states::react::provider::provider_save,
+            states::react::provider::provider_delete,
             // tools
             tools::app_info::app_info,
         ])
