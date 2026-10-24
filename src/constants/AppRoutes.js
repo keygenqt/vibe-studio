@@ -14,4 +14,5 @@ export const AppRoutes = {
   providerAdd: () => '/settings/provider/add',
   provider: (providerId = ':providerId') => `/settings/provider/${providerId}`,
   model: (modelId = ':modelId') => `/settings/model/${modelId}`,
+  models: () => '/settings/models',
 }

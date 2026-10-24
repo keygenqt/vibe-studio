@@ -33,5 +33,12 @@ export const components = {
         }),
     },
   },
+  MuiDialog: {
+    styleOverrides: {
+      paper: {
+        borderRadius: 8,
+      },
+    },
+  },
   MuiChip: { styleOverrides: { root: { borderRadius: 13 } } },
 }

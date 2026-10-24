@@ -15,6 +15,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import DoneOutlined from '@mui/icons-material/DoneOutlined'
 
 // draft: mirrors vibe_cluster::Provider
@@ -28,6 +29,7 @@ const DEFAULT_HOSTS = {
 const CLOUD = ['DeepSeek', 'Qwen', 'Kimi', 'Zhipu']
 
 export function ProviderForm(props) {
+  const isEdit = Boolean(props.isEdit)
   return (
     <Formik
       enableReinitialize
@@ -82,22 +84,24 @@ export function ProviderForm(props) {
         return (
           <Box component={'form'} noValidate onSubmit={handleSubmit}>
             <Stack spacing={2}>
-              <TextField
-                select
-                fullWidth
-                label={'Provider'}
-                name={'provider'}
-                variant={'filled'}
-                value={values.provider}
-                onBlur={handleBlur}
-                onChange={onProviderChange}
-              >
-                {PROVIDERS.map(item => (
-                  <MenuItem key={`provider-${item}`} value={item}>
-                    {item}
-                  </MenuItem>
-                ))}
-              </TextField>
+              {!isEdit && (
+                <TextField
+                  select
+                  fullWidth
+                  label={'Provider'}
+                  name={'provider'}
+                  variant={'filled'}
+                  value={values.provider}
+                  onBlur={handleBlur}
+                  onChange={onProviderChange}
+                >
+                  {PROVIDERS.map(item => (
+                    <MenuItem key={`provider-${item}`} value={item}>
+                      {item}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
               <TextField
                 fullWidth
                 required
@@ -148,6 +152,11 @@ export function ProviderForm(props) {
                 </Typography>
               )}
               <Stack direction={'row'} spacing={2}>
+                {isEdit && props.onDelete && (
+                  <Button variant={'outlined'} color={'error'} onClick={props.onDelete}>
+                    Delete
+                  </Button>
+                )}
                 <Box sx={{ flexGrow: 1 }} />
                 <Button
                   type={'submit'}
@@ -176,9 +185,11 @@ export function ProviderForm(props) {
 }
 
 ProviderForm.propTypes = {
+  isEdit: PropTypes.bool,
   name: PropTypes.string,
   provider: PropTypes.string,
   host: PropTypes.string,
   apiKey: PropTypes.string,
+  onDelete: PropTypes.func,
   onSubmit: PropTypes.func,
 }

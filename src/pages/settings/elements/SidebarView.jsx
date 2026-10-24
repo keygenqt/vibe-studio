@@ -28,8 +28,13 @@ const ITEMS = [
     title: 'settings.t_providers',
     description: 'settings.t_providers_description',
     icon: <HubOutlined />,
-    // active across the whole provider section, including model pages
-    match: [AppRoutes.provider(), AppRoutes.model()],
+    // active across the whole provider section, including the list page
+    match: [
+      AppRoutes.settingsProviders(),
+      AppRoutes.provider(),
+      AppRoutes.model(),
+      AppRoutes.models(),
+    ],
   },
 ]
 
@@ -49,8 +54,10 @@ export function SidebarView() {
             icon={item.icon}
             active={active}
             onClick={() => {
-              // active section: no navigation, no duplicate history entries
-              if (!active) AppNav.openWithReplace(navigate, item.path, AppRoutes.settings())
+              // on the section root: no navigation, no duplicate entries;
+              // from drill-down pages the click returns to the section root
+              if (matchPath(item.path, pathname)) return
+              AppNav.openWithReplace(navigate, item.path, AppRoutes.settings())
             }}
           />
         )
