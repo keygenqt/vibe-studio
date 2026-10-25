@@ -4,23 +4,21 @@
  * TAGS: ['components']
  */
 import PropTypes from 'prop-types'
-import { Card, Stack, Typography } from '@mui/material'
+import { Card, CardActionArea, Stack, Typography } from '@mui/material'
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
 
 // model row on the provider page, styled after the providers page cards
 export function ModelCard(props) {
   return (
-    <Card
-      variant={'outlined'}
-      onClick={props.onClick}
-      sx={{ borderRadius: 2, cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
-    >
-      <Stack direction={'row'} spacing={2} alignItems={'center'} sx={{ p: 2 }}>
-        <Typography noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
-          {props.name}
-        </Typography>
-        <ChevronRightOutlined color={'action'} />
-      </Stack>
+    <Card variant={'outlined'} sx={{ borderRadius: 2 }}>
+      <CardActionArea onClick={props.onClick}>
+        <Stack direction={'row'} spacing={2} alignItems={'center'} sx={{ p: 2 }}>
+          <Typography noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
+            {props.name}
+          </Typography>
+          <ChevronRightOutlined color={'action'} />
+        </Stack>
+      </CardActionArea>
     </Card>
   )
 }

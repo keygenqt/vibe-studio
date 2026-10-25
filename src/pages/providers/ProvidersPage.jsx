@@ -11,6 +11,7 @@ import { Stack } from '@mui/material'
 import { ProviderCard } from './elements/ProviderCard'
 import { DashedButton } from '../../components/buttons'
 import { PageHeader } from '../../components/views'
+import { WaitState } from '../../components/states'
 import { AppRoutes } from '../../constants/AppRoutes'
 import { AppNav } from '../../utils'
 import { Methods } from '../../modules'
@@ -18,8 +19,8 @@ import { Methods } from '../../modules'
 export function ProvidersPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const [providers, setProviders] = React.useState(null)
-  const [catalog, setCatalog] = React.useState(null)
+  const [providers, setProviders] = React.useState(Methods.providers_last())
+  const [catalog, setCatalog] = React.useState(Methods.providers_catalog_last())
 
   React.useEffect(() => {
     Methods.providers_get().then(setProviders)
@@ -35,19 +36,21 @@ export function ProvidersPage() {
   }
 
   return (
-    <Stack spacing={2}>
-      <PageHeader title={t('settings.t_providers')} subtitle={t('settings.t_providers_subtitle')} />
-      <DashedButton onClick={() => AppNav.open(navigate, AppRoutes.providerAdd())}>
-        {t('settings.t_provider_add')}
-      </DashedButton>
-      {(providers ?? []).map(provider => (
-        <ProviderCard
-          key={`provider-${provider.id}`}
-          provider={provider}
-          color={catalogById[provider.provider]?.color}
-          onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
-        />
-      ))}
-    </Stack>
+    <WaitState ready={Boolean(providers) && Boolean(catalog)}>
+      <Stack spacing={2}>
+        <PageHeader title={t('settings.t_providers')} subtitle={t('providers.t_subtitle')} />
+        <DashedButton onClick={() => AppNav.open(navigate, AppRoutes.providerAdd())}>
+          {t('providers.t_add')}
+        </DashedButton>
+        {(providers ?? []).map(provider => (
+          <ProviderCard
+            key={`provider-${provider.id}`}
+            provider={provider}
+            color={catalogById[provider.provider]?.color}
+            onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
+          />
+        ))}
+      </Stack>
+    </WaitState>
   )
 }

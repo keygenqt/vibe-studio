@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
+import { useTranslation } from 'react-i18next'
 import { Stack, Typography } from '@mui/material'
 import Add from '@mui/icons-material/Add'
 
 import { TooltipIconButton } from '../../../components/buttons'
 
 export function SidebarTitle() {
+  const { t } = useTranslation()
   return (
     <Stack
       width={1}
@@ -19,9 +21,9 @@ export function SidebarTitle() {
       }}
     >
       <Typography variant={'h5'} fontWeight={500} color={'text.primary'}>
-        {'Assistants'}
+        {t('main.t_assistants')}
       </Typography>
-      <TooltipIconButton size={'mini'} title={'Add assistant'}>
+      <TooltipIconButton size={'mini'} title={t('main.t_add_assistant')}>
         <Add />
       </TooltipIconButton>
     </Stack>

@@ -24,9 +24,9 @@ export function DeleteDialog(props) {
         <DialogContentText>{props.text}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={props.onCancel}>{t('settings.t_cancel')}</Button>
+        <Button onClick={props.onCancel}>{t('provider.t_cancel')}</Button>
         <Button color={'error'} variant={'contained'} onClick={props.onConfirm}>
-          {t('settings.t_delete')}
+          {t('provider.t_delete')}
         </Button>
       </DialogActions>
     </Dialog>

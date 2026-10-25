@@ -7,6 +7,9 @@ copies only for rendering.
 
 - All Rust calls go through `Methods` (`src/modules`): one method —
   one command.
+- The Methods feature layer keeps the last answer per read as a
+  render copy: pages take the initial state from the `*_last*`
+  getters and revalidate on mount; mutations do not write the cache.
 - Rust validates and clamps; after `invoke` what it returned is what
   gets applied — the optimistic value is only a preview.
 - The application state lives in Rust and is mirrored once —
@@ -18,7 +21,11 @@ copies only for rendering.
   in one place, the provider.
 - Forms are Formik + Yup: client validation is UX, Rust re-validates
   on commit.
-- i18n: three locales — ru/en/cn.
+- i18n: three locales — ru/en/cn. Blocks mirror `pages/`: one section
+  per page (`providers`, `provider`, `models`, `model`, `general`),
+  shell keys in `settings`; a key with one consumer lives in its
+  block, a shared one — in `common`; a new key lands in all three
+  locales in one commit.
 
 ## Navigation
 
@@ -27,6 +34,12 @@ copies only for rendering.
 - All navigation goes through `AppNav` (`src/utils`): `open`,
   `openWithReplace`, `back`, `backTo`. A bare `navigate(path)`
   around it breaks the transition journal.
+
+## Loading
+
+- A page with data loading gates its content in `WaitState`
+  (`components/states`): readiness is the page's own data; the
+  loader shows only when a load starts without data.
 
 ## Structure
 

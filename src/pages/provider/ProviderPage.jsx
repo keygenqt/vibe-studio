@@ -13,6 +13,7 @@ import { ProviderForm } from './elements/ProviderForm'
 import { ModelCard } from './elements/ModelCard'
 import { DashedButton } from '../../components/buttons'
 import { PageHeader } from '../../components/views'
+import { WaitState } from '../../components/states'
 import { AppRoutes } from '../../constants/AppRoutes'
 import { AppNav } from '../../utils'
 import { Methods } from '../../modules'
@@ -23,8 +24,10 @@ export function ProviderPage() {
   const { t } = useTranslation()
   const isEdit = Boolean(providerId)
 
-  const [provider, setProvider] = React.useState(null)
-  const [catalog, setCatalog] = React.useState([])
+  const [provider, setProvider] = React.useState(
+    isEdit ? Methods.providers_last_by_id(Number(providerId)) : null
+  )
+  const [catalog, setCatalog] = React.useState(Methods.providers_catalog_last() ?? [])
 
   React.useEffect(() => {
     Methods.providers_catalog().then(setCatalog)
@@ -41,48 +44,50 @@ export function ProviderPage() {
   }, [providerId])
 
   return (
-    <Stack spacing={2}>
-      <PageHeader
-        title={
-          isEdit
-            ? (catalog.find(info => info.provider === provider?.provider)?.name ??
-              t('settings.t_provider'))
-            : t('settings.t_provider_add')
-        }
-        subtitle={t('settings.t_provider_subtitle')}
-      />
-
-      {!isEdit || provider ? (
-        <ProviderForm
-          isEdit={isEdit}
-          id={isEdit ? provider.id : 0}
-          name={provider?.name}
-          provider={provider?.provider}
-          host={provider?.host}
-          apiKey={provider?.api_key}
+    <WaitState ready={catalog.length > 0 && (!isEdit || Boolean(provider))}>
+      <Stack spacing={2}>
+        <PageHeader
+          title={
+            isEdit
+              ? (catalog.find(info => info.provider === provider?.provider)?.name ??
+                t('provider.t_title'))
+              : t('providers.t_add')
+          }
+          subtitle={t('provider.t_subtitle')}
         />
-      ) : null}
 
-      {isEdit && provider && (
-        <>
-          <Typography variant={'h6'} color={'text.primary'}>
-            {t('settings.t_models')}
-          </Typography>
-          <DashedButton
-            icon={<SyncOutlined />}
-            onClick={() => AppNav.open(navigate, AppRoutes.models())}
-          >
-            {t('settings.t_sync_models')}
-          </DashedButton>
-          {[].map(model => (
-            <ModelCard
-              key={`model-${model.id}`}
-              name={model.name}
-              onClick={() => AppNav.open(navigate, AppRoutes.model(model.id))}
-            />
-          ))}
-        </>
-      )}
-    </Stack>
+        {!isEdit || provider ? (
+          <ProviderForm
+            isEdit={isEdit}
+            id={isEdit ? provider.id : 0}
+            name={provider?.name}
+            provider={provider?.provider}
+            host={provider?.host}
+            apiKey={provider?.api_key}
+          />
+        ) : null}
+
+        {isEdit && provider && (
+          <>
+            <Typography variant={'h6'} color={'text.primary'}>
+              {t('provider.t_models')}
+            </Typography>
+            <DashedButton
+              icon={<SyncOutlined />}
+              onClick={() => AppNav.open(navigate, AppRoutes.models(providerId))}
+            >
+              {t('provider.t_sync_models')}
+            </DashedButton>
+            {[].map(model => (
+              <ModelCard
+                key={`model-${model.id}`}
+                name={model.name}
+                onClick={() => AppNav.open(navigate, AppRoutes.model(model.id))}
+              />
+            ))}
+          </>
+        )}
+      </Stack>
+    </WaitState>
   )
 }

@@ -55,10 +55,10 @@ export function ProviderForm(props) {
         apiKey: props.apiKey ?? '',
       }}
       validationSchema={Yup.object().shape({
-        name: Yup.string().trim().required(t('settings.t_validation_required')),
+        name: Yup.string().trim().required(t('provider.t_validation_required')),
         host: Yup.string()
-          .required(t('settings.t_validation_required'))
-          .test('host', t('settings.t_validation_url'), value => {
+          .required(t('provider.t_validation_required'))
+          .test('host', t('provider.t_validation_url'), value => {
             try {
               return Boolean(new URL(value).hostname)
             } catch {
@@ -67,7 +67,7 @@ export function ProviderForm(props) {
           }),
         apiKey: Yup.string().when('provider', {
           is: provider => catalog.find(info => info.provider === provider)?.cloud ?? false,
-          then: schema => schema.required(t('settings.t_validation_required')),
+          then: schema => schema.required(t('provider.t_validation_required')),
           otherwise: schema => schema.notRequired(),
         }),
       })}
@@ -119,8 +119,8 @@ export function ProviderForm(props) {
           <Box component={'form'} noValidate onSubmit={handleSubmit}>
             <DeleteDialog
               open={openDelete}
-              title={t('settings.t_provider_delete_title')}
-              text={t('settings.t_provider_delete_text')}
+              title={t('provider.t_delete_title')}
+              text={t('provider.t_delete_text')}
               onCancel={() => setOpenDelete(false)}
               onConfirm={() => {
                 Methods.provider_delete(props.id).then(() =>
@@ -130,7 +130,7 @@ export function ProviderForm(props) {
             />
             <SuccessAlert
               open={savedOpen}
-              text={t('settings.t_provider_saved')}
+              text={t('provider.t_saved')}
               onClose={() => setSavedOpen(false)}
             />
             <ErrorAlert
@@ -143,7 +143,7 @@ export function ProviderForm(props) {
                 <TextField
                   select
                   fullWidth
-                  label={t('settings.t_provider')}
+                  label={t('provider.t_title')}
                   name={'provider'}
                   variant={'filled'}
                   value={values.provider}
@@ -172,7 +172,7 @@ export function ProviderForm(props) {
               <TextField
                 fullWidth
                 required
-                label={t('settings.t_name')}
+                label={t('provider.t_name')}
                 name={'name'}
                 variant={'filled'}
                 value={values.name}
@@ -186,7 +186,7 @@ export function ProviderForm(props) {
               <TextField
                 fullWidth
                 required
-                label={t('settings.t_host')}
+                label={t('provider.t_host')}
                 name={'host'}
                 variant={'filled'}
                 value={values.host}
@@ -201,7 +201,7 @@ export function ProviderForm(props) {
                 <TextField
                   fullWidth
                   type={'password'}
-                  label={t('settings.t_api_key')}
+                  label={t('provider.t_api_key')}
                   name={'apiKey'}
                   variant={'filled'}
                   value={values.apiKey}
@@ -216,7 +216,7 @@ export function ProviderForm(props) {
               <Stack direction={'row'} spacing={2}>
                 {isEdit && (
                   <Button variant={'outlined'} color={'error'} onClick={() => setOpenDelete(true)}>
-                    {t('settings.t_delete')}
+                    {t('provider.t_delete')}
                   </Button>
                 )}
                 <Box sx={{ flexGrow: 1 }} />
@@ -236,7 +236,7 @@ export function ProviderForm(props) {
                     )
                   }
                 >
-                  {t('settings.t_save')}
+                  {t('common.t_save')}
                 </Button>
               </Stack>
             </Stack>

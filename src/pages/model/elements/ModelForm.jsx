@@ -4,6 +4,7 @@
  * TAGS: ['components']
  */
 import PropTypes from 'prop-types'
+import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
 import { Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material'
@@ -12,6 +13,7 @@ import DoneOutlined from '@mui/icons-material/DoneOutlined'
 import { AppUtils } from '../../../utils'
 
 export function ModelForm(props) {
+  const { t } = useTranslation()
   return (
     <Formik
       enableReinitialize
@@ -46,7 +48,7 @@ export function ModelForm(props) {
           <Stack spacing={2}>
             <TextField
               fullWidth
-              label={'Name'}
+              label={t('model.t_name')}
               name={'name'}
               variant={'filled'}
               value={values.name}
@@ -63,7 +65,7 @@ export function ModelForm(props) {
               fullWidth
               multiline
               minRows={4}
-              label={'System prompt'}
+              label={t('model.t_system_prompt')}
               name={'systemPrompt'}
               variant={'filled'}
               value={values.systemPrompt}
@@ -73,7 +75,7 @@ export function ModelForm(props) {
               onBlur={handleBlur}
               onChange={handleChange}
             />
-            <Typography variant={'h6'}>{'Parameters'}</Typography>
+            <Typography variant={'h6'}>{t('model.t_parameters')}</Typography>
             <Box
               sx={{
                 display: 'grid',
@@ -83,7 +85,7 @@ export function ModelForm(props) {
             >
               <TextField
                 type={'number'}
-                label={'Temperature'}
+                label={t('model.t_temperature')}
                 name={'temperature'}
                 variant={'filled'}
                 value={values.temperature}
@@ -96,7 +98,7 @@ export function ModelForm(props) {
               />
               <TextField
                 type={'number'}
-                label={'Seed'}
+                label={t('model.t_seed')}
                 name={'seed'}
                 variant={'filled'}
                 value={values.seed}
@@ -109,7 +111,7 @@ export function ModelForm(props) {
               />
               <TextField
                 type={'number'}
-                label={'Num ctx'}
+                label={t('model.t_num_ctx')}
                 name={'numCtx'}
                 variant={'filled'}
                 value={values.numCtx}
@@ -122,7 +124,7 @@ export function ModelForm(props) {
               />
               <TextField
                 type={'number'}
-                label={'Num predict'}
+                label={t('model.t_num_predict')}
                 name={'numPredict'}
                 variant={'filled'}
                 value={values.numPredict}
@@ -156,7 +158,7 @@ export function ModelForm(props) {
                   )
                 }
               >
-                Save
+                {t('common.t_save')}
               </Button>
             </Stack>
           </Stack>

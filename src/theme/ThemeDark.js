@@ -6,7 +6,11 @@
 import { createTheme } from '@mui/material/styles'
 import { typography } from './elements/typography'
 import { components } from './elements/components'
-import { DURATION_AUTO_HIDE, DURATION_DEFAULT } from '../constants/AppDefault'
+import {
+  DURATION_AUTO_HIDE,
+  DURATION_DEFAULT,
+  DURATION_PAGE_LOADING,
+} from '../constants/AppDefault'
 
 export const ThemeDark = createTheme({
   palette: {
@@ -20,7 +24,11 @@ export const ThemeDark = createTheme({
     panel: { main: 'rgba(255, 255, 255, 0.03)' },
   },
   transitions: {
-    duration: { standard: DURATION_DEFAULT, autoHide: DURATION_AUTO_HIDE },
+    duration: {
+      standard: DURATION_DEFAULT,
+      autoHide: DURATION_AUTO_HIDE,
+      pageLoading: DURATION_PAGE_LOADING,
+    },
   },
   typography: typography,
   components: components,
