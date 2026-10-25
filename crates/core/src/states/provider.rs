@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states']
 
-use anyhow::{Result, bail};
+use anyhow::Result;
+use anyhow::bail;
 
-use studio_states::{Provider, ProviderNew, Store};
+use studio_states::Provider;
+use studio_states::ProviderNew;
+use studio_states::Store;
 
 /// id below this value means "new provider" — SQLite assigns the real one.
 const NEW_ID: i32 = 0;

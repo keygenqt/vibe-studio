@@ -3,5 +3,5 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['theme']
  */
-export * from './ThemeDark'
-export * from './ThemeLight'
+export * from "./ThemeDark";
+export * from "./ThemeLight";

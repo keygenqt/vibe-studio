@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['i18n']
  */
-import i18n from 'i18next'
-import { initReactI18next } from 'react-i18next'
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
 
-import { ruLocalization } from './elements/ru'
-import { enLocalization } from './elements/en'
-import { cnLocalization } from './elements/cn'
+import { ruLocalization } from "./elements/ru";
+import { enLocalization } from "./elements/en";
+import { cnLocalization } from "./elements/cn";
 
 i18n.use(initReactI18next).init({
   resources: {
@@ -16,7 +16,7 @@ i18n.use(initReactI18next).init({
     en: enLocalization,
     cn: cnLocalization,
   },
-  lng: 'ru',
-  fallbackLng: 'ru',
+  lng: "ru",
+  fallbackLng: "ru",
   interpolation: { escapeValue: false },
-})
+});

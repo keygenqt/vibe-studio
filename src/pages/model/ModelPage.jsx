@@ -3,30 +3,30 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import { useParams } from 'react-router'
-import { Stack } from '@mui/material'
+import { useParams } from "react-router";
+import { Stack } from "@mui/material";
 
-import { PageHeader } from '../../components/views'
-import { AppUtils } from '../../utils'
+import { PageHeader } from "../../components/views";
+import { AppUtils } from "../../utils";
 
-import { ModelForm } from './elements/ModelForm'
+import { ModelForm } from "./elements/ModelForm";
 
 // draft: hardcoded until model state lands in Rust
 const model = {
   id: 1,
-  name: '',
-  model: 'qwen2.5-coder:7b',
-  provider: 'Ollama',
-  host: 'http://192.168.1.10:11434',
-  systemPrompt: '',
+  name: "",
+  model: "qwen2.5-coder:7b",
+  provider: "Ollama",
+  host: "http://192.168.1.10:11434",
+  systemPrompt: "",
   temperature: 0.2,
   seed: 42,
   numCtx: 4096,
   numPredict: 2048,
-}
+};
 
 export function ModelPage() {
-  const { modelId } = useParams()
+  const { modelId } = useParams();
   return (
     <Stack spacing={2}>
       <PageHeader
@@ -44,5 +44,5 @@ export function ModelPage() {
         numPredict={model.numPredict}
       />
     </Stack>
-  )
+  );
 }

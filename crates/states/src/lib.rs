@@ -13,6 +13,7 @@ pub mod constants;
 pub(crate) mod state;
 pub(crate) mod store;
 
-pub use state::provider::{Provider, ProviderNew};
+pub use state::provider::Provider;
+pub use state::provider::ProviderNew;
 pub use state::workspace::Workspace;
 pub use store::store::Store;

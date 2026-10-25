@@ -3,23 +3,23 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import PropTypes from 'prop-types'
-import * as React from 'react'
-import { useTranslation } from 'react-i18next'
-import { Box, IconButton, Stack, TextField } from '@mui/material'
-import Send from '@mui/icons-material/Send'
+import PropTypes from "prop-types";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Box, IconButton, Stack, TextField } from "@mui/material";
+import Send from "@mui/icons-material/Send";
 
 export function ComposerView(props) {
-  const { t } = useTranslation()
-  const [value, setValue] = React.useState('')
+  const { t } = useTranslation();
+  const [value, setValue] = React.useState("");
 
   return (
     <Stack
       direction="row"
       spacing={1}
       sx={{
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start',
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
         height: props.height,
         flexShrink: 0,
       }}
@@ -28,10 +28,10 @@ export function ComposerView(props) {
         sx={{
           flexGrow: 1,
           minWidth: 0,
-          height: '100%',
+          height: "100%",
           borderRadius: 2,
-          boxSizing: 'border-box',
-          backgroundColor: 'background.paper',
+          boxSizing: "border-box",
+          backgroundColor: "background.paper",
           paddingY: 1,
           paddingBottom: 1,
           paddingLeft: 2,
@@ -42,15 +42,18 @@ export function ComposerView(props) {
           multiline
           fullWidth
           variant="standard"
-          placeholder={t('main.t_placeholder')}
+          placeholder={t("main.t_placeholder")}
           value={value}
-          onChange={event => setValue(event.target.value)}
-          sx={{ height: '100%' }}
+          onChange={(event) => setValue(event.target.value)}
+          sx={{ height: "100%" }}
           slotProps={{
-            input: { disableUnderline: true, sx: { height: '100%', alignItems: 'flex-start' } },
+            input: {
+              disableUnderline: true,
+              sx: { height: "100%", alignItems: "flex-start" },
+            },
             htmlInput: {
-              className: 'ScrollArea',
-              sx: { height: '100% !important', overflowY: 'auto !important' },
+              className: "ScrollArea",
+              sx: { height: "100% !important", overflowY: "auto !important" },
             },
           }}
         />
@@ -58,7 +61,7 @@ export function ComposerView(props) {
 
       <Box
         sx={{
-          paddingTop: '6px',
+          paddingTop: "6px",
         }}
       >
         <IconButton color="primary" size="small">
@@ -66,9 +69,9 @@ export function ComposerView(props) {
         </IconButton>
       </Box>
     </Stack>
-  )
+  );
 }
 
 ComposerView.propTypes = {
   height: PropTypes.number.isRequired,
-}
+};

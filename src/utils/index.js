@@ -3,5 +3,5 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-export * from './AppNav'
-export * from './AppUtils'
+export * from "./AppNav";
+export * from "./AppUtils";

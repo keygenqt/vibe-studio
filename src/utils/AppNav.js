@@ -20,41 +20,41 @@
 // empty and `back` degrades to a plain one-step back until the next
 // push through this module.
 
-const journal = [] // entries: { path, at, section? }, `at` is the history position
+const journal = []; // entries: { path, at, section? }, `at` is the history position
 
 function currentAt() {
-  return journal.length > 0 ? journal[journal.length - 1].at : 0
+  return journal.length > 0 ? journal[journal.length - 1].at : 0;
 }
 
 export const AppNav = {
   // push a new history entry
   open: (navigate, path, arg = {}) => {
-    journal.push({ path: path, at: currentAt() + 1 })
-    return navigate(path, arg)
+    journal.push({ path: path, at: currentAt() + 1 });
+    return navigate(path, arg);
   },
 
   // replace the current history entry, does not grow the stack;
   // with `route` the entry remembers the section it belongs to
   openWithReplace: (navigate, path, route) => {
     if (journal.length > 0) {
-      const top = journal[journal.length - 1]
-      top.path = path
+      const top = journal[journal.length - 1];
+      top.path = path;
       if (route !== undefined) {
-        top.section = route
+        top.section = route;
       }
     }
-    return navigate(path, { replace: true })
+    return navigate(path, { replace: true });
   },
 
   // one step back
-  back: navigate => {
-    const current = journal[journal.length - 1]
+  back: (navigate) => {
+    const current = journal[journal.length - 1];
     // a section page hands the exit over to backTo
     if (current?.section) {
-      return AppNav.backTo(navigate, current.section)
+      return AppNav.backTo(navigate, current.section);
     }
-    journal.pop()
-    return navigate(-1)
+    journal.pop();
+    return navigate(-1);
   },
 
   // exit the section opened at the route: go back below the matched
@@ -63,35 +63,35 @@ export const AppNav = {
   // anchor (the first from the start)
   backTo: (navigate, route, force = false) => {
     // find the matched entry
-    let index = -1
+    let index = -1;
     if (force) {
       for (let i = journal.length - 1; i >= 0; i--) {
         if (journal[i].path.startsWith(route)) {
-          index = i
-          break
+          index = i;
+          break;
         }
       }
     } else {
       for (let i = 0; i < journal.length; i++) {
         if (journal[i].path.startsWith(route)) {
-          index = i
-          break
+          index = i;
+          break;
         }
       }
     }
     // nothing found — one plain back
     if (index === -1) {
-      journal.pop()
-      return navigate(-1)
+      journal.pop();
+      return navigate(-1);
     }
     // backs needed to land below the matched entry — the anchor slot
     // itself is skipped together with the drill-down above it
-    const count = currentAt() - (journal[index].at - 1)
+    const count = currentAt() - (journal[index].at - 1);
     // clean the journal from the matched entry up
-    journal.length = index
+    journal.length = index;
     if (count > 0) {
-      return navigate(-count)
+      return navigate(-count);
     }
-    return undefined
+    return undefined;
   },
-}
+};

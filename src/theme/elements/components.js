@@ -7,9 +7,9 @@ export const components = {
   MuiToolbar: {
     styleOverrides: {
       root: {
-        minHeight: '33px !important',
-        paddingLeft: '6px !important',
-        paddingRight: '6px !important',
+        minHeight: "33px !important",
+        paddingLeft: "6px !important",
+        paddingRight: "6px !important",
       },
     },
   },
@@ -17,8 +17,8 @@ export const components = {
     styleOverrides: {
       root: {
         borderRadius: 8,
-        boxShadow: 'none !important',
-        textTransform: 'none',
+        boxShadow: "none !important",
+        textTransform: "none",
       },
     },
   },
@@ -26,9 +26,10 @@ export const components = {
     styleOverrides: {
       root: ({ theme }) =>
         theme.unstable_sx({
-          background: 'transparent',
-          '&:hover': {
-            background: theme.palette.mode === 'dark' ? '#ffffff14' : '#0000000d',
+          background: "transparent",
+          "&:hover": {
+            background:
+              theme.palette.mode === "dark" ? "#ffffff14" : "#0000000d",
           },
         }),
     },
@@ -41,4 +42,4 @@ export const components = {
     },
   },
   MuiChip: { styleOverrides: { root: { borderRadius: 13 } } },
-}
+};

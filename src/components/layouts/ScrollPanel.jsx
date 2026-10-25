@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import PropTypes from 'prop-types'
-import { Box, Stack } from '@mui/material'
+import PropTypes from "prop-types";
+import { Box, Stack } from "@mui/material";
 
 // framed scroll panel: paper panel + ScrollArea with ScrollFrame edge fades
 export function ScrollPanel(props) {
   return (
     <Box
-      className={'ScrollFrame'}
+      className={"ScrollFrame"}
       sx={{
         flexGrow: 1,
         minHeight: 0,
-        boxSizing: 'border-box',
-        backgroundColor: 'background.paper',
+        boxSizing: "border-box",
+        backgroundColor: "background.paper",
         borderRadius: 2,
         p: 1,
         ...props.sx,
@@ -23,19 +23,19 @@ export function ScrollPanel(props) {
     >
       <Box sx={{ height: 1 }}>
         <Box
-          className={'ScrollArea'}
+          className={"ScrollArea"}
           data-scroll-key={props.scrollKey}
-          sx={{ height: 1, p: 1, boxSizing: 'border-box' }}
+          sx={{ height: 1, p: 1, boxSizing: "border-box" }}
         >
           {props.children}
         </Box>
       </Box>
     </Box>
-  )
+  );
 }
 
 ScrollPanel.propTypes = {
   scrollKey: PropTypes.string,
   sx: PropTypes.object,
   children: PropTypes.node,
-}
+};

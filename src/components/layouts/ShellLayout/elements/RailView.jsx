@@ -3,28 +3,28 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import PropTypes from 'prop-types'
-import { Box, Stack } from '@mui/material'
+import PropTypes from "prop-types";
+import { Box, Stack } from "@mui/material";
 
-import { AppData } from '../../../../constants/AppData'
+import { AppData } from "../../../../constants/AppData";
 
 export function RailView(props) {
   return (
     <Stack
       sx={{
         height: 1,
-        boxSizing: 'border-box',
+        boxSizing: "border-box",
       }}
     >
       <Box
         sx={{
           flexShrink: 0,
           borderRadius: 2,
-          backgroundColor: 'background.paper',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          boxSizing: 'border-box',
+          backgroundColor: "background.paper",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          boxSizing: "border-box",
           p: 1,
           marginBottom: 1,
         }}
@@ -43,12 +43,12 @@ export function RailView(props) {
           flexGrow: 1,
           flexShrink: 0,
           borderRadius: 2,
-          backgroundColor: 'background.paper',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          boxSizing: 'border-box',
-          p: '6px',
+          backgroundColor: "background.paper",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          boxSizing: "border-box",
+          p: "6px",
         }}
       >
         {props.actions}
@@ -56,10 +56,10 @@ export function RailView(props) {
         {props.footer}
       </Stack>
     </Stack>
-  )
+  );
 }
 
 RailView.propTypes = {
   actions: PropTypes.node,
   footer: PropTypes.node,
-}
+};

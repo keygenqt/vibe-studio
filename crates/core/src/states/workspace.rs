@@ -4,7 +4,8 @@
 
 use anyhow::Result;
 
-use studio_states::{Store, Workspace};
+use studio_states::Store;
+use studio_states::Workspace;
 
 /// Loads the shell environment; a missing row falls back to `Default`
 /// — untouched values stay `None`.

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import PropTypes from 'prop-types'
-import { useTranslation } from 'react-i18next'
+import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Dialog,
@@ -12,11 +12,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-} from '@mui/material'
+} from "@mui/material";
 
 // generic confirm dialog for destructive actions
 export function DeleteDialog(props) {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   return (
     <Dialog open={props.open} onClose={props.onCancel}>
       <DialogTitle>{props.title}</DialogTitle>
@@ -24,13 +24,13 @@ export function DeleteDialog(props) {
         <DialogContentText>{props.text}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={props.onCancel}>{t('provider.t_cancel')}</Button>
-        <Button color={'error'} variant={'contained'} onClick={props.onConfirm}>
-          {t('provider.t_delete')}
+        <Button onClick={props.onCancel}>{t("provider.t_cancel")}</Button>
+        <Button color={"error"} variant={"contained"} onClick={props.onConfirm}>
+          {t("provider.t_delete")}
         </Button>
       </DialogActions>
     </Dialog>
-  )
+  );
 }
 
 DeleteDialog.propTypes = {
@@ -39,4 +39,4 @@ DeleteDialog.propTypes = {
   text: PropTypes.string.isRequired,
   onCancel: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
-}
+};

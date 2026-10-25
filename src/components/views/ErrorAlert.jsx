@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import PropTypes from 'prop-types'
-import { Alert, Box, Collapse, Stack } from '@mui/material'
-import ErrorRounded from '@mui/icons-material/ErrorRounded'
+import PropTypes from "prop-types";
+import { Alert, Box, Collapse, Stack } from "@mui/material";
+import ErrorRounded from "@mui/icons-material/ErrorRounded";
 
 // inline error banner, same layout as SuccessAlert; stays until dismissed
 export function ErrorAlert(props) {
@@ -14,12 +14,12 @@ export function ErrorAlert(props) {
       <Collapse in={props.open} unmountOnExit>
         <Stack spacing={2}>
           <Alert
-            severity={'error'}
+            severity={"error"}
             icon={
               <ErrorRounded
-                sx={theme => ({
+                sx={(theme) => ({
                   color:
-                    theme.palette.mode === 'light'
+                    theme.palette.mode === "light"
                       ? theme.darken(theme.palette.error.light, 0.6)
                       : theme.lighten(theme.palette.error.light, 0.6),
                 })}
@@ -34,11 +34,11 @@ export function ErrorAlert(props) {
         </Stack>
       </Collapse>
     </Box>
-  )
+  );
 }
 
 ErrorAlert.propTypes = {
   open: PropTypes.bool.isRequired,
   text: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
-}
+};

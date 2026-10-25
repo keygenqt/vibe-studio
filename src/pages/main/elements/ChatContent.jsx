@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import { Box } from '@mui/material'
+import { Box } from "@mui/material";
 
 export function ChatContent() {
   return (
@@ -12,8 +12,8 @@ export function ChatContent() {
         flexGrow: 1,
         minHeight: 0,
         borderRadius: 2,
-        backgroundColor: 'background.paper',
+        backgroundColor: "background.paper",
       }}
     />
-  )
+  );
 }

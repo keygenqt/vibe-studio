@@ -8,7 +8,9 @@ use anyhow::Result;
 use std::path::Path;
 
 pub use studio_cluster::ProviderInfo;
-pub use studio_states::{Provider, Store, Workspace};
+pub use studio_states::Provider;
+pub use studio_states::Store;
+pub use studio_states::Workspace;
 
 /// Opens (or creates) the database in the given app data directory.
 /// The file name lives in `studio-states` — the shell never knows it.

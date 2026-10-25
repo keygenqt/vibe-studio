@@ -3,4 +3,4 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['states', 'components']
  */
-export { initScrollArea } from './initScrollArea'
+export { initScrollArea } from "./initScrollArea";

@@ -3,18 +3,23 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import PropTypes from 'prop-types'
-import { Avatar, Card, Stack, Switch, Typography } from '@mui/material'
+import PropTypes from "prop-types";
+import { Avatar, Card, Stack, Switch, Typography } from "@mui/material";
 
 // selectable model row: toggled by its checkbox
 export function ModelCard(props) {
   return (
-    <Card variant={'outlined'} sx={{ borderRadius: 2 }}>
-      <Stack direction={'row'} spacing={2} alignItems={'center'} sx={{ py: 1, pr: 2, pl: 2 }}>
+    <Card variant={"outlined"} sx={{ borderRadius: 2 }}>
+      <Stack
+        direction={"row"}
+        spacing={2}
+        alignItems={"center"}
+        sx={{ py: 1, pr: 2, pl: 2 }}
+      >
         <Avatar
           sx={{
-            bgcolor: props.color ?? 'secondary.main',
-            color: 'secondary.contrastText',
+            bgcolor: props.color ?? "secondary.main",
+            color: "secondary.contrastText",
             fontWeight: 600,
           }}
         >
@@ -24,7 +29,7 @@ export function ModelCard(props) {
           <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
             {props.name}
           </Typography>
-          <Typography variant={'body2'} noWrap>
+          <Typography variant={"body2"} noWrap>
             {props.description}
           </Typography>
         </Stack>
@@ -36,7 +41,7 @@ export function ModelCard(props) {
         />
       </Stack>
     </Card>
-  )
+  );
 }
 
 ModelCard.propTypes = {
@@ -47,4 +52,4 @@ ModelCard.propTypes = {
   checked: PropTypes.bool.isRequired,
   disabled: PropTypes.bool,
   onToggle: PropTypes.func,
-}
+};

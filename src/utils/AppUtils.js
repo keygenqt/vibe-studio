@@ -10,7 +10,7 @@ export const AppUtils = {
     return model
       .split(/[:\-_/]/)
       .filter(Boolean)
-      .map(word => word.replace(/^\p{L}/u, ch => ch.toUpperCase()))
-      .join(' ')
+      .map((word) => word.replace(/^\p{L}/u, (ch) => ch.toUpperCase()))
+      .join(" ");
   },
-}
+};

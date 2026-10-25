@@ -7,4 +7,5 @@
 
 mod provider;
 
-pub use provider::{providers, ProviderInfo};
+pub use provider::ProviderInfo;
+pub use provider::providers;

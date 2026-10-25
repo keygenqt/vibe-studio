@@ -4,7 +4,10 @@
 
 use tauri::State;
 
-use studio_core::{Provider, ProviderInfo, Store, providers_load};
+use studio_core::Provider;
+use studio_core::ProviderInfo;
+use studio_core::Store;
+use studio_core::providers_load;
 
 /// Catalog of supported provider types for the add form.
 #[tauri::command]

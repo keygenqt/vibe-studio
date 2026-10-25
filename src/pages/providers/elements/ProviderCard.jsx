@@ -3,55 +3,73 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import PropTypes from 'prop-types'
-import { Avatar, Box, Card, CardActionArea, Chip, Stack, Typography } from '@mui/material'
-import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
+import PropTypes from "prop-types";
+import {
+  Avatar,
+  Box,
+  Card,
+  CardActionArea,
+  Chip,
+  Stack,
+  Typography,
+} from "@mui/material";
+import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 
 export function ProviderCard(props) {
-  const { provider } = props
+  const { provider } = props;
   return (
-    <Card variant={'outlined'} sx={{ borderRadius: 2, flexShrink: 0 }}>
+    <Card variant={"outlined"} sx={{ borderRadius: 2, flexShrink: 0 }}>
       <CardActionArea onClick={props.onConfigure}>
-        <Stack direction={'row'} spacing={2} alignItems={'center'} sx={{ p: 2 }}>
+        <Stack
+          direction={"row"}
+          spacing={2}
+          alignItems={"center"}
+          sx={{ p: 2 }}
+        >
           <Avatar
             sx={{
-              bgcolor: props.color ?? 'secondary.main',
-              color: 'secondary.contrastText',
+              bgcolor: props.color ?? "secondary.main",
+              color: "secondary.contrastText",
               fontWeight: 600,
             }}
           >
-            <Box component={'span'} sx={{ position: 'relative', top: '1px' }}>
+            <Box component={"span"} sx={{ position: "relative", top: "1px" }}>
               {provider.name.charAt(0)}
             </Box>
           </Avatar>
           <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
             <Stack
-              direction={'row'}
+              direction={"row"}
               spacing={1}
               rowGap={0.5}
-              alignItems={'center'}
-              flexWrap={'wrap'}
+              alignItems={"center"}
+              flexWrap={"wrap"}
             >
               <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
                 {provider.name}
               </Typography>
-              {provider.name.toLowerCase() !== provider.provider.toLowerCase() && (
+              {provider.name.toLowerCase() !==
+                provider.provider.toLowerCase() && (
                 <Chip
-                  size={'small'}
+                  size={"small"}
                   label={provider.provider}
-                  sx={{ backgroundColor: 'action.hover', height: 24 }}
+                  sx={{ backgroundColor: "action.hover", height: 24 }}
                 />
               )}
             </Stack>
-            <Typography variant={'body2'} noWrap sx={{ fontFamily: 'monospace' }}>
+            <Typography
+              variant={"body2"}
+              noWrap
+              sx={{ fontFamily: "monospace" }}
+            >
               {provider.host}
             </Typography>
           </Stack>
-          <ChevronRightOutlined color={'action'} />
+          <ChevronRightOutlined color={"action"} />
         </Stack>
       </CardActionArea>
     </Card>
-  )
+  );
 }
 
 ProviderCard.propTypes = {
@@ -62,4 +80,4 @@ ProviderCard.propTypes = {
   }).isRequired,
   color: PropTypes.string,
   onConfigure: PropTypes.func.isRequired,
-}
+};
