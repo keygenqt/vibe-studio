@@ -8,6 +8,9 @@
 //! # Submodules
 //!
 //! - `api` — the public surface: everything a UI shell may touch.
+//! - `models` — `models_load` / `model_load` / `model_save` /
+//!   `models_sync` over the store: the provider model catalog with
+//!   sync-owned facts and user-owned config.
 //! - `provider` — `providers_load` / `provider_save` /
 //!   `provider_delete` over the store, validated against the
 //!   `studio-cluster` catalog.
@@ -17,6 +20,7 @@
 //!   store: the shell environment, window and panel sizes, theme,
 //!   locale.
 
+pub(crate) mod models;
 pub(crate) mod provider;
 pub(crate) mod store;
 pub(crate) mod workspace;

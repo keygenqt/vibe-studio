@@ -50,6 +50,7 @@ export const cnLocalization = {
       t_validation_url: '必须是有效的 URL。',
     },
     models: {
+      t_saved: '模型已保存。',
       t_subtitle: '选择此提供商可用的模型。',
       t_badge_vision: '理解图像',
       t_badge_thinking: '推理（thinking）',
@@ -61,6 +62,7 @@ export const cnLocalization = {
       t_group_selected: '已选择',
     },
     model: {
+      t_saved: '模型已保存。',
       t_name: '名称',
       t_system_prompt: '系统提示词',
       t_parameters: '参数',
@@ -74,6 +76,8 @@ export const cnLocalization = {
     },
     backend: {
       'Name must not be blank': '名称不能为空。',
+      'Display name must not be blank': '名称不能为空。',
+      'System prompt must not be blank': '系统提示词不能为空。',
     },
   },
 }

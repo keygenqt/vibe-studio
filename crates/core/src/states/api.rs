@@ -8,6 +8,8 @@ use anyhow::Result;
 use std::path::Path;
 
 pub use studio_cluster::ProviderInfo;
+pub use studio_states::Model;
+pub use studio_states::ModelConfig;
 pub use studio_states::Provider;
 pub use studio_states::Store;
 pub use studio_states::Workspace;
@@ -49,4 +51,27 @@ pub fn provider_save(store: &Store, provider: &Provider) -> Result<Provider> {
 /// Deletes the provider by id.
 pub fn provider_delete(store: &Store, id: i32) -> Result<()> {
     super::provider::provider_delete(store, id)
+}
+
+/// All models of a provider, ordered by name; a store error yields an
+/// empty list.
+pub fn models_load(store: &Store, provider_id: i32) -> Vec<Model> {
+    super::models::models_load(store, provider_id)
+}
+
+/// Loads one model by id.
+pub fn model_load(store: &Store, id: i32) -> Result<Model> {
+    super::models::model_load(store, id)
+}
+
+/// Clamps the user-owned config and persists it. Returns the stored
+/// row.
+pub fn model_save(store: &Store, id: i32, config: &ModelConfig) -> Result<Model> {
+    super::models::model_save(store, id, config)
+}
+
+/// Syncs the provider's catalog with the live host and applies the
+/// selection. Returns the fresh model list of the provider.
+pub async fn models_sync(store: &Store, provider_id: i32, checked: Vec<String>) -> Result<Vec<Model>> {
+    super::models::models_sync(store, provider_id, checked).await
 }

@@ -7,10 +7,13 @@
 //!
 //! # Submodules
 //!
+//! - `models` — the model catalog commands: list, load, config save
+//!   and the network sync.
 //! - `provider` — the provider catalog and CRUD commands.
 //! - `view` — the single `event-state` channel to the UI.
 //! - `workspace` — the shell environment commands.
 
+pub(crate) mod models;
 pub(crate) mod provider;
 pub(crate) mod view;
 pub(crate) mod workspace;

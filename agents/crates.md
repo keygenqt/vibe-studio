@@ -29,6 +29,9 @@ Rules of the Rust workspace.
 - `api.rs` is the single place controlling the interface: public
   functions with a doc comment, each delegating one line. Types
   owned by the other crates are re-exported here.
+- Synced state has two owners: provider-reported facts are
+  overwritten by sync, user-owned values survive it; a failed fetch
+  mutates nothing.
 
 ## Studio States
 

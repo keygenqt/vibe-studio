@@ -50,6 +50,7 @@ export const ruLocalization = {
       t_validation_url: 'Должен быть корректным URL.',
     },
     models: {
+      t_saved: 'Модели сохранены.',
       t_subtitle: 'Выберите модели, доступные для этого провайдера.',
       t_badge_vision: 'Понимает изображения',
       t_badge_thinking: 'Рассуждения (thinking)',
@@ -61,6 +62,7 @@ export const ruLocalization = {
       t_group_selected: 'Выбранные',
     },
     model: {
+      t_saved: 'Модель сохранена.',
       t_name: 'Название',
       t_system_prompt: 'Системный промпт',
       t_parameters: 'Параметры',
@@ -74,6 +76,8 @@ export const ruLocalization = {
     },
     backend: {
       'Name must not be blank': 'Название не должно быть пустым.',
+      'Display name must not be blank': 'Название не должно быть пустым.',
+      'System prompt must not be blank': 'Системный промпт не должен быть пустым.',
     },
   },
 }

@@ -49,6 +49,15 @@ impl Store {
             .load(&mut *conn)?)
     }
 
+    /// Loads one provider by id.
+    pub fn provider_load(&self, id: i32) -> Result<Provider> {
+        let mut conn = self.lock();
+        Ok(providers::table
+            .find(id)
+            .select(Provider::as_select())
+            .first(&mut *conn)?)
+    }
+
     /// Inserts a new provider or updates the one with the given id.
     pub fn provider_save(&self, id: Option<i32>, provider: &ProviderNew) -> Result<Provider> {
         let mut conn = self.lock();

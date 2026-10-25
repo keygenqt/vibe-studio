@@ -50,6 +50,7 @@ export const enLocalization = {
       t_validation_url: 'Must be a valid URL.',
     },
     models: {
+      t_saved: 'Models saved.',
       t_subtitle: 'Select the models available for this provider.',
       t_badge_vision: 'Understands images',
       t_badge_thinking: 'Reasoning (thinking)',
@@ -61,6 +62,7 @@ export const enLocalization = {
       t_group_selected: 'Selected',
     },
     model: {
+      t_saved: 'Model saved.',
       t_name: 'Name',
       t_system_prompt: 'System prompt',
       t_parameters: 'Parameters',
@@ -74,6 +76,8 @@ export const enLocalization = {
     },
     backend: {
       'Name must not be blank': 'Name must not be blank.',
+      'Display name must not be blank': 'Display name must not be blank.',
+      'System prompt must not be blank': 'System prompt must not be blank.',
     },
   },
 }

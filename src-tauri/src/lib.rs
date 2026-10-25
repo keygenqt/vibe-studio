@@ -68,6 +68,10 @@ pub fn run() {
             states::react::provider::providers_get,
             states::react::provider::provider_save,
             states::react::provider::provider_delete,
+            states::react::models::models_get,
+            states::react::models::model_get,
+            states::react::models::model_save,
+            states::react::models::models_sync,
             // tools
             tools::app_info::app_info,
             tools::models::provider_models,

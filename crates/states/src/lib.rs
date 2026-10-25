@@ -13,6 +13,9 @@ pub mod constants;
 pub(crate) mod state;
 pub(crate) mod store;
 
+pub use state::models::Model;
+pub use state::models::ModelConfig;
+pub use state::models::ModelFacts;
 pub use state::provider::Provider;
 pub use state::provider::ProviderNew;
 pub use state::workspace::Workspace;
