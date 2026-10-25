@@ -5,7 +5,12 @@
 //! Vibe Studio cluster — provider catalog and LLM cluster features
 //! over `vibe-cluster`.
 
+mod models;
 mod provider;
 
 pub use provider::ProviderInfo;
+pub use vibe_cluster::ModelInfo;
+
+pub use models::fetch_models;
+pub use provider::provider_by_kind;
 pub use provider::providers;

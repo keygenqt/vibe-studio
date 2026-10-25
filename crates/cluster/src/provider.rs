@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['facts']
 
+use vibe_cluster::Provider;
+
 /// Metadata of a provider type the cluster can serve.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ProviderInfo {
@@ -11,50 +13,50 @@ pub struct ProviderInfo {
     pub name: &'static str,
     /// Host prefilled by the add form; None = the user types it.
     pub default_host: Option<&'static str>,
-    /// Cloud providers require an api key, local ones do not.
-    pub cloud: bool,
     /// Brand color for UI avatars and accents.
     pub color: &'static str,
 }
 
+/// Catalog facts of a provider: kind id, display title, default host
+/// and brand color. The single place mapping variants to studio facts.
+fn catalog(provider: &Provider) -> (&'static str, &'static str, &'static str, &'static str) {
+    match provider {
+        Provider::Ollama => ("ollama", "Ollama", "http://localhost:11434", "#6b7280"),
+        Provider::DeepSeek => ("deepseek", "DeepSeek", "https://api.deepseek.com/v1", "#4D6BFE"),
+        Provider::Qwen => (
+            "qwen",
+            "Qwen",
+            "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+            "#8B5CF6",
+        ),
+        Provider::Moonshot => ("moonshot", "Moonshot", "https://api.moonshot.cn/v1", "#1f2937"),
+        Provider::Zhipu => ("zhipu", "Zhipu", "https://open.bigmodel.cn/api/paas/v4", "#3859FF"),
+    }
+}
+
 /// Catalog of supported provider types — the single source for the
-/// add form and for validation in core.
+/// add form and for validation in core. Built over vibe-cluster's
+/// provider list: a new provider variant fails to compile here until
+/// it gets its kind, name, host and color.
 pub fn providers() -> Vec<ProviderInfo> {
-    vec![
-        ProviderInfo {
-            provider: "ollama",
-            name: "Ollama",
-            default_host: Some("http://localhost:11434"),
-            cloud: false,
-            color: "#6b7280",
-        },
-        ProviderInfo {
-            provider: "deepseek",
-            name: "DeepSeek",
-            default_host: Some("https://api.deepseek.com/v1"),
-            cloud: true,
-            color: "#4D6BFE",
-        },
-        ProviderInfo {
-            provider: "qwen",
-            name: "Qwen",
-            default_host: Some("https://dashscope-intl.aliyuncs.com/compatible-mode/v1"),
-            cloud: true,
-            color: "#8B5CF6",
-        },
-        ProviderInfo {
-            provider: "moonshot",
-            name: "Moonshot",
-            default_host: Some("https://api.moonshot.cn/v1"),
-            cloud: true,
-            color: "#1f2937",
-        },
-        ProviderInfo {
-            provider: "zhipu",
-            name: "Zhipu",
-            default_host: Some("https://open.bigmodel.cn/api/paas/v4"),
-            cloud: true,
-            color: "#3859FF",
-        },
-    ]
+    Provider::ALL
+        .iter()
+        .map(|provider| {
+            let (kind, name, host, color) = catalog(provider);
+            ProviderInfo {
+                provider: kind,
+                name,
+                default_host: Some(host),
+                color,
+            }
+        })
+        .collect()
+}
+
+/// The vibe-cluster provider for a catalog kind id; None = unknown kind.
+pub fn provider_by_kind(kind: &str) -> Option<Provider> {
+    Provider::ALL
+        .iter()
+        .find(|provider| catalog(provider).0 == kind)
+        .copied()
 }

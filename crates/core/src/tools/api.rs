@@ -3,13 +3,11 @@
 // TAGS: ['theme']
 
 //! Tool features: platform facts with no state behind them.
-//!
-//! Exposed surface: `get_system_theme`, `resolve_theme`,
-//! `listen_system_theme`, `ThemeChoice`.
 
 use anyhow::Result;
 
 pub use super::theme::ThemeChoice;
+pub use studio_cluster::ModelInfo;
 
 /// Detects the OS theme. Falls back to Light when the OS does not
 /// specify one.
@@ -27,4 +25,15 @@ pub fn resolve_theme(choice: ThemeChoice) -> ThemeChoice {
 /// background watcher thread that lives for the app's lifetime.
 pub fn listen_system_theme(on_change: impl Fn(ThemeChoice) + Send + 'static) -> Result<()> {
     super::theme::listen_system_theme(on_change)
+}
+
+/// Fetches the live model catalog of a provider host. The host is not
+/// trusted: trimmed, blank is an error. Embedding models are filtered
+/// out on the cluster layer.
+pub async fn provider_models(kind: &str, host: &str, api_key: Option<&str>) -> Result<Vec<ModelInfo>> {
+    let host = host.trim();
+    if host.is_empty() {
+        anyhow::bail!("Host must not be blank.");
+    }
+    Ok(studio_cluster::fetch_models(kind, host, api_key).await?)
 }

@@ -3,23 +3,27 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
-import PropTypes from "prop-types";
-import { Avatar, Card, Stack, Switch, Typography } from "@mui/material";
+import PropTypes from 'prop-types'
+import { useTranslation } from 'react-i18next'
+import { Avatar, Card, Stack, Switch, Typography } from '@mui/material'
 
 // selectable model row: toggled by its checkbox
 export function ModelCard(props) {
+  const { t } = useTranslation()
+  // description line: facts joined by bullets, like other descriptions
+  const facts = [
+    props.description,
+    props.vision === true && t('models.t_badge_vision'),
+    props.thinking === true && t('models.t_badge_thinking'),
+    props.tools === true && t('models.t_badge_tools'),
+  ].filter(Boolean)
   return (
-    <Card variant={"outlined"} sx={{ borderRadius: 2 }}>
-      <Stack
-        direction={"row"}
-        spacing={2}
-        alignItems={"center"}
-        sx={{ py: 1, pr: 2, pl: 2 }}
-      >
+    <Card variant={'outlined'} sx={{ borderRadius: 2 }}>
+      <Stack direction={'row'} spacing={2} alignItems={'center'} sx={{ py: 1, pr: 2, pl: 2 }}>
         <Avatar
           sx={{
-            bgcolor: props.color ?? "secondary.main",
-            color: "secondary.contrastText",
+            bgcolor: props.color ?? 'secondary.main',
+            color: 'secondary.contrastText',
             fontWeight: 600,
           }}
         >
@@ -29,9 +33,11 @@ export function ModelCard(props) {
           <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
             {props.name}
           </Typography>
-          <Typography variant={"body2"} noWrap>
-            {props.description}
-          </Typography>
+          {facts.length > 0 && (
+            <Typography variant={'body2'} noWrap>
+              {facts.join(' · ')}
+            </Typography>
+          )}
         </Stack>
         <Switch
           checked={props.checked}
@@ -41,15 +47,18 @@ export function ModelCard(props) {
         />
       </Stack>
     </Card>
-  );
+  )
 }
 
 ModelCard.propTypes = {
-  avatar: PropTypes.string.isRequired,
+  avatar: PropTypes.string,
   name: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired,
+  description: PropTypes.string,
+  vision: PropTypes.bool,
+  thinking: PropTypes.bool,
+  tools: PropTypes.bool,
   color: PropTypes.string,
   checked: PropTypes.bool.isRequired,
   disabled: PropTypes.bool,
   onToggle: PropTypes.func,
-};
+}

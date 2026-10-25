@@ -20,7 +20,7 @@ pub(crate) fn providers_load(store: &Store) -> Vec<Provider> {
 
 /// Validates against the cluster catalog, then inserts or updates.
 /// The UI is not trusted: strings are trimmed, the kind is normalized
-/// to the catalog id, the api key is enforced per cloud flag.
+/// to the catalog id, the api key is trimmed and stored as given.
 pub(crate) fn provider_save(store: &Store, provider: &Provider) -> Result<Provider> {
     let info = studio_cluster::providers()
         .into_iter()
@@ -36,14 +36,12 @@ pub(crate) fn provider_save(store: &Store, provider: &Provider) -> Result<Provid
         bail!("Host must not be blank.");
     }
 
-    let api_key = if info.cloud {
-        match provider.api_key.as_deref().map(str::trim) {
-            Some(key) if !key.is_empty() => Some(key.to_string()),
-            _ => bail!("{} requires an API key.", info.name),
-        }
-    } else {
-        None
-    };
+    let api_key = provider
+        .api_key
+        .as_deref()
+        .map(str::trim)
+        .filter(|key| !key.is_empty())
+        .map(String::from);
 
     let id = if provider.id > NEW_ID { Some(provider.id) } else { None };
     store.provider_save(

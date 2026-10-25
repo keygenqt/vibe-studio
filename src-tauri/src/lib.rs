@@ -70,6 +70,7 @@ pub fn run() {
             states::react::provider::provider_delete,
             // tools
             tools::app_info::app_info,
+            tools::models::provider_models,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

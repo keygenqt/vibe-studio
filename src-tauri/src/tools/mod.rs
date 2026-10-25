@@ -7,5 +7,8 @@
 //! # Submodules
 //!
 //! - `app_info` — `app_info` command: version and debug flag.
+//! - `models` — `provider_models` command: live provider model
+//!   catalog over `studio-core`.
 
 pub(crate) mod app_info;
+pub(crate) mod models;
