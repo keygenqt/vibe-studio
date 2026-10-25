@@ -44,14 +44,14 @@ pub fn providers() -> Vec<ProviderInfo> {
         },
         ProviderInfo {
             provider: "moonshot",
-            name: "Kimi",
+            name: "Moonshot",
             default_host: Some("https://api.moonshot.cn/v1"),
             cloud: true,
             color: "#1f2937",
         },
         ProviderInfo {
             provider: "zhipu",
-            name: "GLM",
+            name: "Zhipu",
             default_host: Some("https://open.bigmodel.cn/api/paas/v4"),
             cloud: true,
             color: "#3859FF",

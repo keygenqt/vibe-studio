@@ -5,33 +5,44 @@
  */
 import PropTypes from 'prop-types'
 import * as React from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
-import {
-  Box,
-  Button,
-  CircularProgress,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Box, Button, CircularProgress, MenuItem, Stack, TextField } from '@mui/material'
 import DoneOutlined from '@mui/icons-material/DoneOutlined'
 
+import { ErrorAlert, SuccessAlert } from '../../../components/views'
+import { AppNav } from '../../../utils'
+import { AppRoutes } from '../../../constants/AppRoutes'
+import { DeleteDialog } from './DeleteDialog'
+import { formSuccessClear, formSuccessSet } from '../../../store/impl/appState'
 import { Methods } from '../../../modules'
 
 export function ProviderForm(props) {
   const { t } = useTranslation()
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const formSuccess = useSelector(state => state.appState.formSuccess)
   const isEdit = Boolean(props.isEdit)
   const [catalog, setCatalog] = React.useState(null)
+  const [openDelete, setOpenDelete] = React.useState(false)
+  const [savedOpen, setSavedOpen] = React.useState(false)
 
   React.useEffect(() => {
+    // provider kinds and prefill defaults for the form
     Methods.providers_catalog().then(setCatalog)
+    // success handoff from before the mode switch: show once and clear
+    if (formSuccess) {
+      setSavedOpen(true)
+      dispatch(formSuccessClear())
+    }
   }, [])
 
+  // the form lives on the catalog: nothing to render before it arrives;
+  // edit keeps the stored kind, add starts from the first entry
   if (!catalog) return null
-  // edit mode keeps the stored kind; add mode starts from the first catalog entry
   const current = catalog.find(info => info.provider === props.provider) ?? catalog[0]
 
   return (
@@ -44,11 +55,10 @@ export function ProviderForm(props) {
         apiKey: props.apiKey ?? '',
       }}
       validationSchema={Yup.object().shape({
-        name: Yup.string().required('Must not be null and not blank.'),
+        name: Yup.string().trim().required(t('settings.t_validation_required')),
         host: Yup.string()
-          .required('Must not be null and not blank.')
-          // any scheme + host: Yup's .url() rejects localhost and IPs
-          .test('host', 'Must be a valid URL.', value => {
+          .required(t('settings.t_validation_required'))
+          .test('host', t('settings.t_validation_url'), value => {
             try {
               return Boolean(new URL(value).hostname)
             } catch {
@@ -57,17 +67,35 @@ export function ProviderForm(props) {
           }),
         apiKey: Yup.string().when('provider', {
           is: provider => catalog.find(info => info.provider === provider)?.cloud ?? false,
-          then: schema => schema.required('Must not be null and not blank.'),
+          then: schema => schema.required(t('settings.t_validation_required')),
           otherwise: schema => schema.notRequired(),
         }),
       })}
       onSubmit={async (values, { setErrors, setSubmitting }) => {
         setErrors({ submit: null })
+        setSavedOpen(false)
         try {
           // commit goes through Methods; the Rust answer is the truth
-          await props.onSubmit?.(values)
+          const saved = await Methods.provider_save({
+            // wire format is snake_case, as the Rust struct expects
+            id: props.id ?? 0,
+            name: values.name,
+            provider: values.provider,
+            host: values.host,
+            api_key: values.apiKey,
+          })
+          setSavedOpen(true)
+          // add mode: hand the row to the page over redux and become edit mode
+          if (!isEdit) {
+            dispatch(formSuccessSet(saved))
+            AppNav.openWithReplace(navigate, AppRoutes.provider(saved.id))
+          }
         } catch (error) {
-          setErrors({ submit: error.message ?? String(error) })
+          // the Rust message is the i18n key: lookup without the trailing dot,
+          // unknown messages fall back to the raw string
+          const message = error.message ?? String(error)
+          const key = `backend.${message.replace(/\.$/, '')}`
+          setErrors({ submit: t(key) === key ? message : t(key) })
         } finally {
           setSubmitting(false)
         }
@@ -81,23 +109,35 @@ export function ProviderForm(props) {
         handleBlur,
         handleChange,
         handleSubmit,
+        setErrors,
         setFieldValue,
       }) => {
+        // kind lookup, shared by the api key rule and the prefill
         const infoOf = kind => catalog.find(info => info.provider === kind)
-        const onProviderChange = e => {
-          const info = infoOf(e.target.value)
-          // prefill the default host; keep a custom one
-          if (!values.host || values.host === (infoOf(values.provider)?.default_host ?? '')) {
-            setFieldValue('host', info.default_host ?? '')
-          }
-          // prefill the provider title; keep a custom one
-          if (!values.name || values.name === (infoOf(values.provider)?.name ?? '')) {
-            setFieldValue('name', info.name)
-          }
-          handleChange(e)
-        }
+        // the provider form
         return (
           <Box component={'form'} noValidate onSubmit={handleSubmit}>
+            <DeleteDialog
+              open={openDelete}
+              title={t('settings.t_provider_delete_title')}
+              text={t('settings.t_provider_delete_text')}
+              onCancel={() => setOpenDelete(false)}
+              onConfirm={() => {
+                Methods.provider_delete(props.id).then(() =>
+                  AppNav.openWithReplace(navigate, AppRoutes.settingsProviders())
+                )
+              }}
+            />
+            <SuccessAlert
+              open={savedOpen}
+              text={t('settings.t_provider_saved')}
+              onClose={() => setSavedOpen(false)}
+            />
+            <ErrorAlert
+              open={Boolean(errors.submit)}
+              text={errors.submit ?? ''}
+              onClose={() => setErrors({ submit: null })}
+            />
             <Stack spacing={2}>
               {!isEdit && (
                 <TextField
@@ -108,7 +148,19 @@ export function ProviderForm(props) {
                   variant={'filled'}
                   value={values.provider}
                   onBlur={handleBlur}
-                  onChange={onProviderChange}
+                  onChange={e => {
+                    const prev = infoOf(values.provider)
+                    const next = infoOf(e.target.value)
+                    // overwrite the previous kind's defaults, keep custom values
+                    const prefill = (field, oldDefault, newDefault) => {
+                      if (!values[field] || values[field] === (oldDefault ?? '')) {
+                        setFieldValue(field, newDefault)
+                      }
+                    }
+                    prefill('host', prev?.default_host, next?.default_host ?? '')
+                    prefill('name', prev?.name, next?.name)
+                    handleChange(e)
+                  }}
                 >
                   {catalog.map(info => (
                     <MenuItem key={`provider-${info.provider}`} value={info.provider}>
@@ -161,14 +213,9 @@ export function ProviderForm(props) {
                   slotProps={{ htmlInput: { autoComplete: 'off' } }}
                 />
               )}
-              {errors.submit && (
-                <Typography variant={'caption'} color={'error'}>
-                  {errors.submit}
-                </Typography>
-              )}
               <Stack direction={'row'} spacing={2}>
-                {isEdit && props.onDelete && (
-                  <Button variant={'outlined'} color={'error'} onClick={props.onDelete}>
+                {isEdit && (
+                  <Button variant={'outlined'} color={'error'} onClick={() => setOpenDelete(true)}>
                     {t('settings.t_delete')}
                   </Button>
                 )}
@@ -176,6 +223,7 @@ export function ProviderForm(props) {
                 <Button
                   type={'submit'}
                   variant={'contained'}
+                  color={'success'}
                   size={'large'}
                   disabled={Boolean(isSubmitting)}
                   startIcon={
@@ -200,11 +248,10 @@ export function ProviderForm(props) {
 }
 
 ProviderForm.propTypes = {
+  id: PropTypes.number,
   isEdit: PropTypes.bool,
   name: PropTypes.string,
   provider: PropTypes.string,
   host: PropTypes.string,
   apiKey: PropTypes.string,
-  onDelete: PropTypes.func,
-  onSubmit: PropTypes.func,
 }

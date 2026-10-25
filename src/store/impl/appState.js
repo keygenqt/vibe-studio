@@ -9,8 +9,20 @@ import { createSlice } from '@reduxjs/toolkit'
 // WorkspaceProvider mirrors it, this store never holds a copy.
 export const appStateSlice = createSlice({
   name: 'appState',
-  initialState: {},
-  reducers: {},
+  initialState: {
+    // transient success handoff between pages, cleared right after reading
+    formSuccess: null,
+  },
+  reducers: {
+    formSuccessSet: (state, action) => {
+      state.formSuccess = action.payload
+    },
+    formSuccessClear: state => {
+      state.formSuccess = null
+    },
+  },
 })
+
+export const { formSuccessSet, formSuccessClear } = appStateSlice.actions
 
 export default appStateSlice.reducer

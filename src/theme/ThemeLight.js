@@ -6,7 +6,7 @@
 import { createTheme } from '@mui/material/styles'
 import { typography } from './elements/typography'
 import { components } from './elements/components'
-import { DURATION_DEFAULT } from '../constants/AppDefault'
+import { DURATION_AUTO_HIDE, DURATION_DEFAULT } from '../constants/AppDefault'
 
 export const ThemeLight = createTheme({
   palette: {
@@ -20,7 +20,7 @@ export const ThemeLight = createTheme({
     panel: { main: 'rgba(0, 0, 0, 0.04)' },
   },
   transitions: {
-    duration: { standard: DURATION_DEFAULT },
+    duration: { standard: DURATION_DEFAULT, autoHide: DURATION_AUTO_HIDE },
   },
   typography: typography,
   components: components,

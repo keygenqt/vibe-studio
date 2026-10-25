@@ -24,6 +24,9 @@ export const cnLocalization = {
       t_provider_add: '添加提供商',
       t_provider: '提供商',
       t_provider_subtitle: '管理连接与可用模型。',
+      t_provider_saved: '提供商已保存。',
+      t_validation_required: '不能为空。',
+      t_validation_url: '必须是有效的 URL。',
       t_provider_delete_title: '删除提供商？',
       t_provider_delete_text: '提供商及其模型将被删除。此操作无法撤销。',
       t_name: '名称',
@@ -43,6 +46,9 @@ export const cnLocalization = {
     },
     error: {
       t_text: '嗯，此页面不存在。',
+    },
+    backend: {
+      'Name must not be blank': '名称不能为空。',
     },
   },
 }

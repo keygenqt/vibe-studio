@@ -29,7 +29,7 @@ export function ProviderCard(props) {
             <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
               {provider.name}
             </Typography>
-            {provider.name !== provider.provider && (
+            {provider.name.toLowerCase() !== provider.provider.toLowerCase() && (
               <Chip
                 size={'small'}
                 label={provider.provider}

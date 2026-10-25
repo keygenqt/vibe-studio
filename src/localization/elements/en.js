@@ -24,6 +24,9 @@ export const enLocalization = {
       t_provider_add: 'Connect another provider',
       t_provider: 'Provider',
       t_provider_subtitle: 'Manage the connection and available models.',
+      t_provider_saved: 'Provider saved.',
+      t_validation_required: 'Must not be empty.',
+      t_validation_url: 'Must be a valid URL.',
       t_provider_delete_title: 'Delete provider?',
       t_provider_delete_text:
         'The provider and its models will be removed. This action cannot be undone.',
@@ -44,6 +47,9 @@ export const enLocalization = {
     },
     error: {
       t_text: 'Hmm, this page does not exist.',
+    },
+    backend: {
+      'Name must not be blank': 'Name must not be blank.',
     },
   },
 }

@@ -17,5 +17,6 @@ export const SIDE_BAR_SIZE_MIN = 200
 export const SIDE_BAR_SIZE_MAX = 480
 export const SIDE_BAR_SIZE_DEFAULT = 260
 
-// One tempo for shell motion: MUI standard transitions and the page fade.
+// animation timing vs how long a success banner stays visible
 export const DURATION_DEFAULT = 150
+export const DURATION_AUTO_HIDE = 4000

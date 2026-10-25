@@ -25,6 +25,9 @@ export const ruLocalization = {
       t_provider_add: 'Добавить провайдера',
       t_provider: 'Провайдер',
       t_provider_subtitle: 'Управление подключением и доступными моделями.',
+      t_provider_saved: 'Провайдер сохранён.',
+      t_validation_required: 'Не должно быть пустым.',
+      t_validation_url: 'Должен быть корректным URL.',
       t_provider_delete_title: 'Удалить провайдера?',
       t_provider_delete_text: 'Провайдер и его модели будут удалены. Действие необратимо.',
       t_name: 'Название',
@@ -44,6 +47,9 @@ export const ruLocalization = {
     },
     error: {
       t_text: 'Хм, такой страницы не существует.',
+    },
+    backend: {
+      'Name must not be blank': 'Название не должно быть пустым.',
     },
   },
 }
