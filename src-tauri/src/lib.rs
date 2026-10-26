@@ -6,10 +6,11 @@ use tauri::Emitter;
 use tauri::Manager;
 
 use studio_core::Store;
+use studio_core::WorkspaceData;
 use studio_core::listen_system_theme;
 
-mod states;
-mod tools;
+mod commands;
+mod window;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -19,7 +20,8 @@ pub fn run() {
         .plugin(tauri_plugin_log::Builder::new().build())
         .setup(|app| {
             // Restore state from disk — single source of truth
-            let store = states::storage::store(app.handle())?;
+            let dir = app.path().app_data_dir()?;
+            let store = studio_core::store_open(&dir)?;
             app.manage(store);
 
             // The window is built by hand (`create: false` in the
@@ -35,7 +37,7 @@ pub fn run() {
 
             // Window size from the workspace.
             let store = app.state::<Store>();
-            states::tauri::workspace::restore(&window, &store);
+            window::restore(&window, &store);
 
             // OS theme changed — the system theme is a platform fact
             // on its own channel; the UI resolves it against the
@@ -53,28 +55,24 @@ pub fn run() {
             window.on_window_event(move |event| {
                 if let tauri::WindowEvent::CloseRequested { .. } = event {
                     let store = handle.state::<Store>();
-                    let _ = states::tauri::workspace::save(&closing, &store);
+                    let _ = window::save(&closing, &store);
                 }
             });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            // states
-            states::react::workspace::workspace_get,
-            states::react::workspace::workspace_set_chat_input_size,
-            states::react::workspace::workspace_set_side_bar,
-            states::react::workspace::workspace_set_theme,
-            states::react::provider::providers_catalog,
-            states::react::provider::providers_get,
-            states::react::provider::provider_save,
-            states::react::provider::provider_delete,
-            states::react::models::models_get,
-            states::react::models::model_get,
-            states::react::models::model_save,
-            states::react::models::models_sync,
-            // tools
-            tools::app_info::app_info,
-            tools::models::provider_models,
+            commands::get_workspace,
+            commands::save_workspace,
+            commands::get_providers_catalog,
+            commands::get_providers,
+            commands::save_provider,
+            commands::delete_provider,
+            commands::get_provider_models,
+            commands::get_provider_model,
+            commands::save_provider_model,
+            commands::save_provider_models,
+            commands::get_app_info,
+            commands::get_provider_models_by_type,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
@@ -83,8 +81,18 @@ pub fn run() {
             if let tauri::RunEvent::ExitRequested { .. } = event {
                 if let Some(window) = app.get_webview_window("main") {
                     let store = app.state::<Store>();
-                    let _ = states::tauri::workspace::save(&window, &store);
+                    let _ = window::save(&window, &store);
                 }
             }
         });
+}
+
+/// Single state channel: any mutation ends with this emit.
+/// The emit is spawned: it waits for the main thread, so calling it
+/// from the main thread (command / window event) deadlocks.
+pub(crate) fn emit_state(window: &tauri::WebviewWindow, workspace: WorkspaceData) {
+    let window = window.clone();
+    tauri::async_runtime::spawn(async move {
+        let _ = window.emit("event-state", workspace);
+    });
 }

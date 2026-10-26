@@ -75,8 +75,9 @@ export function ProviderForm(props) {
         try {
           // commit goes through Methods; the Rust answer is the truth
           const saved = await Methods.provider_save({
-            // wire format is snake_case, as the Rust struct expects
-            id: props.id ?? 0,
+            // wire format is snake_case, as the Rust struct expects;
+            // id = null inserts, otherwise updates
+            id: props.id || null,
             name: values.name,
             provider: values.provider,
             host: values.host,

@@ -7,12 +7,12 @@ use tauri::Manager;
 use tauri::WebviewWindow;
 
 use studio_core::Store;
-use studio_core::workspace_load;
-use studio_core::workspace_save;
+use studio_core::get_workspace;
+use studio_core::save_workspace;
 
 /// Applies the saved window size, clamped to the window minimum.
 pub fn restore(window: &WebviewWindow, store: &Store) {
-    let workspace = workspace_load(store);
+    let workspace = get_workspace(store);
     if let (Some(width), Some(height)) = (workspace.window_width, workspace.window_height) {
         // negative values cannot appear — saved from clamped u32
         let (width, height) = clamp(window, width.max(0) as u32, height.max(0) as u32);
@@ -30,10 +30,10 @@ pub fn save(window: &WebviewWindow, store: &Store) -> Result<(), String> {
     let size = window.inner_size().map_err(|e| e.to_string())?;
     let logical = size.to_logical::<u32>(scale);
     let (width, height) = clamp(window, logical.width, logical.height);
-    let mut workspace = workspace_load(store);
+    let mut workspace = get_workspace(store);
     workspace.window_width = Some(width as i32);
     workspace.window_height = Some(height as i32);
-    workspace_save(store, &workspace).map_err(|e| e.to_string())
+    save_workspace(store, &workspace).map(|_| ()).map_err(|e| e.to_string())
 }
 
 /// Clamps the logical size to the window minimum — the single

@@ -10,12 +10,9 @@ live here.
 - The layer holds no mirror of the state: commands read and write
   the Store directly; Rust is the single source of truth, JS gets
   copies for rendering only.
-- Any mutation ends with an event to the UI (`event-state`); separate
-  platform facts go over their own channels (`event-theme` — the
-  system theme).
 - Command errors are `String`.
-- The layout mirrors core: `states/` — state, `tools/` — facts with
-  no state behind them. Module conventions — `agents/crates.md`.
-- Inside `states/` two consumers are separated: `react/` — commands
-  for JS and the event channel; `tauri/` — Tauri features with no
-  JS surface (window lifecycle).
+- The layout is flat: `commands.rs` — the JS surface, one command
+  per core function and named after it; `window.rs` — Tauri
+  features with no JS surface (window lifecycle); `lib.rs` — the
+  app shell: `run()`, the store bootstrap, the `event-state`
+  channel.

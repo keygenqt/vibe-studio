@@ -23,23 +23,23 @@ export const provider = {
     (cache.catalog ?? []).find(info => info.provider === kind) ?? null,
   // catalog: supported provider types for the add form
   providers_catalog: async function () {
-    cache.catalog = await invoke('providers_catalog', {})
+    cache.catalog = await invoke('get_providers_catalog', {})
     return cache.catalog
   },
   providers_get: async function () {
-    cache.providers = await invoke('providers_get', {})
+    cache.providers = await invoke('get_providers', {})
     return cache.providers
   },
-  // insert on id = 0, update otherwise; returns the stored row
+  // insert on id = null, update otherwise; returns the stored row
   provider_save: async function (provider) {
-    return invoke('provider_save', { provider })
+    return invoke('save_provider', { provider })
   },
   provider_delete: async function (id) {
-    return invoke('provider_delete', { id })
+    return invoke('delete_provider', { id })
   },
   // live model catalog of a provider row (kind, host, api_key)
   provider_models: async function (provider) {
-    return invoke('provider_models', {
+    return invoke('get_provider_models_by_type', {
       kind: provider.provider,
       host: provider.host,
       apiKey: provider.api_key ?? null,

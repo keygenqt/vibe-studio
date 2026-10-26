@@ -48,7 +48,7 @@ export function ModelForm(props) {
         setSavedOpen(false)
         try {
           // commit goes through Methods; the Rust answer is the truth
-          const saved = await Methods.model_save(props.model.id, {
+          const saved = await Methods.model_save(props.model, {
             // raw values: Rust trims and validates, the UI sends as typed
             display_name: values.name,
             system_prompt: values.systemPrompt,
