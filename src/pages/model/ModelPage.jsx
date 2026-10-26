@@ -53,7 +53,7 @@ export function ModelPage() {
           <Stack spacing={2}>
             <PageHeader
               title={model.name}
-              subtitle={provider ? `${provider.name} · ${provider.host} · ${model.name}` : ''}
+              subtitle={provider ? `${provider.name} · ${provider.host}` : ''}
             />
             <ModelForm key={`model-${id}`} model={model} onSaved={setModel} />
           </Stack>
