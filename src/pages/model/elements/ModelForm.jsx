@@ -8,9 +8,9 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
-import { Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material'
-import DoneOutlined from '@mui/icons-material/DoneOutlined'
+import { Box, Stack, TextField, Typography } from '@mui/material'
 
+import { SaveButton } from '../../../components/buttons'
 import { ErrorAlert, SuccessAlert } from '../../../components/views'
 import { AppUtils } from '../../../utils'
 import { Methods } from '../../../modules'
@@ -35,7 +35,6 @@ export function ModelForm(props) {
         numPredict: props.model.num_predict,
       }}
       validationSchema={Yup.object().shape({
-        // empty is valid, whitespace-only is not — same rule as in Rust
         name: Yup.string().test('blank', t('provider.t_validation_required'), notBlank),
         systemPrompt: Yup.string().test('blank', t('provider.t_validation_required'), notBlank),
         temperature: Yup.number().min(0).max(2),
@@ -44,12 +43,8 @@ export function ModelForm(props) {
         numPredict: Yup.number().integer().min(1),
       })}
       onSubmit={async (values, { setErrors, setSubmitting }) => {
-        setErrors({ submit: null })
-        setSavedOpen(false)
-        try {
-          // commit goes through Methods; the Rust answer is the truth
-          const saved = await Methods.model_save(props.model, {
-            // raw values: Rust trims and validates, the UI sends as typed
+        const saved = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
+          Methods.save_provider_model(props.model, {
             display_name: values.name,
             system_prompt: values.systemPrompt,
             temperature: Number(values.temperature),
@@ -57,17 +52,8 @@ export function ModelForm(props) {
             num_ctx: Number(values.numCtx),
             num_predict: Number(values.numPredict),
           })
-          setSavedOpen(true)
-          props.onSaved?.(saved)
-        } catch (error) {
-          // the Rust message is the i18n key: lookup without the trailing dot,
-          // unknown messages fall back to the raw string
-          const message = error.message ?? String(error)
-          const key = `backend.${message.replace(/\.$/, '')}`
-          setErrors({ submit: t(key) === key ? message : t(key) })
-        } finally {
-          setSubmitting(false)
-        }
+        )
+        if (saved) props.onSaved?.(saved)
       }}
     >
       {({
@@ -184,27 +170,7 @@ export function ModelForm(props) {
             </Box>
             <Stack direction={'row'} spacing={2}>
               <Box sx={{ flexGrow: 1 }} />
-              <Button
-                type={'submit'}
-                variant={'contained'}
-                size={'large'}
-                disabled={Boolean(isSubmitting)}
-                startIcon={
-                  isSubmitting ? (
-                    <CircularProgress
-                      sx={{
-                        mr: 0.5,
-                        height: '18px !important',
-                        width: '18px !important',
-                      }}
-                    />
-                  ) : (
-                    <DoneOutlined color={'text.primary'} sx={{ height: 18 }} />
-                  )
-                }
-              >
-                {t('common.t_save')}
-              </Button>
+              <SaveButton isSubmitting={isSubmitting} />
             </Stack>
           </Stack>
         </Box>

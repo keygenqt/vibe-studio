@@ -13,44 +13,48 @@ import { ProviderForm } from './elements/ProviderForm'
 import { ModelCard } from './elements/ModelCard'
 import { DashedButton } from '../../components/buttons'
 import { PageHeader } from '../../components/views'
-import { WaitState } from '../../components/states'
-import { AppRoutes } from '../../constants/AppRoutes'
+import { ErrorState, WaitState } from '../../components/states'
+import { AppRoutes } from '../../constants'
 import { AppNav } from '../../utils'
-import { Methods } from '../../modules'
+import { useCoreProviders } from '../../hooks'
 
 export function ProviderPage() {
   const navigate = useNavigate()
   const { providerId } = useParams()
   const { t } = useTranslation()
   const isEdit = Boolean(providerId)
+  const pid = Number(providerId)
 
-  const [provider, setProvider] = React.useState(
-    isEdit ? Methods.providers_last_by_id(Number(providerId)) : null
-  )
-  const [catalog, setCatalog] = React.useState(Methods.providers_catalog_last() ?? [])
-  const [models, setModels] = React.useState(
-    isEdit ? Methods.models_last_by_provider(Number(providerId)) : null
-  )
+  // the model resolves itself from the store — no local mirror
+  const {
+    catalog,
+    providers,
+    models,
+    error: readError,
+    ready,
+  } = useCoreProviders(isEdit ? { providerId: pid } : {})
+  const provider = isEdit ? ((providers ?? []).find(item => item.id === pid) ?? null) : null
+  const [routeError, setRouteError] = React.useState(null)
 
+  // an id with no row is a bad route, not an empty section
   React.useEffect(() => {
-    Methods.providers_catalog().then(setCatalog)
-  }, [])
-
-  React.useEffect(() => {
-    if (!isEdit) {
-      setProvider(null)
-      setModels(null)
-    } else {
-      Methods.providers_get().then(list => {
-        setProvider(list.find(item => item.id === Number(providerId)) ?? null)
-      })
-      // the models live in the store — every row is chosen for chat
-      Methods.models_get(Number(providerId)).then(setModels)
+    if (isEdit && providers !== null && !provider) {
+      setRouteError(new Error(t('error.t_text')))
     }
-  }, [providerId])
+  }, [isEdit, providers, provider, t])
+
+  const error = routeError ?? readError
+  // a failed read or a bad route — the row cannot resolve
+  if (error) {
+    return (
+      <WaitState ready={ready}>
+        <ErrorState text={error.message ?? String(error)} />
+      </WaitState>
+    )
+  }
 
   return (
-    <WaitState ready={catalog.length > 0 && (!isEdit || Boolean(provider))}>
+    <WaitState ready={ready}>
       <Stack spacing={2}>
         <PageHeader
           title={
@@ -64,6 +68,7 @@ export function ProviderPage() {
 
         {!isEdit || provider ? (
           <ProviderForm
+            catalog={catalog}
             isEdit={isEdit}
             id={isEdit ? provider.id : 0}
             name={provider?.name}
@@ -88,7 +93,7 @@ export function ProviderPage() {
               <ModelCard
                 key={`model-${model.id}`}
                 model={model}
-                color={Methods.providers_catalog_last_by(provider?.provider)?.color}
+                color={catalog.find(info => info.provider === provider.provider)?.color}
                 onClick={() => AppNav.open(navigate, AppRoutes.model(model.id))}
               />
             ))}

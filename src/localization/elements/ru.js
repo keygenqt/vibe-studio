@@ -13,7 +13,6 @@ export const ruLocalization = {
     },
     main: {
       t_theme: 'Тема',
-      t_new_chat: 'Новый чат',
       t_sidebar: 'Свернуть панель',
       t_settings: 'Настройки',
       t_placeholder: 'Введите сообщение...',
@@ -25,8 +24,6 @@ export const ruLocalization = {
       t_providers_description: 'API-провайдеры и модели',
       t_general: 'Общие',
       t_general_description: 'Основное поведение приложения',
-      t_appearance: 'Оформление',
-      t_about: 'О программе и отзыв',
     },
     providers: {
       t_add: 'Добавить провайдера',

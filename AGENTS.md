@@ -12,6 +12,7 @@ Product invariants — the fundamental principles.
 - The human acts, the model helps. The model never acts on its own initiative.
 - Control by construction. The model initiates nothing — there is nothing to allow.
 - Ownership and code understanding over throughput.
+- The code works for a human: readability nits and awkward flows are defects too.
 - Transparent context. The user curates what the model sees.
 - The absence of a feature is also a feature. The project follows
   the contract, not feature sprawl for everyone.

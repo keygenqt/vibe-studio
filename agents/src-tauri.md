@@ -10,9 +10,10 @@ live here.
 - The layer holds no mirror of the state: commands read and write
   the Store directly; Rust is the single source of truth, JS gets
   copies for rendering only.
-- Command errors are `String`.
+- Every mutation ends with its block's event carrying the fresh
+  state of the collection — not a delta: the actual state is
+  assembled by Rust, JS builds nothing on top of it.
 - The layout is flat: `commands.rs` — the JS surface, one command
-  per core function and named after it; `window.rs` — Tauri
-  features with no JS surface (window lifecycle); `lib.rs` — the
-  app shell: `run()`, the store bootstrap, the `event-state`
-  channel.
+  per core function and named after it; `events.rs` — the event
+  channels of the blocks, a single payload envelope; `data/` —
+  types served to the shell.

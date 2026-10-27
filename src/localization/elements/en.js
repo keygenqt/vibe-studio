@@ -13,7 +13,6 @@ export const enLocalization = {
     },
     main: {
       t_theme: 'Theme',
-      t_new_chat: 'New chat',
       t_sidebar: 'Toggle sidebar',
       t_settings: 'Settings',
       t_placeholder: 'Type a message...',
@@ -25,8 +24,6 @@ export const enLocalization = {
       t_providers_description: 'API providers and models',
       t_general: 'General',
       t_general_description: 'Base app behavior',
-      t_appearance: 'Appearance',
-      t_about: 'About & feedback',
     },
     providers: {
       t_add: 'Connect another provider',

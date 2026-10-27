@@ -1,95 +1,89 @@
 /*
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
- * TAGS: ['components']
+ * TAGS: ['components', 'hooks']
  */
 import * as React from 'react'
 import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import SearchIcon from '@mui/icons-material/Search'
-import DoneOutlined from '@mui/icons-material/DoneOutlined'
-import {
-  Box,
-  Button,
-  CircularProgress,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Box, Button, InputAdornment, Stack, TextField, Typography } from '@mui/material'
 
+import { SaveButton } from '../../components/buttons'
 import { ModelCard } from './elements/ModelCard'
 import { PageHeader, ErrorAlert, SuccessAlert } from '../../components/views'
 import { ErrorState, WaitState } from '../../components/states'
 import { Methods } from '../../modules'
+import { useCoreProviders } from '../../hooks'
 
 export function ModelsPage() {
   const { t } = useTranslation()
   const { providerId } = useParams()
   const id = Number(providerId)
-  const [provider, setProvider] = React.useState(Methods.providers_last_by_id(id))
+
+  const { catalog, providers, models, error: readError } = useCoreProviders({ providerId: id })
+  // the row resolves from the store
+  const provider = (providers ?? []).find(item => item.id === id) ?? null
   // the live catalog of the host; the store only feeds the selection
-  const [models, setModels] = React.useState(null)
+  const [liveModels, setLiveModels] = React.useState(null)
   const [error, setError] = React.useState(null)
   const [submitError, setSubmitError] = React.useState(null)
   const [savedOpen, setSavedOpen] = React.useState(false)
   const [query, setQuery] = React.useState('')
-  // the user's selection; starts from the rows already in the store
-  const [selected, setSelected] = React.useState(() =>
-    (Methods.models_last_by_provider(id) ?? []).map(model => model.name)
-  )
+  // the user's selection; null = mirrors the store rows
+  const [picked, setPicked] = React.useState(null)
+  const selected = picked ?? (models ?? []).map(model => model.name)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
+  // an id with no row is a bad route, not an empty catalog
   React.useEffect(() => {
-    let live = true
-    Methods.providers_get()
+    if (providers !== null && !provider) {
+      setError(new Error(t('error.t_text')))
+    }
+  }, [providers, provider, t])
+
+  React.useEffect(() => {
+    if (!provider) return undefined
+    let active = true
+    Methods.get_provider_models_by_type(provider)
       .then(list => {
-        if (!live) return null
-        const found = list.find(item => item.id === id) ?? null
-        setProvider(found)
-        // an id with no row is a bad route, not an empty catalog
-        if (!found) {
-          setError(new Error(t('error.t_text')))
-          return null
-        }
-        // the selection baseline is the store, the catalog is live
-        Methods.models_get(id).then(rows => {
-          if (live) setSelected(rows.map(model => model.name))
-        })
-        return Methods.provider_models(found).then(list => {
-          if (live) setModels(list)
-        })
+        if (active) setLiveModels(list)
       })
       .catch(err => {
-        if (live) setError(err)
+        if (active) setError(err)
       })
     return () => {
-      live = false
+      active = false
     }
-  }, [providerId])
+  }, [provider])
 
   // the commit: persist the selection against the live catalog;
   // a failed sync shows a banner — the page keeps its state
   const onSave = () => {
     setIsSubmitting(true)
     setSubmitError(null)
-    Methods.models_sync(id, selected)
-      .then(() => setSavedOpen(true))
+    Methods.save_provider_models(id, selected)
+      .then(() => {
+        // re-sync with the fresh store rows
+        setPicked(null)
+        setSavedOpen(true)
+      })
       .catch(err => setSubmitError(err.message ?? String(err)))
       .finally(() => setIsSubmitting(false))
   }
 
   // readiness: loaded or failed — the loader never covers an error
-  const ready = error !== null || (Boolean(provider) && models !== null)
+  const failure = error ?? readError
+  const pageReady = failure !== null || (Boolean(provider) && liveModels !== null)
 
   // avatar letter from the model name
   const avatarOf = name => name.charAt(0).toUpperCase()
 
-  const color = Methods.providers_catalog_last_by(provider?.provider)?.color
+  const color = (catalog ?? []).find(info => info.provider === provider?.provider)?.color
 
   // the search filter is active on a non-empty query
   const isFilter = query.length > 0
-  const all = models ?? []
+  const all = liveModels ?? []
 
   // matches of the filter, whatever the selection state
   const matched = isFilter ? all.filter(m => m.name.toLowerCase().includes(query)) : []
@@ -117,9 +111,9 @@ export function ModelsPage() {
   ].filter(Boolean)
 
   return (
-    <WaitState ready={ready}>
-      {error ? (
-        <ErrorState text={error.message ?? String(error)} />
+    <WaitState ready={pageReady}>
+      {failure ? (
+        <ErrorState text={failure.message ?? String(failure)} />
       ) : (
         <Stack>
           <PageHeader title={provider.name} subtitle={t('models.t_subtitle')} />
@@ -188,10 +182,10 @@ export function ModelsPage() {
                     checked={selected.includes(model.name)}
                     disabled={all.length === 0 || Boolean(isSubmitting)}
                     onToggle={() =>
-                      setSelected(current =>
-                        current.includes(model.name)
-                          ? current.filter(item => item !== model.name)
-                          : [...current, model.name]
+                      setPicked(current =>
+                        selected.includes(model.name)
+                          ? selected.filter(item => item !== model.name)
+                          : [...selected, model.name]
                       )
                     }
                   />
@@ -211,10 +205,10 @@ export function ModelsPage() {
                   disabled={Boolean(isSubmitting)}
                   sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
                   onClick={() =>
-                    setSelected(current =>
+                    setPicked(
                       allVisibleSelected
-                        ? current.filter(name => !visible.some(model => model.name === name))
-                        : [...new Set([...current, ...visible.map(model => model.name)])]
+                        ? selected.filter(name => !visible.some(model => model.name === name))
+                        : [...new Set([...selected, ...visible.map(model => model.name)])]
                     )
                   }
                 >
@@ -222,28 +216,11 @@ export function ModelsPage() {
                 </Button>
               )}
               <Box sx={{ flexGrow: 1 }} />
-              <Button
-                variant={'contained'}
-                color={'success'}
-                size={'large'}
-                disabled={all.length === 0 || Boolean(isSubmitting)}
-                startIcon={
-                  isSubmitting ? (
-                    <CircularProgress
-                      sx={{
-                        mr: 0.5,
-                        height: '18px !important',
-                        width: '18px !important',
-                      }}
-                    />
-                  ) : (
-                    <DoneOutlined color={'text.primary'} sx={{ height: 18 }} />
-                  )
-                }
+              <SaveButton
+                isSubmitting={isSubmitting}
+                disabled={all.length === 0}
                 onClick={onSave}
-              >
-                {t('common.t_save')}
-              </Button>
+              />
             </Stack>
           </Stack>
         </Stack>

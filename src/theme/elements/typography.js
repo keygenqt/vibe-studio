@@ -7,19 +7,19 @@ export const typography = {
   fontSize: 14,
   h5: {
     fontSize: 20,
-    fontWeight: "bold",
-    fontFamily: ["Ubuntu", "sans-serif"].join(","),
+    fontWeight: 'bold',
+    fontFamily: ['Ubuntu', 'sans-serif'].join(','),
   },
   subtitle1: {
     fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: ["Ubuntu", "sans-serif"].join(","),
+    fontWeight: 'bold',
+    fontFamily: ['Ubuntu', 'sans-serif'].join(','),
   },
   subtitle2: {
     fontSize: 15,
-    fontWeight: "bold",
-    fontFamily: ["Ubuntu", "sans-serif"].join(","),
+    fontWeight: 'bold',
+    fontFamily: ['Ubuntu', 'sans-serif'].join(','),
   },
-  body1: { fontSize: 16, fontFamily: ["Ubuntu", "sans-serif"].join(",") },
-  body2: { fontSize: 14, fontFamily: ["Ubuntu", "sans-serif"].join(",") },
-};
+  body1: { fontSize: 16, fontFamily: ['Ubuntu', 'sans-serif'].join(',') },
+  body2: { fontSize: 14, fontFamily: ['Ubuntu', 'sans-serif'].join(',') },
+}

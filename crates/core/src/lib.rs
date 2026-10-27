@@ -10,15 +10,18 @@ use std::path::Path;
 
 pub(crate) mod theme;
 
-pub use studio_cluster::{ModelInfoData, ProviderInfoData};
-pub use studio_states::{ProviderData, ProviderModelData, Store, WorkspaceData};
+pub use studio_cluster::ModelInfoData;
+pub use studio_cluster::ProviderInfoData;
+pub use studio_states::ProviderData;
+pub use studio_states::ProviderModelData;
+pub use studio_states::Store;
+pub use studio_states::WorkspaceData;
 
 pub use theme::ThemeChoice;
 
-/// Opens (or creates) the studio database in the given app data directory.
-pub fn store_open(dir: &Path) -> Result<Store> {
-    Store::open(&dir.join("vibe-studio.db"))
-}
+// ─────────────────────────────────────────────
+// Workspace
+// ─────────────────────────────────────────────
 
 /// Loads the shell environment; a missing row falls back to `Default`
 /// — untouched values stay `None`.
@@ -30,6 +33,10 @@ pub fn get_workspace(store: &Store) -> WorkspaceData {
 pub fn save_workspace(store: &Store, workspace: &WorkspaceData) -> Result<WorkspaceData> {
     studio_states::save_workspace(store, workspace)
 }
+
+// ─────────────────────────────────────────────
+// Providers
+// ─────────────────────────────────────────────
 
 /// Catalog of supported provider types — the single source for the
 /// add form and for validation.
@@ -74,6 +81,19 @@ pub fn get_provider_models(store: &Store, provider_id: i32) -> Vec<ProviderModel
 /// Loads one model by id.
 pub fn get_provider_model(store: &Store, id: i32) -> Result<ProviderModelData> {
     studio_states::get_provider_model(store, id)
+}
+
+/// Fetches the live model catalog of a provider host. The kind is not
+/// trusted: must be in the catalog; the host is trimmed, blank is an
+/// error. Embedding models are filtered out on the cluster layer.
+pub async fn get_provider_models_by_type(kind: &str, host: &str, api_key: Option<&str>) -> Result<Vec<ModelInfoData>> {
+    let host = host.trim();
+    if host.is_empty() {
+        anyhow::bail!("Host must not be blank.");
+    }
+    let provider =
+        studio_cluster::get_provider_by_kind(kind).ok_or_else(|| anyhow::anyhow!("Unknown provider kind: {kind}."))?;
+    Ok(studio_cluster::get_provider_models_by_type(provider, host, api_key).await?)
 }
 
 /// Validates and persists the model; the UI is not trusted: the id
@@ -145,17 +165,13 @@ pub async fn save_provider_models(
     studio_states::save_provider_models(store, provider_id, &rows)
 }
 
-/// Fetches the live model catalog of a provider host. The kind is not
-/// trusted: must be in the catalog; the host is trimmed, blank is an
-/// error. Embedding models are filtered out on the cluster layer.
-pub async fn get_provider_models_by_type(kind: &str, host: &str, api_key: Option<&str>) -> Result<Vec<ModelInfoData>> {
-    let host = host.trim();
-    if host.is_empty() {
-        anyhow::bail!("Host must not be blank.");
-    }
-    let provider =
-        studio_cluster::get_provider_by_kind(kind).ok_or_else(|| anyhow::anyhow!("Unknown provider kind: {kind}."))?;
-    Ok(studio_cluster::get_provider_models_by_type(provider, host, api_key).await?)
+// ─────────────────────────────────────────────
+// App
+// ─────────────────────────────────────────────
+
+/// Opens (or creates) the studio database in the given app data directory.
+pub fn store_open(dir: &Path) -> Result<Store> {
+    Store::open(&dir.join("vibe-studio.db"))
 }
 
 /// Calls the callback with the OS theme on every change. Spawns a

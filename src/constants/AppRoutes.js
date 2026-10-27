@@ -7,12 +7,12 @@
 // Single source of page routes. Call without arguments for the route
 // pattern, with an id for a concrete URL.
 export const AppRoutes = {
-  main: () => "/",
-  settings: () => "/settings",
-  settingsGeneral: () => "/settings/general",
-  settingsProviders: () => "/settings/providers",
-  providerAdd: () => "/settings/provider/add",
-  provider: (providerId = ":providerId") => `/settings/provider/${providerId}`,
-  model: (modelId = ":modelId") => `/settings/model/${modelId}`,
-  models: (providerId = ":providerId") => `/settings/models/${providerId}`,
-};
+  main: () => '/',
+  settings: () => '/settings',
+  settingsGeneral: () => '/settings/general',
+  settingsProviders: () => '/settings/providers',
+  providerAdd: () => '/settings/provider/add',
+  provider: (providerId = ':providerId') => `/settings/provider/${providerId}`,
+  model: (modelId = ':modelId') => `/settings/model/${modelId}`,
+  models: (providerId = ':providerId') => `/settings/models/${providerId}`,
+}

@@ -13,7 +13,6 @@ export const cnLocalization = {
     },
     main: {
       t_theme: '切换主题',
-      t_new_chat: '新建聊天',
       t_sidebar: '切换侧边栏',
       t_settings: '设置',
       t_placeholder: '输入消息...',
@@ -25,8 +24,6 @@ export const cnLocalization = {
       t_providers_description: 'API 提供商与模型',
       t_general: '通用',
       t_general_description: '应用核心行为',
-      t_appearance: '外观',
-      t_about: '关于与反馈',
     },
     providers: {
       t_add: '添加提供商',

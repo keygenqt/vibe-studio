@@ -9,15 +9,15 @@ import DarkMode from '@mui/icons-material/DarkMode'
 import DesktopWindows from '@mui/icons-material/DesktopWindows'
 import LightMode from '@mui/icons-material/LightMode'
 
-import { useWorkspace } from '../../../../hooks'
+import { useCoreWorkspace } from '../../../../hooks'
 
 export function ThemeAction() {
   const { t } = useTranslation()
-  const { themeChoice, setTheme } = useWorkspace()
+  const { themeChoice, setTheme } = useCoreWorkspace()
 
   const cycleTheme = () => {
     const next = themeChoice === 'light' ? 'dark' : themeChoice === 'dark' ? 'system' : 'light'
-    // the answer comes back over event-state — no local mirror here
+    // the answer comes back over event-workspace — no local mirror here
     setTheme(next)
   }
 

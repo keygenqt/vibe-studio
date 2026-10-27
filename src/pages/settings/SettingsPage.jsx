@@ -6,13 +6,13 @@
 import { Outlet, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Box, Typography } from '@mui/material'
-import { useWorkspace } from '../../hooks'
+import { useCoreWorkspace } from '../../hooks'
 import { ShellLayout, SidebarLayout } from '../../components/layouts'
 import { BackIconButton } from '../../components/buttons'
 import { SidebarView } from './elements/SidebarView'
 
 export function SettingsPage() {
-  const workspace = useWorkspace()
+  const workspace = useCoreWorkspace()
   const { t } = useTranslation()
   // fade on every settings navigation; the shell stays mounted
   const { pathname } = useLocation()

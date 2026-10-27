@@ -7,18 +7,18 @@ copies only for rendering.
 
 - All Rust calls go through `Methods` (`src/modules`): one method —
   one command.
-- The Methods feature layer keeps the last answer per read as a
-  render copy: pages take the initial state from the `*_last*`
-  getters and revalidate on mount; mutations do not write the cache.
-- Rust validates and clamps; after `invoke` what it returned is what
-  gets applied — the optimistic value is only a preview.
-- The application state lives in Rust and is mirrored once —
-  `WorkspaceProvider` (`src/hooks`): a load on mount, live values
-  over events. Redux keeps only pure UI state.
-- The UI holds no copies of Rust facts — catalogs, defaults and
-  colors arrive from Rust; hardcoded data constants do not live here.
-- The wire format is snake_case; the resolution to camelCase happens
-  in one place, the provider.
+- Render copies live in the store (`src/store`): a read lands its
+  answer in the store; pages read the models through the `useCore*`
+  hooks (`src/hooks`) and revalidate on mount. Mutations do not
+  write the store — the block's event brings the fresh state, and a
+  mutation method awaits its own read before returning.
+- Rust data travels through JS in the wire format, as is.
+- Redux holds the block copies and pure UI state; live values
+  arrive over the block event channels, the source of truth is
+  Rust.
+- `constants/` holds only UI constants that do not touch the
+  backend; Rust defaults stay in Rust — the sides share no
+  constants.
 - Forms are Formik + Yup: client validation is UX, Rust re-validates
   on commit.
 - i18n: three locales — ru/en/cn. Blocks mirror `pages/`: one section
@@ -34,6 +34,8 @@ copies only for rendering.
 - All navigation goes through `AppNav` (`src/utils`): `open`,
   `openWithReplace`, `back`, `backTo`. A bare `navigate(path)`
   around it breaks the transition journal.
+- A mutation returning to the page it came from is a `back`: the
+  journal stays clean, no duplicated slots.
 
 ## Loading
 
@@ -45,8 +47,7 @@ copies only for rendering.
 
 - An element is a part of its parent (`elements/`, nesting exactly
   one level); a component is a unit that lives its own life
-  (`components/<type>/`). `views` is the nursery: a second instance
-  of a kind is the trigger to move it to its own folder.
+  (`components/<type>/`).
 - A page is `pages/<page>/<Page>.jsx`: the route entry and its
   composition; a layout page hosts children through `Outlet`.
 - Every top-level zone has an `index.js` barrel; consumers import

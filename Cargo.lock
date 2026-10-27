@@ -4918,6 +4918,7 @@ dependencies = [
  "anyhow",
  "log",
  "serde",
+ "serde_json",
  "studio-core",
  "tauri",
  "tauri-build",

@@ -2,14 +2,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states', 'theme']
 
-use tauri::Emitter;
 use tauri::Manager;
 
 use studio_core::Store;
-use studio_core::WorkspaceData;
 use studio_core::listen_system_theme;
 
+use crate::data::event_data::EventData;
+use crate::data::event_data::EventKey;
+use crate::events::emit_event_app;
+
 mod commands;
+mod data;
+mod events;
 mod window;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -43,11 +47,9 @@ pub fn run() {
             // on its own channel; the UI resolves it against the
             // persisted choice itself.
             let handle = app.handle().clone();
-            listen_system_theme({
-                let handle = handle.clone();
-                move |theme| {
-                    let _ = handle.emit("event-theme", theme.as_str());
-                }
+            let theme_window = window.clone();
+            listen_system_theme(move |theme| {
+                emit_event_app(&theme_window, EventData::new(EventKey::SystemTheme, &theme));
             })?;
 
             // Window closed — persist its size.
@@ -85,14 +87,4 @@ pub fn run() {
                 }
             }
         });
-}
-
-/// Single state channel: any mutation ends with this emit.
-/// The emit is spawned: it waits for the main thread, so calling it
-/// from the main thread (command / window event) deadlocks.
-pub(crate) fn emit_state(window: &tauri::WebviewWindow, workspace: WorkspaceData) {
-    let window = window.clone();
-    tauri::async_runtime::spawn(async move {
-        let _ = window.emit("event-state", workspace);
-    });
 }

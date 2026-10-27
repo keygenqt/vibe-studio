@@ -6,18 +6,19 @@ body,
 }
 
 body {
-  font-family: "Ubuntu", "Segoe UI", sans-serif;
+  font-family: 'Ubuntu', 'Segoe UI', sans-serif;
   overflow: hidden;
   user-select: none;
 }
 
-/* window focus: dim the shell when the window loses focus */
+/* window focus: dim the content when the window loses focus,
+   the window background stays solid */
 .WindowFocus,
 .WindowUnfocus {
   transition: opacity 100ms ease;
 }
 .WindowUnfocus {
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 /* scroll areas: thin scrollbar, right padding only while content overflows */
@@ -49,7 +50,7 @@ body {
 }
 .ScrollFrame::before,
 .ScrollFrame::after {
-  content: "";
+  content: '';
   position: absolute;
   height: 10px;
   width: calc(100% - 32px);

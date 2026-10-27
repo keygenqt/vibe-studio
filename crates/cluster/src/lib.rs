@@ -9,7 +9,9 @@ mod data;
 use anyhow::Result;
 use vibe_cluster::ConnectionParams;
 
-pub use data::{ModelInfoData, ProviderInfoData, ProviderTypeData};
+pub use data::ModelInfoData;
+pub use data::ProviderInfoData;
+pub use data::ProviderTypeData;
 
 /// Catalog of supported provider kinds — the source for the add form.
 pub fn get_providers() -> Vec<ProviderInfoData> {
