@@ -1,6 +1,6 @@
 # Vibe Studio
 
-![preview.png](data/preview.png)
+![preview.png](data/preview_2.png)
 
 A fast, lightweight studio for working with LLMs.
 
