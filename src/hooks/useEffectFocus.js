@@ -8,6 +8,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 
 export function useEffectFocus() {
   const [isFocusWindow, setIsFocusWindow] = React.useState(true)
+
   React.useEffect(() => {
     const unlisten = getCurrentWindow().onFocusChanged(({ payload: focused }) => {
       setIsFocusWindow(focused)
@@ -16,5 +17,6 @@ export function useEffectFocus() {
       unlisten.then(fn => fn())
     }
   }, [])
+
   return isFocusWindow
 }

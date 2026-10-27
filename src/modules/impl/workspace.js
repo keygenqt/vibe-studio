@@ -15,15 +15,11 @@ export const workspace = {
     store.dispatch(workspaceSet(answer))
     return answer
   },
-  // one command for every mutation: the whole struct is the wire unit;
-  // the event-workspace broadcast writes the fresh row to the store
   save_workspace: async function (workspace) {
     return invoke('save_workspace', { workspace })
   },
 }
 
-// the block's Rust channel, bound once for the app lifetime: every
-// workspace mutation ends with the fresh stored row
 export function workspace_events() {
   return [
     listen('event-workspace', event => {

@@ -7,7 +7,6 @@ import PropTypes from 'prop-types'
 import { Alert, Box, Collapse, Stack } from '@mui/material'
 import ErrorRounded from '@mui/icons-material/ErrorRounded'
 
-// inline error banner, same layout as SuccessAlert; stays until dismissed
 export function ErrorAlert(props) {
   return (
     <Box>

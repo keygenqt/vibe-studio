@@ -10,7 +10,6 @@ import store from '../../store'
 import { catalogSet, modelSet, modelsSet, providersSet } from '../../store/impl/providers'
 
 export const providers = {
-  // catalog: supported provider types for the add form
   get_providers_catalog: async function () {
     const list = await invoke('get_providers_catalog', {})
     store.dispatch(catalogSet(list))
@@ -21,9 +20,6 @@ export const providers = {
     store.dispatch(providersSet(list))
     return list
   },
-  // insert on id = null, update otherwise; the read afterwards is the
-  // delivery confirmation — the caller navigates against a fresh
-  // store, the event broadcast only repeats it
   save_provider: async function (provider) {
     const saved = await invoke('save_provider', { provider })
     await providers.get_providers()
@@ -31,12 +27,9 @@ export const providers = {
   },
   delete_provider: async function (id) {
     await invoke('delete_provider', { id })
-    // the provider is gone, its model copy has no owner — drop it
     store.dispatch(modelsSet({ providerId: id, models: [] }))
     await providers.get_providers()
   },
-  // live model catalog of a provider row (kind, host, api_key);
-  // network answer, not a stored state — lands nowhere
   get_provider_models_by_type: async function (provider) {
     return invoke('get_provider_models_by_type', {
       kind: provider.provider,
@@ -44,7 +37,6 @@ export const providers = {
       apiKey: provider.api_key ?? null,
     })
   },
-  // models selected for a provider
   get_provider_models: async function (providerId) {
     const list = await invoke('get_provider_models', { providerId })
     store.dispatch(modelsSet({ providerId, models: list }))
@@ -55,17 +47,12 @@ export const providers = {
     store.dispatch(modelSet(model))
     return model
   },
-  // persists the full model row with the user-owned config patched
-  // over it; the saved row and the fresh model list land in the store
-  // — the event broadcast only repeats the list
   save_provider_model: async function (model, config) {
     const saved = await invoke('save_provider_model', { model: { ...model, ...config } })
     store.dispatch(modelSet(saved))
     await providers.get_provider_models(saved.provider_id)
     return saved
   },
-  // network sync: fetch the live catalog, upsert the facts, apply the
-  // selection; the fresh model list comes back and lands in the store
   save_provider_models: async function (providerId, checked) {
     const models = await invoke('save_provider_models', { providerId, checked })
     store.dispatch(modelsSet({ providerId, models }))
@@ -73,10 +60,6 @@ export const providers = {
   },
 }
 
-// the block's Rust channel, bound once for the app lifetime; the key
-// routes the payload: `providers` — the fresh providers list,
-// `provider_models` — the fresh model list of one provider, the
-// provider itself is taken from the rows
 export function providers_events() {
   return [
     listen('event-providers', event => {

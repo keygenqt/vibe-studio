@@ -7,11 +7,10 @@ import * as React from 'react'
 import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import SearchIcon from '@mui/icons-material/Search'
-import { Box, Button, InputAdornment, Stack, TextField, Typography } from '@mui/material'
+import { Box, Button, InputAdornment, Stack, Switch, TextField, Typography } from '@mui/material'
 
 import { SaveButton } from '../../components/buttons'
-import { ModelCard } from './elements/ModelCard'
-import { PageHeader, ErrorAlert, SuccessAlert } from '../../components/views'
+import { ModelCard, PageHeader, ErrorAlert, SuccessAlert } from '../../components/views'
 import { ErrorState, WaitState } from '../../components/states'
 import { Methods } from '../../modules'
 import { useCoreProviders } from '../../hooks'
@@ -22,20 +21,16 @@ export function ModelsPage() {
   const id = Number(providerId)
 
   const { catalog, providers, models, error: readError } = useCoreProviders({ providerId: id })
-  // the row resolves from the store
   const provider = (providers ?? []).find(item => item.id === id) ?? null
-  // the live catalog of the host; the store only feeds the selection
   const [liveModels, setLiveModels] = React.useState(null)
   const [error, setError] = React.useState(null)
   const [submitError, setSubmitError] = React.useState(null)
   const [savedOpen, setSavedOpen] = React.useState(false)
   const [query, setQuery] = React.useState('')
-  // the user's selection; null = mirrors the store rows
   const [picked, setPicked] = React.useState(null)
   const selected = picked ?? (models ?? []).map(model => model.name)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
-  // an id with no row is a bad route, not an empty catalog
   React.useEffect(() => {
     if (providers !== null && !provider) {
       setError(new Error(t('error.t_text')))
@@ -64,7 +59,6 @@ export function ModelsPage() {
     setSubmitError(null)
     Methods.save_provider_models(id, selected)
       .then(() => {
-        // re-sync with the fresh store rows
         setPicked(null)
         setSavedOpen(true)
       })
@@ -76,9 +70,7 @@ export function ModelsPage() {
   const failure = error ?? readError
   const pageReady = failure !== null || (Boolean(provider) && liveModels !== null)
 
-  // avatar letter from the model name
-  const avatarOf = name => name.charAt(0).toUpperCase()
-
+  // accent color of this provider's type from the static catalog
   const color = (catalog ?? []).find(info => info.provider === provider?.provider)?.color
 
   // the search filter is active on a non-empty query
@@ -172,21 +164,25 @@ export function ModelsPage() {
                 {section.models.map(model => (
                   <ModelCard
                     key={`model-${model.name}`}
-                    avatar={avatarOf(model.name)}
-                    name={model.name}
+                    title={model.name}
                     description={model.params ?? undefined}
                     vision={model.vision}
                     thinking={model.thinking}
                     tools={model.tools}
                     color={color}
-                    checked={selected.includes(model.name)}
-                    disabled={all.length === 0 || Boolean(isSubmitting)}
-                    onToggle={() =>
-                      setPicked(current =>
-                        selected.includes(model.name)
-                          ? selected.filter(item => item !== model.name)
-                          : [...selected, model.name]
-                      )
+                    action={
+                      <Switch
+                        checked={selected.includes(model.name)}
+                        disabled={all.length === 0 || Boolean(isSubmitting)}
+                        onChange={() =>
+                          setPicked(current =>
+                            selected.includes(model.name)
+                              ? selected.filter(item => item !== model.name)
+                              : [...selected, model.name]
+                          )
+                        }
+                        sx={{ flexShrink: 0 }}
+                      />
                     }
                   />
                 ))}

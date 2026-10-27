@@ -8,13 +8,6 @@ import { useSelector } from 'react-redux'
 
 import { Methods } from '../modules'
 
-/**
- * The providers block model: render copies from the store plus the
- * mount revalidation. `providerId`/`modelId` pull the scoped lists
- * and rows; `ready` covers exactly what was asked for. A failed
- * read surfaces as `error` and opens `ready` — the loader never
- * covers an error.
- */
 export function useCoreProviders({ providerId, modelId } = {}) {
   const catalog = useSelector(state => state.providers.catalog)
   const providers = useSelector(state => state.providers.providers)

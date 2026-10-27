@@ -14,21 +14,14 @@ import { useCoreWorkspace } from '../../../../hooks'
 export function ThemeAction() {
   const { t } = useTranslation()
   const { themeChoice, setTheme } = useCoreWorkspace()
-
-  const cycleTheme = () => {
-    const next = themeChoice === 'light' ? 'dark' : themeChoice === 'dark' ? 'system' : 'light'
-    // the answer comes back over event-workspace — no local mirror here
-    setTheme(next)
-  }
-
   return (
     <Tooltip title={t('main.t_theme')}>
       <IconButton
-        onClick={cycleTheme}
         size="small"
-        sx={{
-          p: '2px',
-        }}
+        sx={{ p: '2px' }}
+        onClick={() =>
+          setTheme(themeChoice === 'light' ? 'dark' : themeChoice === 'dark' ? 'system' : 'light')
+        }
       >
         {themeChoice === 'light' ? (
           <LightMode sx={{ fontSize: 16 }} />

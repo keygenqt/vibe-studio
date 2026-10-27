@@ -7,12 +7,12 @@ import * as React from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Stack, Typography } from '@mui/material'
+import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
 import SyncOutlined from '@mui/icons-material/SyncOutlined'
 
 import { ProviderForm } from './elements/ProviderForm'
-import { ModelCard } from './elements/ModelCard'
 import { DashedButton } from '../../components/buttons'
-import { PageHeader } from '../../components/views'
+import { ModelCard, PageHeader } from '../../components/views'
 import { ErrorState, WaitState } from '../../components/states'
 import { AppRoutes } from '../../constants'
 import { AppNav } from '../../utils'
@@ -24,8 +24,6 @@ export function ProviderPage() {
   const { t } = useTranslation()
   const isEdit = Boolean(providerId)
   const pid = Number(providerId)
-
-  // the model resolves itself from the store — no local mirror
   const {
     catalog,
     providers,
@@ -36,7 +34,6 @@ export function ProviderPage() {
   const provider = isEdit ? ((providers ?? []).find(item => item.id === pid) ?? null) : null
   const [routeError, setRouteError] = React.useState(null)
 
-  // an id with no row is a bad route, not an empty section
   React.useEffect(() => {
     if (isEdit && providers !== null && !provider) {
       setRouteError(new Error(t('error.t_text')))
@@ -44,7 +41,6 @@ export function ProviderPage() {
   }, [isEdit, providers, provider, t])
 
   const error = routeError ?? readError
-  // a failed read or a bad route — the row cannot resolve
   if (error) {
     return (
       <WaitState ready={ready}>
@@ -92,9 +88,14 @@ export function ProviderPage() {
             {(models ?? []).map(model => (
               <ModelCard
                 key={`model-${model.id}`}
-                model={model}
+                title={model.display_name ? `${model.display_name} (${model.name})` : model.name}
+                description={model.params}
+                vision={model.vision}
+                thinking={model.reasoning}
+                tools={model.tools}
                 color={catalog.find(info => info.provider === provider.provider)?.color}
                 onClick={() => AppNav.open(navigate, AppRoutes.model(model.id))}
+                action={<ChevronRightOutlined color={'action'} />}
               />
             ))}
           </>

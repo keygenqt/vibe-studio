@@ -10,6 +10,8 @@ export const cnLocalization = {
       t_error_data: '获取数据失败！',
       t_not_found: '未找到任何内容。',
       t_save: '保存',
+      t_cancel: '取消',
+      t_delete: '删除',
     },
     main: {
       t_theme: '切换主题',
@@ -22,6 +24,10 @@ export const cnLocalization = {
     settings: {
       t_providers: '提供商',
       t_providers_description: 'API 提供商与模型',
+      t_general: '通用',
+      t_general_description: '应用核心行为',
+    },
+    general: {
       t_general: '通用',
       t_general_description: '应用核心行为',
     },
@@ -41,7 +47,6 @@ export const cnLocalization = {
       t_api_key_hint: '如非必需请留空',
       t_sync_models: '同步模型',
       t_models: '模型',
-      t_cancel: '取消',
       t_delete: '删除',
       t_validation_required: '不能为空。',
       t_validation_url: '必须是有效的 URL。',

@@ -5,16 +5,13 @@
  */
 import { createSlice } from '@reduxjs/toolkit'
 
-// Render copies of the Rust providers block answers (providers and
-// their models). Every read and every mutation lands its answer here;
-// `null`/`{}` = the read has not happened yet.
 const providersSlice = createSlice({
   name: 'providers',
   initialState: {
-    catalog: null, // supported provider kinds
-    providers: null, // configured providers
-    models: {}, // models by provider id
-    model: {}, // single model rows by id
+    catalog: null,
+    providers: null,
+    models: {},
+    model: {},
   },
   reducers: {
     catalogSet: (state, action) => {

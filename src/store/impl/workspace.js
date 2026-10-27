@@ -7,9 +7,6 @@ import { createSlice } from '@reduxjs/toolkit'
 
 import { CHAT_INPUT_SIZE_DEFAULT, SIDE_BAR_SIZE_DEFAULT } from '../../constants'
 
-// Render copy of the Rust workspace. Rust stays the source of truth:
-// the load, every save answer and every event-workspace payload land
-// here — wire fields, as Rust keeps them.
 const workspaceSlice = createSlice({
   name: 'workspace',
   initialState: {
@@ -23,12 +20,12 @@ const workspaceSlice = createSlice({
     side_bar_collapsed: false,
   },
   reducers: {
-    // merge of a fresh workspace answer (load, event-workspace payload)
     workspaceSet: (state, action) => {
       Object.assign(state, action.payload)
+      state.chat_input_size = state.chat_input_size ?? CHAT_INPUT_SIZE_DEFAULT
+      state.side_bar_size = state.side_bar_size ?? SIDE_BAR_SIZE_DEFAULT
       state.ready = true
     },
-    // live drag values; the whole row is saved on release
     sideBarSizeSet: (state, action) => {
       state.side_bar_size = action.payload
     },

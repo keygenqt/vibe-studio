@@ -15,6 +15,11 @@ export const app = {
     store.dispatch(appSet(info))
     return info
   },
+  get_system_theme: async function () {
+    const theme = await invoke('get_system_theme', {})
+    store.dispatch(systemThemeSet(theme))
+    return theme
+  },
 }
 
 // the block's Rust channel, bound once for the app lifetime: the OS
@@ -22,7 +27,6 @@ export const app = {
 export function app_events() {
   return [
     listen('event-app', event => {
-      // keep the theme lowercase whatever the wire variant shape is
       store.dispatch(systemThemeSet(String(event.payload.value).toLowerCase()))
     }),
   ]

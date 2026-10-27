@@ -14,13 +14,9 @@ import {
   SIDE_BAR_SIZE_MIN,
 } from '../constants'
 import { Methods } from '../modules'
+import { AppUtils } from '../utils'
 import { chatInputSizeSet, sideBarSizeSet, workspaceSet } from '../store/impl/workspace'
 
-/**
- * The workspace block model: one load on mount, live values over
- * event-workspace, mutations through Methods with an optimistic
- * write. The only hook over the workspace store.
- */
 export function useCoreWorkspace() {
   const dispatch = useDispatch()
   const raw = useSelector(state => state.workspace)
@@ -30,15 +26,12 @@ export function useCoreWorkspace() {
     Methods.get_workspace()
   }, [])
 
-  // locale rides the workspace
   React.useEffect(() => {
     if (raw.ready && i18next.language !== raw.locale) {
       i18next.changeLanguage(raw.locale)
     }
   }, [raw.ready, raw.locale])
 
-  // the wire unit: every field Rust keeps; the window size rides
-  // along untouched — Rust owns it, JS only echoes it back
   const wire = () => ({
     window_width: raw.window_width,
     window_height: raw.window_height,
@@ -52,7 +45,6 @@ export function useCoreWorkspace() {
   const toggleSidebar = () => {
     if (!raw.ready) return
     const next = !raw.side_bar_collapsed
-    // optimistic write; the event-workspace broadcast confirms it
     dispatch(workspaceSet({ side_bar_collapsed: next }))
     Methods.save_workspace({ ...wire(), side_bar_collapsed: next })
   }
@@ -74,7 +66,11 @@ export function useCoreWorkspace() {
     setDragging(true)
 
     const onPointerMove = move => {
-      size = clamp(base.side_bar_size + move.clientX - startX, SIDE_BAR_SIZE_MIN, SIDE_BAR_SIZE_MAX)
+      size = AppUtils.clamp(
+        base.side_bar_size + move.clientX - startX,
+        SIDE_BAR_SIZE_MIN,
+        SIDE_BAR_SIZE_MAX
+      )
       dispatch(sideBarSizeSet(size))
     }
 
@@ -100,8 +96,7 @@ export function useCoreWorkspace() {
     setDragging(true)
 
     const onPointerMove = move => {
-      // dragging up grows the composer
-      size = clamp(
+      size = AppUtils.clamp(
         base.chat_input_size + startY - move.clientY,
         CHAT_INPUT_SIZE_MIN,
         CHAT_INPUT_SIZE_MAX
@@ -133,9 +128,4 @@ export function useCoreWorkspace() {
     onSidebarHandlePointerDown,
     onComposerHandlePointerDown,
   }
-}
-
-// Rust keeps values as sent; bounds are a UI shell policy
-function clamp(value, min, max) {
-  return Math.round(Math.min(max, Math.max(min, value)))
 }

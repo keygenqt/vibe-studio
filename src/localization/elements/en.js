@@ -10,6 +10,8 @@ export const enLocalization = {
       t_error_data: 'Failed to load data!',
       t_not_found: 'Nothing found.',
       t_save: 'Save',
+      t_cancel: 'Cancel',
+      t_delete: 'Delete',
     },
     main: {
       t_theme: 'Theme',
@@ -22,6 +24,10 @@ export const enLocalization = {
     settings: {
       t_providers: 'Providers',
       t_providers_description: 'API providers and models',
+      t_general: 'General',
+      t_general_description: 'Base app behavior',
+    },
+    general: {
       t_general: 'General',
       t_general_description: 'Base app behavior',
     },
@@ -41,7 +47,6 @@ export const enLocalization = {
       t_api_key_hint: 'Leave empty if not required',
       t_sync_models: 'Sync models',
       t_models: 'Models',
-      t_cancel: 'Cancel',
       t_delete: 'Delete',
       t_validation_required: 'Must not be empty.',
       t_validation_url: 'Must be a valid URL.',

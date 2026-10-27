@@ -13,7 +13,6 @@ import { SettingsSidebarItem } from './SettingsSidebarItem'
 import { AppRoutes } from '../../../constants'
 import { AppNav } from '../../../utils'
 
-// draft: providers only; a section returns with its feature
 const ITEMS = [
   {
     path: AppRoutes.settingsGeneral(),
@@ -27,7 +26,6 @@ const ITEMS = [
     title: 'settings.t_providers',
     description: 'settings.t_providers_description',
     icon: <HubOutlined />,
-    // active across the whole provider section, including the list page
     match: [
       AppRoutes.settingsProviders(),
       AppRoutes.provider(),
@@ -41,6 +39,7 @@ export function SidebarView() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+
   return (
     <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
       {ITEMS.map(item => {
@@ -53,8 +52,6 @@ export function SidebarView() {
             icon={item.icon}
             active={active}
             onClick={() => {
-              // on the section root: no navigation, no duplicate entries;
-              // from drill-down pages the click returns to the section root
               if (matchPath(item.path, pathname)) return
               AppNav.openWithReplace(navigate, item.path, AppRoutes.settings())
             }}

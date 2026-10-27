@@ -15,12 +15,9 @@ import { ModelForm } from './elements/ModelForm'
 export function ModelPage() {
   const { modelId } = useParams()
   const id = Number(modelId)
-
-  // the row and the provider resolve from the store
   const { providers, model, error, ready } = useCoreProviders({ modelId: id })
   const provider = (providers ?? []).find(item => item.id === model?.provider_id) ?? null
 
-  // a failed read — the row cannot resolve
   if (error) {
     return (
       <WaitState ready={ready}>
@@ -37,7 +34,6 @@ export function ModelPage() {
             title={model.name}
             subtitle={provider ? `${provider.name} · ${provider.host}` : ''}
           />
-          {/* reinitialize picks the fresh row after every save */}
           <ModelForm key={`model-${id}`} model={model} />
         </Stack>
       )}

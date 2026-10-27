@@ -5,18 +5,12 @@
  */
 import { createSlice } from '@reduxjs/toolkit'
 
-// The App block: render copy of the Rust app facts (version, debug
-// flag) plus the transient UI state of the shell.
 const appSlice = createSlice({
   name: 'app',
   initialState: {
-    // facts served by get_app_info
     version: null,
     isDebug: false,
-    // transient success handoff between pages, cleared right after reading
     formSuccess: null,
-    // OS theme, arrives over event-app; the UI resolves it against
-    // the persisted workspace choice
     systemTheme: 'light',
   },
   reducers: {

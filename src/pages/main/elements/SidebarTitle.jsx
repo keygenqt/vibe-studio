@@ -11,6 +11,7 @@ import { TooltipIconButton } from '../../../components/buttons'
 
 export function SidebarTitle() {
   const { t } = useTranslation()
+
   return (
     <Stack
       width={1}

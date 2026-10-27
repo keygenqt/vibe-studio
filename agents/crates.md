@@ -44,12 +44,13 @@ Rules of the Rust workspace.
   reading, values for writing — and the `impl Store` next to it;
   methods are `pub(crate)`.
 - The public surface is flat functions in `src/lib.rs`, each
-  delegating one line into `Store`; every row leaving the crate is
-  resolved — unset user config comes out as the model defaults.
+  delegating one line into `Store`; untouched values leave as
+  `None` — the UI resolves them only where it needs a concrete value.
 - Generic query primitives live in `db/store.rs`; concrete diesel is
   allowed only where a generic cannot express the query.
 - The `Default` of a state struct is an honest zero: nothing stored,
-  nothing touched; resolving defaults is the UI's job.
+  nothing touched; core knows nothing of the UI defaults — the UI
+  keeps its own and applies them where needed.
 - Schema changes only through migrations: one folder per migration,
   `<version>_<name>/up.sql` (+ `down.sql`); the set is embedded
   into the binary and applied in `Store::open`. During development:

@@ -147,6 +147,12 @@ pub async fn save_provider_models(
 // App
 // ─────────────────────────────────────────────
 
+/// The current OS theme — the startup value for the shell.
+#[tauri::command]
+pub fn get_system_theme() -> String {
+    studio_core::get_system_theme().as_str().to_string()
+}
+
 /// Serves the app version and debug flag to the shell.
 #[tauri::command]
 pub fn get_app_info(app: AppHandle) -> AppInfoData {

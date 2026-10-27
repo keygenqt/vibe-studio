@@ -7,10 +7,7 @@ import { useTranslation } from 'react-i18next'
 
 import { PageHeader } from '../../components/views'
 
-// draft: will grow into default models and core app settings
 export function GeneralPage() {
   const { t } = useTranslation()
-  return (
-    <PageHeader title={t('settings.t_general')} subtitle={t('settings.t_general_description')} />
-  )
+  return <PageHeader title={t('general.t_general')} subtitle={t('general.t_general_description')} />
 }

@@ -35,6 +35,15 @@ impl ThemeChoice {
     }
 }
 
+/// Detects the OS theme once — the startup value; changes come
+/// through the watcher.
+pub(crate) fn system_theme() -> ThemeChoice {
+    match dark_light::detect() {
+        Ok(dark_light::Mode::Dark) => ThemeChoice::Dark,
+        _ => ThemeChoice::Light,
+    }
+}
+
 /// Calls the callback with the OS theme on every change. Spawns a
 /// background watcher thread that lives for the app's lifetime.
 pub(crate) fn listen_system_theme(on_change: impl Fn(ThemeChoice) + Send + 'static) -> Result<()> {

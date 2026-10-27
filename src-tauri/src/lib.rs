@@ -73,6 +73,7 @@ pub fn run() {
             commands::get_provider_model,
             commands::save_provider_model,
             commands::save_provider_models,
+            commands::get_system_theme,
             commands::get_app_info,
             commands::get_provider_models_by_type,
         ])

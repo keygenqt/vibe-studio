@@ -174,6 +174,12 @@ pub fn store_open(dir: &Path) -> Result<Store> {
     Store::open(&dir.join("vibe-studio.db"))
 }
 
+/// Detects the OS theme once — the startup value; changes come
+/// through the watcher.
+pub fn get_system_theme() -> ThemeChoice {
+    theme::system_theme()
+}
+
 /// Calls the callback with the OS theme on every change. Spawns a
 /// background watcher thread that lives for the app's lifetime.
 pub fn listen_system_theme(on_change: impl Fn(ThemeChoice) + Send + 'static) -> Result<()> {

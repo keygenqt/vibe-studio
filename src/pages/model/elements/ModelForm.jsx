@@ -15,9 +15,6 @@ import { ErrorAlert, SuccessAlert } from '../../../components/views'
 import { AppUtils } from '../../../utils'
 import { Methods } from '../../../modules'
 
-// empty is valid, whitespace-only is not — same rule as in Rust
-const notBlank = value => !value || value.trim() !== ''
-
 export function ModelForm(props) {
   const { t } = useTranslation()
   const [savedOpen, setSavedOpen] = React.useState(false)
@@ -25,7 +22,6 @@ export function ModelForm(props) {
   return (
     <Formik
       enableReinitialize
-      // concrete values arrive from Rust — the UI keeps no defaults
       initialValues={{
         name: props.model.display_name ?? '',
         systemPrompt: props.model.system_prompt,
@@ -35,8 +31,12 @@ export function ModelForm(props) {
         numPredict: props.model.num_predict,
       }}
       validationSchema={Yup.object().shape({
-        name: Yup.string().test('blank', t('provider.t_validation_required'), notBlank),
-        systemPrompt: Yup.string().test('blank', t('provider.t_validation_required'), notBlank),
+        name: Yup.string().test('blank', t('provider.t_validation_required'), AppUtils.notBlank),
+        systemPrompt: Yup.string().test(
+          'blank',
+          t('provider.t_validation_required'),
+          AppUtils.notBlank
+        ),
         temperature: Yup.number().min(0).max(2),
         seed: Yup.number().integer().min(0),
         numCtx: Yup.number().integer().min(1),
@@ -84,8 +84,7 @@ export function ModelForm(props) {
               name={'name'}
               variant={'filled'}
               value={values.name}
-              // empty name falls back to the derived model title
-              placeholder={AppUtils.formatModelName(props.model.name)}
+              placeholder={props.model.name}
               helperText={touched.name && errors.name ? errors.name : ''}
               error={Boolean(touched.name && errors.name)}
               disabled={isSubmitting}

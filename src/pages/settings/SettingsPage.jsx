@@ -14,10 +14,10 @@ import { SidebarView } from './elements/SidebarView'
 export function SettingsPage() {
   const workspace = useCoreWorkspace()
   const { t } = useTranslation()
-  // fade on every settings navigation; the shell stays mounted
   const { pathname } = useLocation()
-  // no render until the stored truth arrives — no startup animation
+
   if (!workspace.ready) return null
+
   return (
     <ShellLayout railActions={<BackIconButton />}>
       <SidebarLayout
@@ -29,7 +29,6 @@ export function SettingsPage() {
           </Typography>
         }
         sidebar={{
-          // collapse is a chat-shell feature; settings sidebar is always open
           collapsed: false,
           width: workspace.sideBarSize,
           dragging: workspace.dragging,
@@ -37,8 +36,6 @@ export function SettingsPage() {
         }}
         sidebarView={<SidebarView />}
       >
-        {/* keyed by pathname: the fade replays on every inner navigation;
-            minHeight lets short pages stretch, flexGrow centers loaders */}
         <Box
           key={pathname}
           className={'PageFade'}

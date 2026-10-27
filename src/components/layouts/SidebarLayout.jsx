@@ -13,7 +13,6 @@ export function SidebarLayout(props) {
   const { collapsed, width, dragging, onHandlePointerDown } = props.sidebar
   return (
     <>
-      {/* stands still, fades out while the content column covers it */}
       <Box
         sx={theme => ({
           width: width,
@@ -23,7 +22,6 @@ export function SidebarLayout(props) {
           gap: '10px',
           opacity: collapsed ? 0 : 1,
           boxSizing: 'border-box',
-          // fade leads the slide by 100ms and trails it by 100ms
           transition: dragging
             ? 'none'
             : theme.transitions.create(['opacity'], {
@@ -53,7 +51,10 @@ export function SidebarLayout(props) {
           <ScrollPanel scrollKey={props.scrollSidebarKey}>{props.sidebarView}</ScrollPanel>
         )}
       </Box>
-      <HandleView orientation="vertical" onPointerDown={onPointerDownGuard(props)} />
+      <HandleView
+        orientation="vertical"
+        onPointerDown={collapsed ? undefined : onHandlePointerDown}
+      />
       <Box
         sx={theme => ({
           flexGrow: 1,
@@ -61,7 +62,6 @@ export function SidebarLayout(props) {
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
-          // slides over the standing sidebar: width + two gaps + handle
           marginLeft: collapsed ? `calc(-1 * (${width}px + ${theme.spacing(2)} + 2px))` : 0,
           position: 'relative',
           zIndex: 1,
@@ -82,10 +82,6 @@ export function SidebarLayout(props) {
       </Box>
     </>
   )
-}
-
-function onPointerDownGuard(props) {
-  return props.sidebar.collapsed ? undefined : props.sidebar.onHandlePointerDown
 }
 
 SidebarLayout.propTypes = {

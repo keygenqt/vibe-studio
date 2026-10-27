@@ -13,10 +13,9 @@ import * as Yup from 'yup'
 import { Box, Button, MenuItem, Stack, TextField } from '@mui/material'
 
 import { SaveButton } from '../../../components/buttons'
-import { ErrorAlert, SuccessAlert } from '../../../components/views'
+import { DeleteDialog, ErrorAlert, SuccessAlert } from '../../../components/views'
 import { AppNav, AppUtils } from '../../../utils'
 import { AppRoutes } from '../../../constants'
-import { DeleteDialog } from './DeleteDialog'
 import { formSuccessClear, formSuccessSet } from '../../../store/impl/app'
 import { Methods } from '../../../modules'
 
@@ -29,17 +28,14 @@ export function ProviderForm(props) {
   const isEdit = Boolean(props.isEdit)
   const [openDelete, setOpenDelete] = React.useState(false)
   const [savedOpen, setSavedOpen] = React.useState(false)
+  const current = catalog.find(info => info.provider === props.provider) ?? catalog[0]
 
   React.useEffect(() => {
-    // success handoff from before the mode switch: show once and clear
     if (formSuccess) {
       setSavedOpen(true)
       dispatch(formSuccessClear())
     }
   }, [])
-
-  // edit keeps the stored kind, add starts from the first entry
-  const current = catalog.find(info => info.provider === props.provider) ?? catalog[0]
 
   return (
     <Formik
@@ -54,13 +50,7 @@ export function ProviderForm(props) {
         name: Yup.string().trim().required(t('provider.t_validation_required')),
         host: Yup.string()
           .required(t('provider.t_validation_required'))
-          .test('host', t('provider.t_validation_url'), value => {
-            try {
-              return Boolean(new URL(value).hostname)
-            } catch {
-              return false
-            }
-          }),
+          .test('host', t('provider.t_validation_url'), AppUtils.validUrl),
         apiKey: Yup.string().notRequired(),
       })}
       onSubmit={async (values, { setErrors, setSubmitting }) => {
@@ -90,9 +80,7 @@ export function ProviderForm(props) {
         setErrors,
         setFieldValue,
       }) => {
-        // kind lookup, shared by the api key rule and the prefill
         const infoOf = kind => catalog.find(info => info.provider === kind)
-        // the provider form
         return (
           <Box component={'form'} noValidate onSubmit={handleSubmit}>
             <DeleteDialog
@@ -132,7 +120,6 @@ export function ProviderForm(props) {
                   onChange={e => {
                     const prev = infoOf(values.provider)
                     const next = infoOf(e.target.value)
-                    // overwrite the previous kind's defaults, keep custom values
                     const prefill = (field, oldDefault, newDefault) => {
                       if (!values[field] || values[field] === (oldDefault ?? '')) {
                         setFieldValue(field, newDefault)

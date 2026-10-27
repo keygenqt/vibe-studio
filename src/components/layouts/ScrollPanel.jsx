@@ -6,7 +6,6 @@
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 
-// framed scroll panel: paper panel + ScrollArea with ScrollFrame edge fades
 export function ScrollPanel(props) {
   return (
     <Box

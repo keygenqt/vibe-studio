@@ -24,8 +24,10 @@ export function MainPage() {
   const workspace = useCoreWorkspace()
   const { t } = useTranslation()
   const navigate = useNavigate()
+
   // no render until the stored truth arrives — no startup animation
   if (!workspace.ready) return null
+
   return (
     <ShellLayout
       railActions={

@@ -15,18 +15,13 @@ export function initScrollArea() {
   let raf = 0
 
   const check = (el, state) => {
-    // data-scroll-static: scrollable, but the padding toggle disturbs
-    // foreign layout observers (textarea autosize) — leave its padding alone
     const padded = el.scrollHeight > el.clientHeight && el.dataset.scrollStatic === undefined
     el.classList.toggle('ScrollAreaPadded', padded)
-    // restore until the user scrolls themselves — content may mount late
     if (state.key !== undefined && !state.touched) {
       el.scrollTop = positions.get(state.key) ?? 0
     }
   }
 
-  // every DOM write lands here: one batch per frame, outside the measure
-  // phases — RO delivery and mutation microtasks stay read-only
   const flush = () => {
     raf = 0
     pending.forEach((state, el) => check(el, state))
@@ -77,7 +72,6 @@ export function initScrollArea() {
     muts.forEach(m => {
       m.addedNodes.forEach(node => find(node).forEach(watch))
       m.removedNodes.forEach(node => find(node).forEach(forget))
-      // content changed inside an already mounted scroll area
       const target = m.target instanceof Element ? m.target : m.target?.parentElement
       const el = target?.closest('.ScrollArea')
       const state = el && watched.get(el)

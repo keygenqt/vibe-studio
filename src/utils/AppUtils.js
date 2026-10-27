@@ -3,17 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['misc']
  */
-
 export const AppUtils = {
-  // 'qwen2.5-coder:7b-instruct' -> 'Qwen2.5 Coder 7b Instruct'
-  formatModelName: function (model) {
-    return model
-      .split(/[:\-_/]/)
-      .filter(Boolean)
-      .map(word => word.replace(/^\p{L}/u, ch => ch.toUpperCase()))
-      .join(' ')
-  },
-
   // the Rust message is the i18n key: lookup without the trailing
   // dot, unknown messages fall back to the raw string
   backendMessage: function (t, error) {
@@ -37,6 +27,25 @@ export const AppUtils = {
       setErrors({ submit: AppUtils.backendMessage(t, error) })
     } finally {
       setSubmitting(false)
+    }
+  },
+
+  // Rust keeps values as sent; bounds are a UI shell policy
+  clamp: function (value, min, max) {
+    return Math.round(Math.min(max, Math.max(min, value)))
+  },
+
+  // empty is valid, whitespace-only is not
+  notBlank: function (value) {
+    return !value || value.trim() !== ''
+  },
+
+  // parses only absolute URLs with a host
+  validUrl: function (value) {
+    try {
+      return Boolean(new URL(value).hostname)
+    } catch {
+      return false
     }
   },
 }

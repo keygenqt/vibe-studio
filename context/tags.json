@@ -4,6 +4,7 @@
   "CONTRIBUTING.md": ["misc"],
   "Cargo.lock": ["deps"],
   "Cargo.toml": ["deps"],
+  ".prettierrc.json": ["misc"],
   "LICENSE": ["misc"],
   "README.md": ["misc"],
   "agents/agents.md": ["context"],

@@ -8,9 +8,6 @@ import { useSelector } from 'react-redux'
 
 import { Methods } from '../modules'
 
-/**
- * The app block model: facts and the system theme; one fetch on mount.
- */
 export function useCoreApp() {
   const version = useSelector(state => state.app.version)
   const isDebug = useSelector(state => state.app.isDebug)
@@ -18,6 +15,7 @@ export function useCoreApp() {
 
   React.useEffect(() => {
     Methods.get_app_info()
+    Methods.get_system_theme()
   }, [])
 
   return { version, isDebug, systemTheme, ready: version !== null }

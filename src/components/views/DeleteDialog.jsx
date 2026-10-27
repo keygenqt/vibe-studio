@@ -14,7 +14,6 @@ import {
   DialogTitle,
 } from '@mui/material'
 
-// generic confirm dialog for destructive actions
 export function DeleteDialog(props) {
   const { t } = useTranslation()
   return (
@@ -24,9 +23,9 @@ export function DeleteDialog(props) {
         <DialogContentText>{props.text}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={props.onCancel}>{t('provider.t_cancel')}</Button>
+        <Button onClick={props.onCancel}>{t('common.t_cancel')}</Button>
         <Button color={'error'} variant={'contained'} onClick={props.onConfirm}>
-          {t('provider.t_delete')}
+          {t('common.t_delete')}
         </Button>
       </DialogActions>
     </Dialog>

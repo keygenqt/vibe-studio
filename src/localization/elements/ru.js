@@ -10,6 +10,8 @@ export const ruLocalization = {
       t_error_data: 'Ошибка получения данных!',
       t_not_found: 'Ничего не найдено.',
       t_save: 'Сохранить',
+      t_cancel: 'Отмена',
+      t_delete: 'Удалить',
     },
     main: {
       t_theme: 'Тема',
@@ -22,6 +24,10 @@ export const ruLocalization = {
     settings: {
       t_providers: 'Провайдеры',
       t_providers_description: 'API-провайдеры и модели',
+      t_general: 'Общие',
+      t_general_description: 'Основное поведение приложения',
+    },
+    general: {
       t_general: 'Общие',
       t_general_description: 'Основное поведение приложения',
     },
@@ -41,7 +47,6 @@ export const ruLocalization = {
       t_api_key_hint: 'Оставьте пустым, если ключ не обязателен',
       t_sync_models: 'Синхронизировать модели',
       t_models: 'Модели',
-      t_cancel: 'Отмена',
       t_delete: 'Удалить',
       t_validation_required: 'Не должно быть пустым.',
       t_validation_url: 'Должен быть корректным URL.',

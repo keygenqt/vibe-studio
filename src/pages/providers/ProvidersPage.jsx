@@ -20,14 +20,6 @@ export function ProvidersPage() {
   const { t } = useTranslation()
   const { catalog, providers, ready } = useCoreProviders()
 
-  // kind id -> catalog entry, for card colors
-  const catalogById = {}
-  if (catalog) {
-    catalog.forEach(info => {
-      catalogById[info.provider] = info
-    })
-  }
-
   return (
     <WaitState ready={ready}>
       <Stack spacing={2}>
@@ -39,7 +31,7 @@ export function ProvidersPage() {
           <ProviderCard
             key={`provider-${provider.id}`}
             provider={provider}
-            color={catalogById[provider.provider]?.color}
+            color={catalog.find(info => info.provider === provider.provider)?.color}
             onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
           />
         ))}

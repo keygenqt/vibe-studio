@@ -15,6 +15,8 @@ export function bindEvents() {
   return Promise.all([...app_events(), ...providers_events(), ...workspace_events()])
 }
 
+// the single JS surface to Rust: one method — one command, a block
+// brings its own methods into the spread
 export const Methods = {
   ...app,
   ...providers,

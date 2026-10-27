@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
+export * from './DeleteDialog'
 export * from './ErrorAlert'
 export * from './HandleView'
+export * from './ModelCard'
 export * from './SidebarItem'
 export * from './PageHeader'
 export * from './SuccessAlert'

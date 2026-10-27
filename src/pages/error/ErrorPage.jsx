@@ -11,6 +11,7 @@ import { BackIconButton } from '../../components/buttons'
 
 export function ErrorPage() {
   const { t } = useTranslation()
+
   return (
     <ShellLayout railActions={<BackIconButton />}>
       <Box
