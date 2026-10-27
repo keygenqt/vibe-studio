@@ -24,6 +24,8 @@ export const ruLocalization = {
     settings: {
       t_providers: 'Провайдеры',
       t_providers_description: 'API-провайдеры и модели',
+      t_groups_chat: 'Группы чатов',
+      t_groups_chat_description: 'Настройка групп чатов',
       t_general: 'Общие',
       t_general_description: 'Основное поведение приложения',
     },
@@ -50,6 +52,22 @@ export const ruLocalization = {
       t_delete: 'Удалить',
       t_validation_required: 'Не должно быть пустым.',
       t_validation_url: 'Должен быть корректным URL.',
+    },
+    groups_chat: {
+      t_add: 'Добавить группу',
+      t_subtitle: 'Группы чатов с настройкой модели и системного промпта.',
+    },
+    group_chat: {
+      t_title: 'Группа',
+      t_subtitle: 'Модель и системный промпт группы.',
+      t_saved: 'Группа сохранена.',
+      t_delete_title: 'Удалить группу?',
+      t_delete_text: 'Группа будет удалена. Действие необратимо.',
+      t_name: 'Название',
+      t_model: 'Модель',
+      t_system_prompt: 'Системный промпт',
+      t_delete: 'Удалить',
+      t_validation_required: 'Не должно быть пустым.',
     },
     models: {
       t_saved: 'Модели сохранены.',
@@ -80,6 +98,7 @@ export const ruLocalization = {
       'Name must not be blank': 'Название не должно быть пустым.',
       'Display name must not be blank': 'Название не должно быть пустым.',
       'System prompt must not be blank': 'Системный промпт не должен быть пустым.',
+      'Unknown model': 'Неизвестная модель.',
     },
   },
 }

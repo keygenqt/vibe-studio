@@ -7,7 +7,13 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
 import store from '../../store'
-import { catalogSet, modelSet, modelsSet, providersSet } from '../../store/impl/providers'
+import {
+  catalogSet,
+  modelSet,
+  modelsSet,
+  providerSet,
+  providersSet,
+} from '../../store/impl/providers'
 
 export const providers = {
   get_providers_catalog: async function () {
@@ -19,6 +25,11 @@ export const providers = {
     const list = await invoke('get_providers', {})
     store.dispatch(providersSet(list))
     return list
+  },
+  get_provider: async function (id) {
+    const provider = await invoke('get_provider', { id })
+    store.dispatch(providerSet(provider))
+    return provider
   },
   save_provider: async function (provider) {
     const saved = await invoke('save_provider', { provider })

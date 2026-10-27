@@ -12,6 +12,7 @@ pub(crate) mod theme;
 
 pub use studio_cluster::ModelInfoData;
 pub use studio_cluster::ProviderInfoData;
+pub use studio_states::GroupChatData;
 pub use studio_states::ProviderData;
 pub use studio_states::ProviderModelData;
 pub use studio_states::Store;
@@ -48,6 +49,11 @@ pub fn get_providers_catalog() -> Vec<ProviderInfoData> {
 /// loading never blocks the UI.
 pub fn get_providers(store: &Store) -> Vec<ProviderData> {
     studio_states::get_providers(store).unwrap_or_default()
+}
+
+/// Loads one provider by id.
+pub fn get_provider(store: &Store, id: i32) -> Result<ProviderData> {
+    studio_states::get_provider(store, id)
 }
 
 /// Validates against the cluster catalog, then inserts or updates.
@@ -163,6 +169,40 @@ pub async fn save_provider_models(
         })
         .collect();
     studio_states::save_provider_models(store, provider_id, &rows)
+}
+
+// ─────────────────────────────────────────────
+// Groups Chat
+// ─────────────────────────────────────────────
+
+/// All chat groups; a store error yields an empty list — loading
+/// never blocks the UI.
+pub fn get_groups_chat(store: &Store) -> Vec<GroupChatData> {
+    studio_states::get_groups_chat(store).unwrap_or_default()
+}
+
+/// Loads one group by id.
+pub fn get_group_chat(store: &Store, id: i32) -> Result<GroupChatData> {
+    studio_states::get_group_chat(store, id)
+}
+
+/// Validates and persists the group. The UI is not trusted: a blank
+/// name is an error, the model must exist; everything else is stored
+/// as sent.
+pub fn save_group_chat(store: &Store, group_chat: &GroupChatData) -> Result<GroupChatData> {
+    if group_chat.name.trim().is_empty() {
+        anyhow::bail!("Name must not be blank.");
+    }
+    if studio_states::get_provider_model(store, group_chat.model_id).is_err() {
+        anyhow::bail!("Unknown model.");
+    }
+    studio_states::save_group_chat(store, group_chat)
+}
+
+/// Deletes the group; a missing row is a no-op.
+pub fn delete_group_chat(store: &Store, id: i32) -> Result<()> {
+    studio_states::delete_group_chat(store, id)?;
+    Ok(())
 }
 
 // ─────────────────────────────────────────────

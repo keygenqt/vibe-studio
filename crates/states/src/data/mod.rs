@@ -15,12 +15,15 @@
 //!   get/save/delete API on `Store`.
 //! - `provider_model` — the `models` table: `ProviderModelData`, the
 //!   provider catalog with sync-owned facts and user-owned config.
+//! - `group_chat` — the `groups_chat` table: `GroupChatData`, the
+//!   get/save/delete API on `Store`.
 //! - `workspace` — the `workspace` table: `WorkspaceData`, the shell
 //!   environment as a single row (id = 1).
 //!
 //! Everything here is `pub(crate)`; the public surface is the flat
 //! API in `lib.rs`.
 
+pub(crate) mod group_chat;
 pub(crate) mod provider;
 pub(crate) mod provider_model;
 pub(crate) mod workspace;

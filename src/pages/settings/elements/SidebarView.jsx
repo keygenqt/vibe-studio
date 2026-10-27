@@ -6,6 +6,7 @@
 import { matchPath, useLocation, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { List } from '@mui/material'
+import ForumOutlined from '@mui/icons-material/ForumOutlined'
 import HubOutlined from '@mui/icons-material/HubOutlined'
 import TuneOutlined from '@mui/icons-material/TuneOutlined'
 
@@ -32,6 +33,13 @@ const ITEMS = [
       AppRoutes.model(),
       AppRoutes.models(),
     ],
+  },
+  {
+    path: AppRoutes.settingsGroupsChat(),
+    title: 'settings.t_groups_chat',
+    description: 'settings.t_groups_chat_description',
+    icon: <ForumOutlined />,
+    match: [AppRoutes.settingsGroupsChat(), AppRoutes.groupChat()],
   },
 ]
 

@@ -24,6 +24,8 @@ export const enLocalization = {
     settings: {
       t_providers: 'Providers',
       t_providers_description: 'API providers and models',
+      t_groups_chat: 'Chat groups',
+      t_groups_chat_description: 'Chat group settings',
       t_general: 'General',
       t_general_description: 'Base app behavior',
     },
@@ -50,6 +52,22 @@ export const enLocalization = {
       t_delete: 'Delete',
       t_validation_required: 'Must not be empty.',
       t_validation_url: 'Must be a valid URL.',
+    },
+    groups_chat: {
+      t_add: 'Add group',
+      t_subtitle: 'Chat groups with model and system prompt settings.',
+    },
+    group_chat: {
+      t_title: 'Group',
+      t_subtitle: "The group's model and system prompt.",
+      t_saved: 'Group saved.',
+      t_delete_title: 'Delete group?',
+      t_delete_text: 'The group will be removed. This action cannot be undone.',
+      t_name: 'Name',
+      t_model: 'Model',
+      t_system_prompt: 'System prompt',
+      t_delete: 'Delete',
+      t_validation_required: 'Must not be empty.',
     },
     models: {
       t_saved: 'Models saved.',
@@ -80,6 +98,7 @@ export const enLocalization = {
       'Name must not be blank': 'Name must not be blank.',
       'Display name must not be blank': 'Display name must not be blank.',
       'System prompt must not be blank': 'System prompt must not be blank.',
+      'Unknown model': 'Unknown model.',
     },
   },
 }

@@ -10,7 +10,7 @@ import { Stack } from '@mui/material'
 import { ProviderCard } from './elements/ProviderCard'
 import { DashedButton } from '../../components/buttons'
 import { PageHeader } from '../../components/views'
-import { WaitState } from '../../components/states'
+import { ErrorState, WaitState } from '../../components/states'
 import { AppRoutes } from '../../constants'
 import { AppNav } from '../../utils'
 import { useCoreProviders } from '../../hooks'
@@ -18,7 +18,15 @@ import { useCoreProviders } from '../../hooks'
 export function ProvidersPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { catalog, providers, ready } = useCoreProviders()
+  const { catalog, providers, error, ready } = useCoreProviders()
+
+  if (error) {
+    return (
+      <WaitState ready={ready}>
+        <ErrorState text={error.message ?? String(error)} />
+      </WaitState>
+    )
+  }
 
   return (
     <WaitState ready={ready}>
@@ -31,7 +39,7 @@ export function ProvidersPage() {
           <ProviderCard
             key={`provider-${provider.id}`}
             provider={provider}
-            color={catalog.find(info => info.provider === provider.provider)?.color}
+            color={catalog?.find(info => info.provider === provider.provider)?.color}
             onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
           />
         ))}

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'hooks']
  */
-import * as React from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Stack, Typography } from '@mui/material'
@@ -26,21 +25,13 @@ export function ProviderPage() {
   const pid = Number(providerId)
   const {
     catalog,
-    providers,
+    provider,
     models,
     error: readError,
     ready,
   } = useCoreProviders(isEdit ? { providerId: pid } : {})
-  const provider = isEdit ? ((providers ?? []).find(item => item.id === pid) ?? null) : null
-  const [routeError, setRouteError] = React.useState(null)
 
-  React.useEffect(() => {
-    if (isEdit && providers !== null && !provider) {
-      setRouteError(new Error(t('error.t_text')))
-    }
-  }, [isEdit, providers, provider, t])
-
-  const error = routeError ?? readError
+  const error = readError
   if (error) {
     return (
       <WaitState ready={ready}>

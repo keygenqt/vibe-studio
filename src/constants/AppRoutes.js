@@ -15,4 +15,7 @@ export const AppRoutes = {
   provider: (providerId = ':providerId') => `/settings/provider/${providerId}`,
   model: (modelId = ':modelId') => `/settings/model/${modelId}`,
   models: (providerId = ':providerId') => `/settings/models/${providerId}`,
+  settingsGroupsChat: () => '/settings/groups-chat',
+  groupChatAdd: () => '/settings/group-chat/add',
+  groupChat: (groupChatId = ':groupChatId') => `/settings/group-chat/${groupChatId}`,
 }

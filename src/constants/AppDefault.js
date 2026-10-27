@@ -17,6 +17,3 @@ export const SIDE_BAR_SIZE_DEFAULT = 330
 // animation timing vs how long a success banner stays visible
 export const DURATION_DEFAULT = 150
 export const DURATION_AUTO_HIDE = 4000
-
-// minimum loader phase on data pages
-export const DURATION_PAGE_LOADING = 500

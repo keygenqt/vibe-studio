@@ -6,6 +6,7 @@ use tauri::AppHandle;
 use tauri::State;
 use tauri::WebviewWindow;
 
+use studio_core::GroupChatData;
 use studio_core::ModelInfoData;
 use studio_core::ProviderData;
 use studio_core::ProviderInfoData;
@@ -16,6 +17,7 @@ use studio_core::WorkspaceData;
 use crate::data::app_info::AppInfoData;
 use crate::data::event_data::EventData;
 use crate::data::event_data::EventKey;
+use crate::events::emit_event_groups_chat;
 use crate::events::emit_event_providers;
 use crate::events::emit_event_workspace;
 
@@ -55,6 +57,12 @@ pub fn get_providers_catalog() -> Vec<ProviderInfoData> {
 #[tauri::command]
 pub fn get_providers(store: State<Store>) -> Vec<ProviderData> {
     studio_core::get_providers(&store)
+}
+
+/// Loads one provider by id.
+#[tauri::command]
+pub fn get_provider(store: State<Store>, id: i32) -> Result<ProviderData, String> {
+    studio_core::get_provider(&store, id).map_err(|e| e.to_string())
 }
 
 /// Validates and persists; `id: null` inserts, otherwise updates.
@@ -141,6 +149,49 @@ pub async fn save_provider_models(
         .map_err(|e| e.to_string())?;
     emit_event_providers(&window, EventData::new(EventKey::ProviderModels, &models));
     Ok(models)
+}
+
+// ─────────────────────────────────────────────
+// Groups Chat
+// ─────────────────────────────────────────────
+
+/// All chat groups.
+#[tauri::command]
+pub fn get_groups_chat(store: State<Store>) -> Vec<GroupChatData> {
+    studio_core::get_groups_chat(&store)
+}
+
+/// Loads one group by id.
+#[tauri::command]
+pub fn get_group_chat(store: State<Store>, id: i32) -> Result<GroupChatData, String> {
+    studio_core::get_group_chat(&store, id).map_err(|e| e.to_string())
+}
+
+/// Validates and persists; `id: null` inserts, otherwise updates.
+/// Returns the stored row and broadcasts the fresh groups chat list.
+#[tauri::command]
+pub fn save_group_chat(
+    window: WebviewWindow,
+    store: State<Store>,
+    group_chat: GroupChatData,
+) -> Result<GroupChatData, String> {
+    let saved = studio_core::save_group_chat(&store, &group_chat).map_err(|e| e.to_string())?;
+    emit_event_groups_chat(
+        &window,
+        EventData::new(EventKey::GroupsChat, &studio_core::get_groups_chat(&store)),
+    );
+    Ok(saved)
+}
+
+/// Deletes the group by id and broadcasts the fresh groups chat list.
+#[tauri::command]
+pub fn delete_group_chat(window: WebviewWindow, store: State<Store>, id: i32) -> Result<(), String> {
+    studio_core::delete_group_chat(&store, id).map_err(|e| e.to_string())?;
+    emit_event_groups_chat(
+        &window,
+        EventData::new(EventKey::GroupsChat, &studio_core::get_groups_chat(&store)),
+    );
+    Ok(())
 }
 
 // ─────────────────────────────────────────────

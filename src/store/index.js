@@ -6,12 +6,14 @@
 import { configureStore } from '@reduxjs/toolkit'
 
 import appReducer from './impl/app'
+import groupsChatReducer from './impl/groups_chat'
 import providersReducer from './impl/providers'
 import workspaceReducer from './impl/workspace'
 
 export default configureStore({
   reducer: {
     app: appReducer,
+    groups_chat: groupsChatReducer,
     providers: providersReducer,
     workspace: workspaceReducer,
   },

@@ -24,6 +24,8 @@ export const cnLocalization = {
     settings: {
       t_providers: '提供商',
       t_providers_description: 'API 提供商与模型',
+      t_groups_chat: '聊天分组',
+      t_groups_chat_description: '聊天分组设置',
       t_general: '通用',
       t_general_description: '应用核心行为',
     },
@@ -50,6 +52,22 @@ export const cnLocalization = {
       t_delete: '删除',
       t_validation_required: '不能为空。',
       t_validation_url: '必须是有效的 URL。',
+    },
+    groups_chat: {
+      t_add: '添加分组',
+      t_subtitle: '聊天分组：设置模型与系统提示词。',
+    },
+    group_chat: {
+      t_title: '分组',
+      t_subtitle: '分组的模型与系统提示词。',
+      t_saved: '分组已保存。',
+      t_delete_title: '删除分组？',
+      t_delete_text: '分组将被删除。此操作无法撤销。',
+      t_name: '名称',
+      t_model: '模型',
+      t_system_prompt: '系统提示词',
+      t_delete: '删除',
+      t_validation_required: '不能为空。',
     },
     models: {
       t_saved: '模型已保存。',
@@ -80,6 +98,7 @@ export const cnLocalization = {
       'Name must not be blank': '名称不能为空。',
       'Display name must not be blank': '名称不能为空。',
       'System prompt must not be blank': '系统提示词不能为空。',
+      'Unknown model': '未知模型。',
     },
   },
 }

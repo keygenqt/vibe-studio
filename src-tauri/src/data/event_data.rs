@@ -13,6 +13,7 @@ pub(crate) enum EventKey {
     Workspace,
     Providers,
     ProviderModels,
+    GroupsChat,
     SystemTheme,
 }
 

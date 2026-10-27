@@ -11,6 +11,8 @@ import { AppRoutes } from './constants'
 import {
   ErrorPage,
   GeneralPage,
+  GroupChatPage,
+  GroupsChatPage,
   MainPage,
   ModelPage,
   ModelsPage,
@@ -42,6 +44,9 @@ const router = createBrowserRouter([
           { path: AppRoutes.provider(), element: <ProviderPage /> },
           { path: AppRoutes.model(), element: <ModelPage /> },
           { path: AppRoutes.models(), element: <ModelsPage /> },
+          { path: AppRoutes.settingsGroupsChat(), element: <GroupsChatPage /> },
+          { path: AppRoutes.groupChatAdd(), element: <GroupChatPage /> },
+          { path: AppRoutes.groupChat(), element: <GroupChatPage /> },
         ],
       },
       { path: '*', element: <ErrorPage /> },

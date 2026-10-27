@@ -6,4 +6,5 @@
 export * from './useEffectFocus'
 export * from './useCoreWorkspace'
 export * from './useCoreProviders'
+export * from './useCoreGroupsChat'
 export * from './useCoreApp'

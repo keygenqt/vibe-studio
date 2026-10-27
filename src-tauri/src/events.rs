@@ -10,6 +10,7 @@ use crate::data::event_data::EventData;
 /// Event channel names — one per block.
 pub(crate) const EVENT_WORKSPACE: &str = "event-workspace";
 pub(crate) const EVENT_PROVIDERS: &str = "event-providers";
+pub(crate) const EVENT_GROUPS_CHAT: &str = "event-groups-chat";
 pub(crate) const EVENT_APP: &str = "event-app";
 
 /// Workspace mutations end with the fresh stored row.
@@ -21,6 +22,12 @@ pub(crate) fn emit_event_workspace(window: &WebviewWindow, value: EventData) {
 /// providers list, or the model list of one provider.
 pub(crate) fn emit_event_providers(window: &WebviewWindow, value: EventData) {
     emit_event(window, EVENT_PROVIDERS, value);
+}
+
+/// Group chat block mutations end with the fresh state: the
+/// groups chat list.
+pub(crate) fn emit_event_groups_chat(window: &WebviewWindow, value: EventData) {
+    emit_event(window, EVENT_GROUPS_CHAT, value);
 }
 
 /// The OS theme watcher reports the current theme.

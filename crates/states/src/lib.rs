@@ -13,6 +13,7 @@ use anyhow::Result;
 pub(crate) mod data;
 pub(crate) mod db;
 
+pub use data::group_chat::GroupChatData;
 pub use data::provider::ProviderData;
 pub use data::provider_model::ProviderModelData;
 pub use data::workspace::WorkspaceData;
@@ -60,6 +61,26 @@ pub fn save_provider_models(
     models: &[ProviderModelData],
 ) -> Result<Vec<ProviderModelData>> {
     store.save_provider_models(provider_id, models)
+}
+
+/// All chat groups.
+pub fn get_groups_chat(store: &Store) -> Result<Vec<GroupChatData>> {
+    store.get_groups_chat()
+}
+
+/// Loads one group by id.
+pub fn get_group_chat(store: &Store, id: i32) -> Result<GroupChatData> {
+    store.get_group_chat(id)
+}
+
+/// Inserts a new group (`id = None`) or updates the one with the given id; returns the stored row.
+pub fn save_group_chat(store: &Store, group_chat: &GroupChatData) -> Result<GroupChatData> {
+    store.save_group_chat(group_chat)
+}
+
+/// Deletes the group with the given id, returns affected rows.
+pub fn delete_group_chat(store: &Store, id: i32) -> Result<usize> {
+    store.delete_group_chat(id)
 }
 
 /// Loads the shell environment; a missing row falls back to `Default`.
