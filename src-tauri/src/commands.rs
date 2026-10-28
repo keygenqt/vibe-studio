@@ -6,6 +6,7 @@ use tauri::AppHandle;
 use tauri::State;
 use tauri::WebviewWindow;
 
+use studio_core::ChatData;
 use studio_core::GroupChatData;
 use studio_core::ModelInfoData;
 use studio_core::ProviderData;
@@ -190,6 +191,36 @@ pub fn delete_group_chat(window: WebviewWindow, store: State<Store>, id: i32) ->
     emit_event_groups_chat(
         &window,
         EventData::new(EventKey::GroupsChat, &studio_core::get_groups_chat(&store)),
+    );
+    Ok(())
+}
+
+/// All chats.
+#[tauri::command]
+pub fn get_chats(store: State<Store>) -> Vec<ChatData> {
+    studio_core::get_chats(&store)
+}
+
+/// Validates and persists; `id: null` inserts with a random pool
+/// name, otherwise updates. Returns the stored row and broadcasts
+/// the fresh chats list.
+#[tauri::command]
+pub fn save_chat(window: WebviewWindow, store: State<Store>, chat: ChatData) -> Result<ChatData, String> {
+    let saved = studio_core::save_chat(&store, &chat).map_err(|e| e.to_string())?;
+    emit_event_groups_chat(
+        &window,
+        EventData::new(EventKey::Chats, &studio_core::get_chats(&store)),
+    );
+    Ok(saved)
+}
+
+/// Deletes the chat by id and broadcasts the fresh chats list.
+#[tauri::command]
+pub fn delete_chat(window: WebviewWindow, store: State<Store>, id: i32) -> Result<(), String> {
+    studio_core::delete_chat(&store, id).map_err(|e| e.to_string())?;
+    emit_event_groups_chat(
+        &window,
+        EventData::new(EventKey::Chats, &studio_core::get_chats(&store)),
     );
     Ok(())
 }

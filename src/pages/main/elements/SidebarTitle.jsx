@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
+import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { Stack, Typography } from '@mui/material'
 import Add from '@mui/icons-material/Add'
 
 import { TooltipIconButton } from '../../../components/buttons'
 
-export function SidebarTitle() {
+export function SidebarTitle(props) {
   const { t } = useTranslation()
 
   return (
@@ -24,9 +25,16 @@ export function SidebarTitle() {
       <Typography variant={'h5'} fontWeight={500} color={'text.primary'}>
         {t('main.t_assistants')}
       </Typography>
-      <TooltipIconButton size={'mini'} title={t('main.t_add_assistant')}>
-        <Add />
-      </TooltipIconButton>
+      {props.canAdd && (
+        <TooltipIconButton size={'mini'} title={t('main.t_add_assistant')} onClick={props.onAdd}>
+          <Add />
+        </TooltipIconButton>
+      )}
     </Stack>
   )
+}
+
+SidebarTitle.propTypes = {
+  canAdd: PropTypes.bool.isRequired,
+  onAdd: PropTypes.func.isRequired,
 }

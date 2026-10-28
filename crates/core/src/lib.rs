@@ -12,6 +12,7 @@ pub(crate) mod theme;
 
 pub use studio_cluster::ModelInfoData;
 pub use studio_cluster::ProviderInfoData;
+pub use studio_states::ChatData;
 pub use studio_states::GroupChatData;
 pub use studio_states::ProviderData;
 pub use studio_states::ProviderModelData;
@@ -199,9 +200,36 @@ pub fn save_group_chat(store: &Store, group_chat: &GroupChatData) -> Result<Grou
     studio_states::save_group_chat(store, group_chat)
 }
 
-/// Deletes the group; a missing row is a no-op.
+/// Deletes the group with its chats; a missing group is a no-op.
 pub fn delete_group_chat(store: &Store, id: i32) -> Result<()> {
+    studio_states::delete_group_chats(store, id)?;
     studio_states::delete_group_chat(store, id)?;
+    Ok(())
+}
+
+// ─────────────────────────────────────────────
+// Chats
+// ─────────────────────────────────────────────
+
+/// All chats; a store error yields an empty list — loading never
+/// blocks the UI.
+pub fn get_chats(store: &Store) -> Vec<ChatData> {
+    studio_states::get_chats(store).unwrap_or_default()
+}
+
+/// Validates and persists the chat. The UI is not trusted: the group
+/// must exist; an empty name is filled with a random pool name on
+/// the states layer. Everything else is stored as sent.
+pub fn save_chat(store: &Store, chat: &ChatData) -> Result<ChatData> {
+    if studio_states::get_group_chat(store, chat.group_chat_id).is_err() {
+        anyhow::bail!("Unknown group.");
+    }
+    studio_states::save_chat(store, chat)
+}
+
+/// Deletes the chat; a missing row is a no-op.
+pub fn delete_chat(store: &Store, id: i32) -> Result<()> {
+    studio_states::delete_chat(store, id)?;
     Ok(())
 }
 

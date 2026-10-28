@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'hooks']
  */
+import * as React from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import ViewSidebar from '@mui/icons-material/ViewSidebar'
 import Settings from '@mui/icons-material/Settings'
 
-import { useCoreWorkspace } from '../../hooks'
+import { useCoreGroupsChat, useCoreWorkspace } from '../../hooks'
+import { Methods } from '../../modules'
 import { AppRoutes } from '../../constants'
 import { ShellLayout, SidebarLayout } from '../../components/layouts'
 import { TooltipIconButton } from '../../components/buttons'
@@ -24,6 +26,24 @@ export function MainPage() {
   const workspace = useCoreWorkspace()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { groupsChat, chats } = useCoreGroupsChat()
+  const [activeId, setActiveId] = React.useState(null)
+
+  // the first group is active until the user picks another; a group
+  // deletion falls back to the first remaining one
+  React.useEffect(() => {
+    if (groupsChat === null) return
+    setActiveId(prev =>
+      prev !== null && groupsChat.some(group => group.id === prev)
+        ? prev
+        : (groupsChat[0]?.id ?? null)
+    )
+  }, [groupsChat])
+
+  const createChat = () => {
+    if (activeId === null) return
+    Methods.save_chat({ id: null, name: '', group_chat_id: activeId }).catch(() => {})
+  }
 
   // no render until the stored truth arrives — no startup animation
   if (!workspace.ready) return null
@@ -59,8 +79,17 @@ export function MainPage() {
           dragging: workspace.dragging,
           onHandlePointerDown: workspace.onSidebarHandlePointerDown,
         }}
-        sidebarTitle={<SidebarTitle />}
-        sidebarView={<SidebarView />}
+        sidebarTitle={
+          <SidebarTitle canAdd={groupsChat !== null && groupsChat.length > 0} onAdd={createChat} />
+        }
+        sidebarView={
+          <SidebarView
+            groupsChat={groupsChat}
+            chats={chats}
+            activeId={activeId}
+            onActivate={setActiveId}
+          />
+        }
       >
         <ChatContent />
         {/* horizontal mirror of the sidebar handle: dragging up grows the composer */}

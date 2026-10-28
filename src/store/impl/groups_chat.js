@@ -9,11 +9,15 @@ const groupsChatSlice = createSlice({
   name: 'groups_chat',
   initialState: {
     groupsChat: null,
+    chats: [],
     groupChat: {},
   },
   reducers: {
     groupsChatSet: (state, action) => {
       state.groupsChat = action.payload
+    },
+    chatsSet: (state, action) => {
+      state.chats = action.payload
     },
     groupChatSet: (state, action) => {
       state.groupChat[action.payload.id] = action.payload
@@ -21,5 +25,5 @@ const groupsChatSlice = createSlice({
   },
 })
 
-export const { groupsChatSet, groupChatSet } = groupsChatSlice.actions
+export const { groupsChatSet, chatsSet, groupChatSet } = groupsChatSlice.actions
 export default groupsChatSlice.reducer

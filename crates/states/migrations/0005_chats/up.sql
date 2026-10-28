@@ -1,0 +1,5 @@
+CREATE TABLE chats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT NOT NULL,
+    group_chat_id INTEGER NOT NULL
+);

@@ -13,6 +13,7 @@ use anyhow::Result;
 pub(crate) mod data;
 pub(crate) mod db;
 
+pub use data::chat::ChatData;
 pub use data::group_chat::GroupChatData;
 pub use data::provider::ProviderData;
 pub use data::provider_model::ProviderModelData;
@@ -81,6 +82,27 @@ pub fn save_group_chat(store: &Store, group_chat: &GroupChatData) -> Result<Grou
 /// Deletes the group with the given id, returns affected rows.
 pub fn delete_group_chat(store: &Store, id: i32) -> Result<usize> {
     store.delete_group_chat(id)
+}
+
+/// All chats.
+pub fn get_chats(store: &Store) -> Result<Vec<ChatData>> {
+    store.get_chats()
+}
+
+/// Inserts a new chat (`id = None`) or updates the one with the given id; returns the stored row.
+pub fn save_chat(store: &Store, chat: &ChatData) -> Result<ChatData> {
+    store.save_chat(chat)
+}
+
+/// Deletes the chat with the given id, returns affected rows.
+pub fn delete_chat(store: &Store, id: i32) -> Result<usize> {
+    store.delete_chat(id)
+}
+
+/// Deletes all chats of the group, returns affected rows — the
+/// cleanup behind the group deletion.
+pub fn delete_group_chats(store: &Store, group_chat_id: i32) -> Result<usize> {
+    store.delete_group_chats(group_chat_id)
 }
 
 /// Loads the shell environment; a missing row falls back to `Default`.

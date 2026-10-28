@@ -14,6 +14,7 @@ pub(crate) enum EventKey {
     Providers,
     ProviderModels,
     GroupsChat,
+    Chats,
     SystemTheme,
 }
 
