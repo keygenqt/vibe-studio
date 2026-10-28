@@ -42,6 +42,8 @@ copies only for rendering.
 - A page with data loading gates its content in `WaitState`
   (`components/states`): readiness is the page's own data; the
   loader shows only when a load starts without data.
+- One row — one command: a page fetches its item by id, never
+  derives it from the collection list.
 
 ## Structure
 
