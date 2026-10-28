@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'hooks']
  */
-import * as React from 'react'
 import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Stack } from '@mui/material'
@@ -11,7 +10,6 @@ import { Stack } from '@mui/material'
 import { GroupChatForm } from './elements/GroupChatForm'
 import { PageHeader } from '../../components/views'
 import { ErrorState, WaitState } from '../../components/states'
-import { AppRoutes } from '../../constants'
 import { useCoreGroupsChat } from '../../hooks'
 
 export function GroupChatPage() {

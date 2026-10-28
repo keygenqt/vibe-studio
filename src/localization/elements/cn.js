@@ -64,6 +64,7 @@ export const cnLocalization = {
     group_chat: {
       t_title: '分组',
       t_subtitle: '分组的模型与系统提示词。',
+      t_no_models: '暂无模型。请先添加提供商，并在其中激活模型。',
       t_saved: '分组已保存。',
       t_delete_title: '删除分组？',
       t_delete_text: '分组将被删除。此操作无法撤销。',

@@ -64,6 +64,7 @@ export const enLocalization = {
     group_chat: {
       t_title: 'Group',
       t_subtitle: "The group's model and system prompt.",
+      t_no_models: 'No models yet. Add a provider and activate its models in it.',
       t_saved: 'Group saved.',
       t_delete_title: 'Delete group?',
       t_delete_text: 'The group will be removed. This action cannot be undone.',

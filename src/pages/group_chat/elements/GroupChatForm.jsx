@@ -13,7 +13,8 @@ import * as Yup from 'yup'
 import { Box, Button, ListSubheader, MenuItem, Stack, TextField } from '@mui/material'
 
 import { SaveButton } from '../../../components/buttons'
-import { DeleteDialog, ErrorAlert, SuccessAlert } from '../../../components/views'
+import { DeleteDialog } from '../../../components/views'
+import { ErrorAlert, SuccessAlert, InfoAlert } from '../../../components/alerts'
 import { AppNav, AppUtils } from '../../../utils'
 import { AppRoutes } from '../../../constants'
 import { formSuccessClear, formSuccessSet } from '../../../store/impl/app'
@@ -27,6 +28,7 @@ export function GroupChatForm(props) {
   const isEdit = Boolean(props.isEdit)
   const [openDelete, setOpenDelete] = React.useState(false)
   const [savedOpen, setSavedOpen] = React.useState(false)
+  const [noModelsOpen, setNoModelsOpen] = React.useState(true)
 
   React.useEffect(() => {
     if (formSuccess) {
@@ -88,6 +90,11 @@ export function GroupChatForm(props) {
                     setErrors({ submit: AppUtils.backendMessage(t, error) })
                   })
               }}
+            />
+            <InfoAlert
+              open={noModelsOpen && props.models.length === 0}
+              text={t('group_chat.t_no_models')}
+              onClose={() => setNoModelsOpen(false)}
             />
             <SuccessAlert
               open={savedOpen}
@@ -162,7 +169,7 @@ export function GroupChatForm(props) {
                   </Button>
                 )}
                 <Box sx={{ flexGrow: 1 }} />
-                <SaveButton isSubmitting={isSubmitting} />
+                <SaveButton isSubmitting={isSubmitting} disabled={props.models.length === 0} />
               </Stack>
             </Stack>
           </Box>

@@ -4,9 +4,7 @@
  * TAGS: ['components']
  */
 export * from './DeleteDialog'
-export * from './ErrorAlert'
 export * from './HandleView'
 export * from './ModelCard'
 export * from './SidebarItem'
 export * from './PageHeader'
-export * from './SuccessAlert'
