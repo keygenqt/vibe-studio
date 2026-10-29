@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
+import * as React from 'react'
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { Box, CircularProgress, IconButton, Stack, TextField } from '@mui/material'
@@ -13,6 +14,12 @@ import { useCoreChat } from '../../../hooks'
 export function InputView(props) {
   const { t } = useTranslation()
   const { draft, setDraft, send, sending } = useCoreChat({ chatId: props.chatId })
+  const inputRef = React.useRef(null)
+
+  // the disabled input can't take focus, so refocus after sending ends
+  React.useEffect(() => {
+    if (!sending) inputRef.current?.focus()
+  }, [sending])
 
   return (
     <Stack
@@ -43,6 +50,7 @@ export function InputView(props) {
           multiline
           fullWidth
           variant="standard"
+          inputRef={inputRef}
           disabled={sending}
           placeholder={t('main.t_placeholder')}
           value={draft}
