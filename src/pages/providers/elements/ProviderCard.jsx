@@ -24,7 +24,7 @@ export function ProviderCard(props) {
               {provider.name.charAt(0)}
             </Box>
           </Avatar>
-          <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
             <Stack
               direction={'row'}
               spacing={1}

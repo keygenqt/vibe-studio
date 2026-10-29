@@ -24,6 +24,10 @@ export const cnLocalization = {
       t_add_group: '创建分组',
       t_chat_delete_title: '删除聊天？',
       t_chat_delete_text: '聊天将被删除。此操作无法撤销。',
+      t_chat_untitled: '[聊天名称]',
+      t_chat_more: '更多 {{n}}',
+      t_chat_less: '收起',
+      t_group_collapse: '折叠 / 展开',
     },
     settings: {
       t_providers: '提供商',

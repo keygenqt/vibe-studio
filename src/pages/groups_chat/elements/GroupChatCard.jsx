@@ -23,7 +23,7 @@ export function GroupChatCard(props) {
               {props.groupChat.name.charAt(0)}
             </Box>
           </Avatar>
-          <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
               {props.groupChat.name}
             </Typography>

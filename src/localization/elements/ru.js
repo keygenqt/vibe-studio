@@ -24,6 +24,10 @@ export const ruLocalization = {
       t_add_group: 'Создать группу',
       t_chat_delete_title: 'Удалить чат?',
       t_chat_delete_text: 'Чат будет удалён. Действие необратимо.',
+      t_chat_untitled: '[Название чата]',
+      t_chat_more: 'Ещё {{n}}',
+      t_chat_less: 'Свернуть',
+      t_group_collapse: 'Свернуть / развернуть',
     },
     settings: {
       t_providers: 'Провайдеры',

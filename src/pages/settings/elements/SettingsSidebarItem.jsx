@@ -4,7 +4,9 @@
  * TAGS: ['components']
  */
 import PropTypes from 'prop-types'
-import { Box, Card, ListItemButton, ListItemText } from '@mui/material'
+import { Card, ListItemButton, Stack, Typography } from '@mui/material'
+
+import { BadgeView } from '../../../components/views'
 
 export function SettingsSidebarItem(props) {
   return (
@@ -17,32 +19,22 @@ export function SettingsSidebarItem(props) {
       }}
     >
       <ListItemButton selected={props.active} onClick={props.onClick} sx={{ px: '8px', py: '6px' }}>
-        <Box
-          sx={{
-            mr: 1,
-            mt: '7px',
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            alignSelf: 'flex-start',
-            bgcolor: 'action.selected',
-            color: 'text.primary',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            '& .MuiSvgIcon-root': { fontSize: 20 },
-          }}
+        <Stack
+          direction={'row'}
+          spacing={2}
+          alignItems={'center'}
+          sx={{ flexGrow: 1, minWidth: 0 }}
         >
-          {props.icon}
-        </Box>
-        <ListItemText
-          primary={props.title}
-          secondary={props.description}
-          slotProps={{
-            primary: { noWrap: true },
-          }}
-        />
+          <BadgeView active={props.active}>{props.icon}</BadgeView>
+          <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography fontWeight={600} noWrap color={'text.primary'} sx={{ minWidth: 0 }}>
+              {props.title}
+            </Typography>
+            <Typography variant={'body2'} noWrap color={'text.secondary'}>
+              {props.description}
+            </Typography>
+          </Stack>
+        </Stack>
       </ListItemButton>
     </Card>
   )

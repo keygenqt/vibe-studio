@@ -8,6 +8,7 @@
 // pattern, with an id for a concrete URL.
 export const AppRoutes = {
   main: () => '/',
+  chat: (chatId = ':chatId') => `/chat/${chatId}`,
   settings: () => '/settings',
   settingsGeneral: () => '/settings/general',
   settingsProviders: () => '/settings/providers',

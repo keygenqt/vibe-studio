@@ -13,7 +13,7 @@ export const ThemeDark = createTheme({
     mode: 'dark',
     background: { default: '#333333', paper: '#1e1e1e' },
     primary: { main: '#2dd4bf', contrastText: '#0f2a2c' },
-    secondary: { main: '#14b8a6', contrastText: '#fff' },
+    secondary: { main: '#14b8a6', light: '#22423c', contrastText: '#fff' },
     success: { main: '#23a076' },
     error: { main: '#ef5350' },
     inherit: { main: '#f7f7f7', light: '#4a4a55' },

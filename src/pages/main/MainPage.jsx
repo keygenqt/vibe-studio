@@ -26,8 +26,9 @@ export function MainPage() {
   const workspace = useCoreWorkspace()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { groupsChat, chats } = useCoreGroupsChat()
+  const { groupsChat, chats, models } = useCoreGroupsChat()
   const [activeId, setActiveId] = React.useState(null)
+  const [activeChatId, setActiveChatId] = React.useState(null)
 
   // the first group is active until the user picks another; a group
   // deletion falls back to the first remaining one
@@ -42,7 +43,9 @@ export function MainPage() {
 
   const createChat = () => {
     if (activeId === null) return
-    Methods.save_chat({ id: null, name: '', group_chat_id: activeId }).catch(() => {})
+    Methods.save_chat({ id: null, name: '', group_chat_id: activeId })
+      .then(saved => setActiveChatId(saved.id))
+      .catch(() => {})
   }
 
   // no render until the stored truth arrives — no startup animation
@@ -86,8 +89,11 @@ export function MainPage() {
           <SidebarView
             groupsChat={groupsChat}
             chats={chats}
+            models={models}
             activeId={activeId}
             onActivate={setActiveId}
+            activeChatId={activeChatId}
+            onActivateChat={setActiveChatId}
           />
         }
       >

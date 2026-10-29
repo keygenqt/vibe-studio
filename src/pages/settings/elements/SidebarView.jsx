@@ -49,7 +49,7 @@ export function SidebarView() {
   const { pathname } = useLocation()
 
   return (
-    <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+    <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {ITEMS.map(item => {
         const active = item.match.some(pattern => Boolean(matchPath(pattern, pathname)))
         return (

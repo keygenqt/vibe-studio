@@ -24,6 +24,10 @@ export const enLocalization = {
       t_add_group: 'Create group',
       t_chat_delete_title: 'Delete chat?',
       t_chat_delete_text: 'The chat will be removed. This action cannot be undone.',
+      t_chat_untitled: '[Untitled chat]',
+      t_chat_more: 'More {{n}}',
+      t_chat_less: 'Collapse',
+      t_group_collapse: 'Collapse / expand',
     },
     settings: {
       t_providers: 'Providers',

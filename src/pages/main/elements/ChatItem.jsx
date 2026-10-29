@@ -5,40 +5,49 @@
  */
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
-import { Card, ListItem, ListItemButton, ListItemText } from '@mui/material'
+import { ListItem, ListItemButton, ListItemText } from '@mui/material'
 import DeleteOutline from '@mui/icons-material/DeleteOutline'
 
 import { TooltipIconButton } from '../../../components/buttons'
 
 export function ChatItem(props) {
   const { t } = useTranslation()
+  // the delete action belongs to the active chat only
   return (
     <ListItem
       disablePadding
       secondaryAction={
-        <TooltipIconButton
-          size={'mini'}
-          title={t('common.t_delete')}
-          onClick={event => {
-            event.stopPropagation()
-            props.onDelete()
-          }}
-        >
-          <DeleteOutline />
-        </TooltipIconButton>
+        props.active ? (
+          <TooltipIconButton
+            size={'mini'}
+            title={t('common.t_delete')}
+            onClick={event => {
+              event.stopPropagation()
+              props.onDelete()
+            }}
+          >
+            <DeleteOutline />
+          </TooltipIconButton>
+        ) : undefined
       }
     >
-      <Card elevation={0} sx={{ borderRadius: 2, overflow: 'hidden', width: '100%' }}>
-        <ListItemButton onClick={props.onClick} sx={{ px: '8px', py: '6px' }}>
-          <ListItemText primary={props.title} slotProps={{ primary: { noWrap: true } }} />
-        </ListItemButton>
-      </Card>
+      <ListItemButton
+        selected={props.active}
+        onClick={props.onClick}
+        sx={{ borderRadius: 2, px: '8px', py: '6px' }}
+      >
+        <ListItemText
+          primary={props.title}
+          slotProps={{ primary: { noWrap: true, color: 'text.primary' } }}
+        />
+      </ListItemButton>
     </ListItem>
   )
 }
 
 ChatItem.propTypes = {
   title: PropTypes.string.isRequired,
+  active: PropTypes.bool,
   onClick: PropTypes.func,
   onDelete: PropTypes.func.isRequired,
 }
