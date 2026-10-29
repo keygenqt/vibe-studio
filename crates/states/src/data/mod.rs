@@ -19,6 +19,9 @@
 //!   the get/save/delete API on `Store`.
 //! - `group_chat` — the `groups_chat` table: `GroupChatData`, the
 //!   get/save/delete API on `Store`.
+//! - `group_chat_history` — the `group_chat_history` table:
+//!   `GroupChatHistoryData`, the per-group life record — view state,
+//!   the app-wide selection, the accumulated counters.
 //! - `workspace` — the `workspace` table: `WorkspaceData`, the shell
 //!   environment as a single row (id = 1).
 //!
@@ -27,6 +30,7 @@
 
 pub(crate) mod chat;
 pub(crate) mod group_chat;
+pub(crate) mod group_chat_history;
 pub(crate) mod provider;
 pub(crate) mod provider_model;
 pub(crate) mod workspace;

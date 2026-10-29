@@ -1,0 +1,3 @@
+DROP INDEX idx_group_chat_history_active_chat;
+DROP INDEX idx_group_chat_history_active;
+DROP TABLE group_chat_history;

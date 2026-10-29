@@ -4,12 +4,10 @@
  * TAGS: ['misc']
  */
 export const AppUtils = {
-  // the Rust message is the i18n key: lookup without the trailing
-  // dot, unknown messages fall back to the raw string
+  // the Rust message is the i18n key: unknown messages fall back to the raw string
   backendMessage: function (t, error) {
     const message = error.message ?? String(error)
-    const key = `backend.${message.replace(/\.$/, '')}`
-    return t(key) === key ? message : t(key)
+    return t(message) === message ? message : t(message)
   },
 
   // the form submit pipeline: clears the submit error, shows the saved

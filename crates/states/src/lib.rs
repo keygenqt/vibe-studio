@@ -15,6 +15,7 @@ pub(crate) mod db;
 
 pub use data::chat::ChatData;
 pub use data::group_chat::GroupChatData;
+pub use data::group_chat_history::GroupChatHistoryData;
 pub use data::provider::ProviderData;
 pub use data::provider_model::ProviderModelData;
 pub use data::workspace::WorkspaceData;
@@ -40,8 +41,9 @@ pub fn delete_provider(store: &Store, id: i32) -> Result<usize> {
     store.delete_provider(id)
 }
 
-/// All models of a provider.
-pub fn get_provider_models(store: &Store, provider_id: i32) -> Result<Vec<ProviderModelData>> {
+/// All models, optionally of one provider — `None` takes the whole
+/// table behind the providers block state.
+pub fn get_provider_models(store: &Store, provider_id: Option<i32>) -> Result<Vec<ProviderModelData>> {
     store.get_provider_models(provider_id)
 }
 
@@ -89,6 +91,16 @@ pub fn get_chats(store: &Store) -> Result<Vec<ChatData>> {
     store.get_chats()
 }
 
+/// Loads one chat by id.
+pub fn get_chat(store: &Store, id: i32) -> Result<ChatData> {
+    store.get_chat(id)
+}
+
+/// The latest chat of the group; `None` = the group has no chats.
+pub fn get_last_group_chat(store: &Store, group_chat_id: i32) -> Result<Option<ChatData>> {
+    store.get_last_group_chat(group_chat_id)
+}
+
 /// Inserts a new chat (`id = None`) or updates the one with the given id; returns the stored row.
 pub fn save_chat(store: &Store, chat: &ChatData) -> Result<ChatData> {
     store.save_chat(chat)
@@ -103,6 +115,57 @@ pub fn delete_chat(store: &Store, id: i32) -> Result<usize> {
 /// cleanup behind the group deletion.
 pub fn delete_group_chats(store: &Store, group_chat_id: i32) -> Result<usize> {
     store.delete_group_chats(group_chat_id)
+}
+
+/// All group chat history rows.
+pub fn get_group_chat_histories(store: &Store) -> Result<Vec<GroupChatHistoryData>> {
+    store.get_group_chat_histories()
+}
+
+/// Borns the history row with the group and activates the fresh group.
+pub fn create_group_chat_history(store: &Store, group_chat_id: i32) -> Result<GroupChatHistoryData> {
+    store.create_group_chat_history(group_chat_id)
+}
+
+/// Selects the group (`chat_id = None`) or its chat as the single active one.
+pub fn set_active_group_chat(store: &Store, group_chat_id: i32, chat_id: Option<i32>) -> Result<()> {
+    store.set_active_group_chat(group_chat_id, chat_id)
+}
+
+/// Persists the view flags of the group block and its chat list.
+pub fn set_group_chat_view(
+    store: &Store,
+    group_chat_id: i32,
+    collapsed_group: bool,
+    collapsed_chats: bool,
+) -> Result<()> {
+    store.set_group_chat_view(group_chat_id, collapsed_group, collapsed_chats)
+}
+
+/// Counts a group save — the update branch.
+pub fn bump_group_chat_history_updates(store: &Store, group_chat_id: i32) -> Result<()> {
+    store.bump_group_chat_history_updates(group_chat_id)
+}
+
+/// Counts a user selection of the group or its chat.
+pub fn bump_group_chat_history_activations(store: &Store, group_chat_id: i32) -> Result<()> {
+    store.bump_group_chat_history_activations(group_chat_id)
+}
+
+/// Counts a chat created in the group.
+pub fn bump_group_chat_history_chats_created(store: &Store, group_chat_id: i32) -> Result<()> {
+    store.bump_group_chat_history_chats_created(group_chat_id)
+}
+
+/// Clears the selected chat that points at the deleted chat; returns
+/// 1 if the deleted chat was the selected one.
+pub fn clear_group_chat_history_selected_chat(store: &Store, chat_id: i32) -> Result<usize> {
+    store.clear_group_chat_history_selected_chat(chat_id)
+}
+
+/// Deletes the history row together with its group.
+pub fn delete_group_chat_history(store: &Store, group_chat_id: i32) -> Result<usize> {
+    store.delete_group_chat_history(group_chat_id)
 }
 
 /// Loads the shell environment; a missing row falls back to `Default`.

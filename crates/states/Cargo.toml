@@ -9,7 +9,9 @@ name = "studio_states"
 path = "src/lib.rs"
 
 [dependencies]
-diesel = { version = "2.3", features = ["sqlite"] }
+diesel = { version = "2.3", features = ["sqlite", "chrono"] }
+chrono = "0.4.43"
+serde_with = { version = "3.16", features = ["chrono"] }
 diesel_migrations = "2"
 serde = { version = "1.0.229", features = ["derive"] }
 anyhow = "1.0.104"

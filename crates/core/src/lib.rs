@@ -14,6 +14,7 @@ pub use studio_cluster::ModelInfoData;
 pub use studio_cluster::ProviderInfoData;
 pub use studio_states::ChatData;
 pub use studio_states::GroupChatData;
+pub use studio_states::GroupChatHistoryData;
 pub use studio_states::ProviderData;
 pub use studio_states::ProviderModelData;
 pub use studio_states::Store;
@@ -79,9 +80,9 @@ pub fn delete_provider(store: &Store, id: i32) -> Result<()> {
     Ok(())
 }
 
-/// All models of a provider; a store error yields an empty list —
-/// loading never blocks the UI.
-pub fn get_provider_models(store: &Store, provider_id: i32) -> Vec<ProviderModelData> {
+/// All models, optionally of one provider; a store error yields an
+/// empty list — loading never blocks the UI.
+pub fn get_provider_models(store: &Store, provider_id: Option<i32>) -> Vec<ProviderModelData> {
     studio_states::get_provider_models(store, provider_id).unwrap_or_default()
 }
 
@@ -189,7 +190,8 @@ pub fn get_group_chat(store: &Store, id: i32) -> Result<GroupChatData> {
 
 /// Validates and persists the group. The UI is not trusted: a blank
 /// name is an error, the model must exist; everything else is stored
-/// as sent.
+/// as sent. A fresh group is born into the history active, an update
+/// counts.
 pub fn save_group_chat(store: &Store, group_chat: &GroupChatData) -> Result<GroupChatData> {
     if group_chat.name.trim().is_empty() {
         anyhow::bail!("Name must not be blank.");
@@ -197,13 +199,25 @@ pub fn save_group_chat(store: &Store, group_chat: &GroupChatData) -> Result<Grou
     if studio_states::get_provider_model(store, group_chat.model_id).is_err() {
         anyhow::bail!("Unknown model.");
     }
-    studio_states::save_group_chat(store, group_chat)
+    let saved = studio_states::save_group_chat(store, group_chat)?;
+    let id = saved.id.expect("stored group id");
+    match group_chat.id {
+        None => {
+            studio_states::create_group_chat_history(store, id)?;
+        }
+        Some(_) => {
+            studio_states::bump_group_chat_history_updates(store, id)?;
+        }
+    }
+    Ok(saved)
 }
 
-/// Deletes the group with its chats; a missing group is a no-op.
+/// Deletes the group with its chats and history; a missing group is
+/// a no-op.
 pub fn delete_group_chat(store: &Store, id: i32) -> Result<()> {
     studio_states::delete_group_chats(store, id)?;
     studio_states::delete_group_chat(store, id)?;
+    studio_states::delete_group_chat_history(store, id)?;
     Ok(())
 }
 
@@ -219,18 +233,82 @@ pub fn get_chats(store: &Store) -> Vec<ChatData> {
 
 /// Validates and persists the chat. The UI is not trusted: the group
 /// must exist; an empty name is filled with a random pool name on
-/// the states layer. Everything else is stored as sent.
+/// the states layer. Everything else is stored as sent. A fresh chat
+/// becomes the selected one of its group and counts as created.
 pub fn save_chat(store: &Store, chat: &ChatData) -> Result<ChatData> {
     if studio_states::get_group_chat(store, chat.group_chat_id).is_err() {
         anyhow::bail!("Unknown group.");
     }
-    studio_states::save_chat(store, chat)
+    let saved = studio_states::save_chat(store, chat)?;
+    if chat.id.is_none() {
+        let id = saved.id.expect("stored chat id");
+        studio_states::set_active_group_chat(store, saved.group_chat_id, Some(id))?;
+        studio_states::bump_group_chat_history_chats_created(store, saved.group_chat_id)?;
+    }
+    Ok(saved)
 }
 
-/// Deletes the chat; a missing row is a no-op.
+/// Deletes the chat; a missing row is a no-op. If the deleted chat
+/// was the selected one, the group falls back to its newest remaining
+/// chat — the same as a group click; a chatless group keeps no chat.
 pub fn delete_chat(store: &Store, id: i32) -> Result<()> {
+    let chat = studio_states::get_chat(store, id).ok();
     studio_states::delete_chat(store, id)?;
+    if let Some(chat) = chat {
+        if studio_states::clear_group_chat_history_selected_chat(store, id)? != 0 {
+            if let Some(last) = studio_states::get_last_group_chat(store, chat.group_chat_id)? {
+                studio_states::set_active_group_chat(
+                    store,
+                    chat.group_chat_id,
+                    Some(last.id.expect("stored chat id")),
+                )?;
+            }
+        }
+    }
     Ok(())
+}
+
+// ─────────────────────────────────────────────
+// Group Chat History
+// ─────────────────────────────────────────────
+
+/// All group chat history rows; a store error yields an empty list —
+/// loading never blocks the UI.
+pub fn get_group_chat_histories(store: &Store) -> Vec<GroupChatHistoryData> {
+    studio_states::get_group_chat_histories(store).unwrap_or_default()
+}
+
+/// Persists the view flags of the group block and its chat list. The
+/// UI is not trusted: the group must exist.
+pub fn set_group_chat_view(
+    store: &Store,
+    group_chat_id: i32,
+    collapsed_group: bool,
+    collapsed_chats: bool,
+) -> Result<()> {
+    if studio_states::get_group_chat(store, group_chat_id).is_err() {
+        anyhow::bail!("Unknown group.");
+    }
+    studio_states::set_group_chat_view(store, group_chat_id, collapsed_group, collapsed_chats)
+}
+
+/// Selects the group or its chat as the single active one. The UI is
+/// not trusted: the group must exist, the chat must exist and belong
+/// to the group. A group without a chat selection takes its newest
+/// chat; a chatless group takes none. Counts the activation.
+pub fn select_group_chat(store: &Store, group_chat_id: i32, chat_id: Option<i32>) -> Result<()> {
+    studio_states::get_group_chat(store, group_chat_id)?;
+    let chat_id = match chat_id {
+        Some(chat_id) => {
+            if studio_states::get_chat(store, chat_id)?.group_chat_id != group_chat_id {
+                anyhow::bail!("Unknown chat.");
+            }
+            Some(chat_id)
+        }
+        None => studio_states::get_last_group_chat(store, group_chat_id)?.map(|chat| chat.id.expect("stored chat id")),
+    };
+    studio_states::set_active_group_chat(store, group_chat_id, chat_id)?;
+    studio_states::bump_group_chat_history_activations(store, group_chat_id)
 }
 
 // ─────────────────────────────────────────────

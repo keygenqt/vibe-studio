@@ -51,7 +51,7 @@ export function GroupChatForm(props) {
         systemPrompt: Yup.string().notRequired(),
       })}
       onSubmit={async (values, { setErrors, setSubmitting }) => {
-        const saved = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
+        const state = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
           Methods.save_group_chat({
             id: props.id || null,
             name: values.name,
@@ -59,9 +59,10 @@ export function GroupChatForm(props) {
             model_id: values.modelId,
           })
         )
-        if (saved && !isEdit) {
-          dispatch(formSuccessSet(saved))
-          AppNav.openWithReplace(navigate, AppRoutes.groupChat(saved.id))
+        const savedId = state?.history.find(item => item.current_is_active)?.group_chat_id
+        if (state && !isEdit && savedId) {
+          dispatch(formSuccessSet(state.groups_chat.find(group => group.id === savedId)))
+          AppNav.openWithReplace(navigate, AppRoutes.groupChat(savedId))
         }
       }}
     >

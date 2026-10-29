@@ -155,10 +155,17 @@ impl From<&ProviderModelData> for ProviderModelNewData {
 }
 
 impl Store {
-    /// All models of a provider, untouched config resolved to the
-    /// model defaults.
-    pub(crate) fn get_provider_models(&self, provider_id: i32) -> Result<Vec<ProviderModelData>> {
-        let rows: Vec<ProviderModelRow> = self.select_where(models::table, models::provider_id.eq(provider_id))?;
+    /// All models, optionally of one provider — untouched config
+    /// resolved to the model defaults. `None` takes the whole table:
+    /// the read behind the providers block state.
+    pub(crate) fn get_provider_models(&self, provider_id: Option<i32>) -> Result<Vec<ProviderModelData>> {
+        let mut conn = self.lock();
+        let rows: Vec<ProviderModelRow> = match provider_id {
+            Some(provider_id) => models::table
+                .filter(models::provider_id.eq(provider_id))
+                .load(&mut *conn)?,
+            None => models::table.load(&mut *conn)?,
+        };
         Ok(rows.into_iter().map(ProviderModelData::from).collect())
     }
 
@@ -209,6 +216,6 @@ impl Store {
             .collect();
 
         self.sync(models::table, &stored_ids, rows)?;
-        self.get_provider_models(provider_id)
+        self.get_provider_models(Some(provider_id))
     }
 }

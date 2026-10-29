@@ -27,26 +27,37 @@ export function MainPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const { groupsChat, chats, models } = useCoreGroupsChat()
-  const [activeId, setActiveId] = React.useState(null)
+  const { groupsChat, chats, models, history } = useCoreGroupsChat()
   // the active chat is the routed one: no mirror state
   const chatId = Number(matchPath(AppRoutes.chat(), pathname)?.params.chatId) || null
+  // the composer belongs to the open chat only
+  const hasChat = chatId !== null && Boolean(chats?.some(chat => chat.id === chatId))
+  // the sidebar highlight is the persisted selection, not the route:
+  // it lands together with the chat it belongs to — one paint
+  const activeChatId = history?.find(item => item.current_is_active)?.current_active_chat_id || null
+  // the active group is the persisted selection; until the user picks
+  // one it falls back to the first group — highlight only, no write
+  const activeId =
+    history?.find(item => item.current_is_active)?.group_chat_id ?? groupsChat?.[0]?.id ?? null
 
-  // the first group is active until the user picks another; a group
-  // deletion falls back to the first remaining one
+  // restore the persisted chat once: the route always starts at '/'
+  // and the journal is empty on a fresh window
   React.useEffect(() => {
-    if (groupsChat === null) return
-    setActiveId(prev =>
-      prev !== null && groupsChat.some(group => group.id === prev)
-        ? prev
-        : (groupsChat[0]?.id ?? null)
-    )
-  }, [groupsChat])
+    if (!groupsChat || !history || !chats) return
+    if (pathname !== AppRoutes.main()) return
+    const active = history.find(item => item.current_is_active)
+    const restoredId = active?.current_active_chat_id
+    if (!restoredId || !chats.some(chat => chat.id === restoredId)) return
+    AppNav.open(navigate, AppRoutes.chat(restoredId))
+  }, [groupsChat, history, chats])
 
   const createChat = () => {
     if (activeId === null) return
     Methods.save_chat({ id: null, name: '', group_chat_id: activeId })
-      .then(saved => AppNav.open(navigate, AppRoutes.chat(saved.id)))
+      .then(state => {
+        const savedId = state.history.find(item => item.current_is_active)?.current_active_chat_id
+        if (savedId) AppNav.open(navigate, AppRoutes.chat(savedId))
+      })
       .catch(() => {})
   }
 
@@ -92,10 +103,27 @@ export function MainPage() {
             groupsChat={groupsChat}
             chats={chats}
             models={models}
+            history={history}
             activeId={activeId}
-            onActivate={setActiveId}
-            activeChatId={chatId}
-            onActivateChat={id => AppNav.open(navigate, AppRoutes.chat(id))}
+            onActivate={groupId =>
+              Methods.select_group_chat(groupId, null)
+                .then(state => {
+                  const selectedId = state.history.find(
+                    item => item.current_is_active
+                  )?.current_active_chat_id
+                  if (selectedId) {
+                    AppNav.open(navigate, AppRoutes.chat(selectedId))
+                  } else {
+                    AppNav.open(navigate, AppRoutes.main())
+                  }
+                })
+                .catch(() => {})
+            }
+            activeChatId={activeChatId}
+            onActivateChat={(groupId, chatId) => {
+              Methods.select_group_chat(groupId, chatId).catch(console.error)
+              AppNav.open(navigate, AppRoutes.chat(chatId))
+            }}
           />
         }
       >
@@ -112,11 +140,15 @@ export function MainPage() {
           <Outlet />
         </Box>
         {/* horizontal mirror of the sidebar handle: dragging up grows the composer */}
-        <HandleView
-          orientation="horizontal"
-          onPointerDown={workspace.onComposerHandlePointerDown}
-        />
-        <InputView height={workspace.chatInputSize} chatId={chatId} />
+        {hasChat && (
+          <>
+            <HandleView
+              orientation="horizontal"
+              onPointerDown={workspace.onComposerHandlePointerDown}
+            />
+            <InputView height={workspace.chatInputSize} chatId={chatId} />
+          </>
+        )}
       </SidebarLayout>
     </ShellLayout>
   )

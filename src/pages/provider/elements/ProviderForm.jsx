@@ -55,7 +55,7 @@ export function ProviderForm(props) {
         apiKey: Yup.string().notRequired(),
       })}
       onSubmit={async (values, { setErrors, setSubmitting }) => {
-        const saved = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
+        const state = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
           Methods.save_provider({
             id: props.id || null,
             name: values.name,
@@ -64,6 +64,7 @@ export function ProviderForm(props) {
             api_key: values.apiKey,
           })
         )
+        const saved = state?.provider
         if (saved && !isEdit) {
           dispatch(formSuccessSet(saved))
           AppNav.openWithReplace(navigate, AppRoutes.provider(saved.id))

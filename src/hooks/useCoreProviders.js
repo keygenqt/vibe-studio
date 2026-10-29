@@ -14,9 +14,11 @@ export function useCoreProviders({ providerId, modelId } = {}) {
   const provider = useSelector(state =>
     providerId ? (state.providers.provider[providerId] ?? null) : null
   )
-  const models = useSelector(state =>
-    providerId ? (state.providers.models[providerId] ?? null) : null
-  )
+  // the block state keeps the flat models of all providers: the page
+  // takes its slice by provider
+  const models = useSelector(state => state.providers.models)
+  const providerModels =
+    providerId && models ? models.filter(model => model.provider_id === providerId) : null
   const model = useSelector(state => (modelId ? (state.providers.model[modelId] ?? null) : null))
   const [error, setError] = React.useState(null)
 
@@ -24,8 +26,9 @@ export function useCoreProviders({ providerId, modelId } = {}) {
     setError(null)
     Methods.get_providers_catalog().catch(setError)
     Methods.get_providers().catch(setError)
+    // no argument = the whole table, the flat models of the block state
+    Methods.get_provider_models().catch(setError)
     if (providerId) Methods.get_provider(providerId).catch(setError)
-    if (providerId) Methods.get_provider_models(providerId).catch(setError)
     if (modelId) Methods.get_provider_model(modelId).catch(setError)
   }, [providerId, modelId])
 
@@ -33,14 +36,14 @@ export function useCoreProviders({ providerId, modelId } = {}) {
     catalog,
     providers,
     provider,
-    models,
+    models: providerModels,
     model,
     error,
     ready:
       error !== null ||
       (catalog !== null &&
         providers !== null &&
-        (providerId ? models !== null : true) &&
+        models !== null &&
         (modelId ? model !== null : true)),
   }
 }

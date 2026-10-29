@@ -7,7 +7,12 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
 import store from '../../store'
-import { chatsSet, groupChatSet, groupsChatSet } from '../../store/impl/groups_chat'
+import {
+  chatsSet,
+  groupChatHistorySet,
+  groupChatSet,
+  groupsChatSet,
+} from '../../store/impl/groups_chat'
 
 export const groups_chat = {
   get_groups_chat: async function () {
@@ -21,13 +26,18 @@ export const groups_chat = {
     return groupChat
   },
   save_group_chat: async function (groupChat) {
-    const saved = await invoke('save_group_chat', { groupChat })
-    await groups_chat.get_groups_chat()
-    return saved
+    const state = await invoke('save_group_chat', { groupChat })
+    store.dispatch(groupsChatSet(state.groups_chat))
+    store.dispatch(chatsSet(state.chats))
+    store.dispatch(groupChatHistorySet(state.history))
+    return state
   },
   delete_group_chat: async function (id) {
-    await invoke('delete_group_chat', { id })
-    await groups_chat.get_groups_chat()
+    const state = await invoke('delete_group_chat', { id })
+    store.dispatch(groupsChatSet(state.groups_chat))
+    store.dispatch(chatsSet(state.chats))
+    store.dispatch(groupChatHistorySet(state.history))
+    return state
   },
   get_chats: async function () {
     const list = await invoke('get_chats', {})
@@ -35,25 +45,46 @@ export const groups_chat = {
     return list
   },
   save_chat: async function (chat) {
-    const saved = await invoke('save_chat', { chat })
-    await groups_chat.get_chats()
-    return saved
+    const state = await invoke('save_chat', { chat })
+    store.dispatch(groupsChatSet(state.groups_chat))
+    store.dispatch(chatsSet(state.chats))
+    store.dispatch(groupChatHistorySet(state.history))
+    return state
   },
   delete_chat: async function (id) {
-    await invoke('delete_chat', { id })
-    await groups_chat.get_chats()
+    const state = await invoke('delete_chat', { id })
+    store.dispatch(groupsChatSet(state.groups_chat))
+    store.dispatch(chatsSet(state.chats))
+    store.dispatch(groupChatHistorySet(state.history))
+    return state
+  },
+  get_group_chat_histories: async function () {
+    const list = await invoke('get_group_chat_histories', {})
+    store.dispatch(groupChatHistorySet(list))
+    return list
+  },
+  set_group_chat_view: async function (groupChatId, collapsedGroup, collapsedChats) {
+    const state = await invoke('set_group_chat_view', {
+      groupChatId,
+      collapsedGroup,
+      collapsedChats,
+    })
+    store.dispatch(groupsChatSet(state.groups_chat))
+    store.dispatch(chatsSet(state.chats))
+    store.dispatch(groupChatHistorySet(state.history))
+  },
+  select_group_chat: async function (groupChatId, chatId) {
+    return invoke('select_group_chat', { groupChatId, chatId: chatId ?? null })
   },
 }
 
 export function groups_chat_events() {
   return [
     listen('event-groups-chat', event => {
-      if (event.payload.key === 'groups_chat') {
-        store.dispatch(groupsChatSet(event.payload.value))
-      }
-      if (event.payload.key === 'chats') {
-        store.dispatch(chatsSet(event.payload.value))
-      }
+      const state = event.payload.value
+      store.dispatch(groupsChatSet(state.groups_chat))
+      store.dispatch(chatsSet(state.chats))
+      store.dispatch(groupChatHistorySet(state.history))
     }),
   ]
 }

@@ -9,6 +9,7 @@ import { Box } from '@mui/material'
 
 import { AppRoutes } from './constants'
 import {
+  ChatEmptyPage,
   ChatPage,
   ErrorPage,
   GeneralPage,
@@ -33,7 +34,10 @@ const router = createBrowserRouter([
       {
         path: AppRoutes.main(),
         element: <MainPage />,
-        children: [{ index: true }, { path: AppRoutes.chat(), element: <ChatPage /> }],
+        children: [
+          { index: true, element: <ChatEmptyPage /> },
+          { path: AppRoutes.chat(), element: <ChatPage /> },
+        ],
       },
       {
         path: AppRoutes.settings(),

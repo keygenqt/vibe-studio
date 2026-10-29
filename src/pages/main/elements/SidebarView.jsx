@@ -27,15 +27,8 @@ export function SidebarView(props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [chatToDelete, setChatToDelete] = React.useState(null)
-  // local UI state: per-group collapse and the "more" expander,
-  // both die with the session
-  const [collapsed, setCollapsed] = React.useState({})
-  const [expanded, setExpanded] = React.useState({})
-  // chat names are dynamic keys: resolve against the backend object
-  // directly — dots in the names break the nested key path
-  const backend = t('backend', { returnObjects: true })
-
-  const chatTitle = chat => (chat.name ? (backend?.[chat.name] ?? chat.name) : '')
+  // per-group view flags live in the persisted history copy
+  const historyById = new Map((props.history ?? []).map(item => [item.group_chat_id, item]))
 
   if (props.groupsChat === null) {
     return <WaitState ready={false} />
@@ -62,8 +55,10 @@ export function SidebarView(props) {
       <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {props.groupsChat.map(group => {
           const chats = (props.chats ?? []).filter(chat => chat.group_chat_id === group.id)
-          const isCollapsed = Boolean(collapsed[group.id])
-          const visible = Boolean(expanded[group.id]) ? chats : chats.slice(0, CHATS_PREVIEW_COUNT)
+          const item = historyById.get(group.id)
+          const isCollapsed = Boolean(item?.current_collapsed_group)
+          const isExpanded = Boolean(item && !item.current_collapsed_chats)
+          const visible = isExpanded ? chats : chats.slice(0, CHATS_PREVIEW_COUNT)
           return (
             <React.Fragment key={`group-${group.id}`}>
               <GroupItem
@@ -72,7 +67,16 @@ export function SidebarView(props) {
                 active={props.activeId === group.id}
                 collapsed={isCollapsed}
                 onActivate={() => props.onActivate(group.id)}
-                onToggle={() => setCollapsed(prev => ({ ...prev, [group.id]: !isCollapsed }))}
+                onToggle={
+                  chats.length > 0
+                    ? () =>
+                        Methods.set_group_chat_view(
+                          group.id,
+                          !isCollapsed,
+                          Boolean(item?.current_collapsed_chats)
+                        ).catch(() => {})
+                    : undefined
+                }
               />
               {!isCollapsed && chats.length > 0 && (
                 // the connector line ties the chats to their group header
@@ -91,9 +95,9 @@ export function SidebarView(props) {
                   {visible.map(chat => (
                     <ChatItem
                       key={`chat-${chat.id}`}
-                      title={chatTitle(chat)}
+                      title={t(chat.name)}
                       active={props.activeChatId === chat.id}
-                      onClick={() => props.onActivateChat(chat.id)}
+                      onClick={() => props.onActivateChat(group.id, chat.id)}
                       onDelete={() => setChatToDelete(chat)}
                     />
                   ))}
@@ -101,17 +105,19 @@ export function SidebarView(props) {
                     <ListItemButton
                       sx={{ borderRadius: 2, px: '8px', py: '4px', minHeight: 40 }}
                       onClick={() =>
-                        setExpanded(prev => ({ ...prev, [group.id]: !prev[group.id] }))
+                        Methods.set_group_chat_view(group.id, isCollapsed, isExpanded).catch(
+                          () => {}
+                        )
                       }
                     >
                       <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                        {expanded[group.id] ? (
+                        {isExpanded ? (
                           <ExpandLess sx={{ fontSize: 18 }} />
                         ) : (
                           <ExpandMore sx={{ fontSize: 18 }} />
                         )}
                         <Typography variant={'body2'} color={'text.secondary'}>
-                          {expanded[group.id]
+                          {isExpanded
                             ? t('main.t_chat_less')
                             : t('main.t_chat_more', {
                                 n: chats.length - CHATS_PREVIEW_COUNT,
@@ -133,7 +139,17 @@ export function SidebarView(props) {
         onCancel={() => setChatToDelete(null)}
         onConfirm={() => {
           Methods.delete_chat(chatToDelete.id)
-            .then(() => setChatToDelete(null))
+            .then(state => {
+              setChatToDelete(null)
+              const nextId = state.history.find(
+                item => item.current_is_active
+              )?.current_active_chat_id
+              if (nextId) {
+                AppNav.open(navigate, AppRoutes.chat(nextId))
+              } else {
+                AppNav.open(navigate, AppRoutes.main())
+              }
+            })
             .catch(() => setChatToDelete(null))
         }}
       />
@@ -145,6 +161,7 @@ SidebarView.propTypes = {
   groupsChat: PropTypes.array,
   chats: PropTypes.array,
   models: PropTypes.array,
+  history: PropTypes.array,
   activeId: PropTypes.number,
   onActivate: PropTypes.func.isRequired,
   activeChatId: PropTypes.number,

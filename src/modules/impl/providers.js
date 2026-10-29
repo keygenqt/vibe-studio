@@ -32,14 +32,18 @@ export const providers = {
     return provider
   },
   save_provider: async function (provider) {
-    const saved = await invoke('save_provider', { provider })
-    await providers.get_providers()
-    return saved
+    const state = await invoke('save_provider', { provider })
+    store.dispatch(catalogSet(state.catalog))
+    store.dispatch(providersSet(state.providers))
+    store.dispatch(modelsSet(state.models))
+    return state
   },
   delete_provider: async function (id) {
-    await invoke('delete_provider', { id })
-    store.dispatch(modelsSet({ providerId: id, models: [] }))
-    await providers.get_providers()
+    const state = await invoke('delete_provider', { id })
+    store.dispatch(catalogSet(state.catalog))
+    store.dispatch(providersSet(state.providers))
+    store.dispatch(modelsSet(state.models))
+    return state
   },
   get_provider_models_by_type: async function (provider) {
     return invoke('get_provider_models_by_type', {
@@ -49,8 +53,9 @@ export const providers = {
     })
   },
   get_provider_models: async function (providerId) {
-    const list = await invoke('get_provider_models', { providerId })
-    store.dispatch(modelsSet({ providerId, models: list }))
+    // null takes the whole table — the flat models of the block state
+    const list = await invoke('get_provider_models', { providerId: providerId ?? null })
+    store.dispatch(modelsSet(list))
     return list
   },
   get_provider_model: async function (id) {
@@ -59,31 +64,28 @@ export const providers = {
     return model
   },
   save_provider_model: async function (model, config) {
-    const saved = await invoke('save_provider_model', { model: { ...model, ...config } })
-    store.dispatch(modelSet(saved))
-    await providers.get_provider_models(saved.provider_id)
-    return saved
+    const state = await invoke('save_provider_model', { model: { ...model, ...config } })
+    store.dispatch(catalogSet(state.catalog))
+    store.dispatch(providersSet(state.providers))
+    store.dispatch(modelsSet(state.models))
+    return state
   },
   save_provider_models: async function (providerId, checked) {
-    const models = await invoke('save_provider_models', { providerId, checked })
-    store.dispatch(modelsSet({ providerId, models }))
-    return models
+    const state = await invoke('save_provider_models', { providerId, checked })
+    store.dispatch(catalogSet(state.catalog))
+    store.dispatch(providersSet(state.providers))
+    store.dispatch(modelsSet(state.models))
+    return state
   },
 }
 
 export function providers_events() {
   return [
     listen('event-providers', event => {
-      const { key, value } = event.payload
-      if (key === 'providers') {
-        store.dispatch(providersSet(value))
-      }
-      if (key === 'provider_models') {
-        const providerId = value[0]?.provider_id
-        if (providerId !== undefined) {
-          store.dispatch(modelsSet({ providerId, models: value }))
-        }
-      }
+      const state = event.payload.value
+      store.dispatch(catalogSet(state.catalog))
+      store.dispatch(providersSet(state.providers))
+      store.dispatch(modelsSet(state.models))
     }),
   ]
 }

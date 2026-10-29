@@ -49,16 +49,18 @@ export function GroupItem(props) {
             </Typography>
           </Stack>
         </Stack>
-        <TooltipIconButton
-          size={'mini'}
-          title={t('main.t_group_collapse')}
-          onClick={event => {
-            event.stopPropagation()
-            props.onToggle()
-          }}
-        >
-          {props.collapsed ? <KeyboardArrowRight /> : <ExpandMore />}
-        </TooltipIconButton>
+        {props.onToggle && (
+          <TooltipIconButton
+            size={'mini'}
+            title={t('main.t_group_collapse')}
+            onClick={event => {
+              event.stopPropagation()
+              props.onToggle()
+            }}
+          >
+            {props.collapsed ? <KeyboardArrowRight /> : <ExpandMore />}
+          </TooltipIconButton>
+        )}
       </ListItemButton>
     </Card>
   )
@@ -70,5 +72,5 @@ GroupItem.propTypes = {
   active: PropTypes.bool,
   collapsed: PropTypes.bool,
   onActivate: PropTypes.func.isRequired,
-  onToggle: PropTypes.func.isRequired,
+  onToggle: PropTypes.func,
 }

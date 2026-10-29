@@ -10,8 +10,11 @@ copies only for rendering.
 - Render copies live in the store (`src/store`): a read lands its
   answer in the store; pages read the models through the `useCore*`
   hooks (`src/hooks`) and revalidate on mount. Mutations do not
-  write the store — the block's event brings the fresh state, and a
-  mutation method awaits its own read before returning.
+  write the store — the block's event brings the fresh state.
+- Direction: a mutation response carries the fresh block state and
+  the block's event mirrors it — JS dispatches one of them, re-reads
+  after a mutation are not needed. The groups chat block follows
+  this; the providers block is not migrated yet.
 - Rust data travels through JS in the wire format, as is.
 - Redux holds the block copies and pure UI state; live values
   arrive over the block event channels, the source of truth is

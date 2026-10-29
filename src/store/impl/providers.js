@@ -11,7 +11,7 @@ const providersSlice = createSlice({
     catalog: null,
     providers: null,
     provider: {},
-    models: {},
+    models: [],
     model: {},
   },
   reducers: {
@@ -25,7 +25,7 @@ const providersSlice = createSlice({
       state.provider[action.payload.id] = action.payload
     },
     modelsSet: (state, action) => {
-      state.models[action.payload.providerId] = action.payload.models
+      state.models = action.payload
     },
     modelSet: (state, action) => {
       state.model[action.payload.id] = action.payload

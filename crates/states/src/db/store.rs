@@ -51,6 +51,7 @@ impl Store {
 
     /// Selects rows of `table` matching `filter`. The row type must
     /// match the full column order of the table.
+    #[allow(dead_code)]
     pub(crate) fn select_where<T, F, R>(&self, table: T, filter: F) -> Result<Vec<R>>
     where
         T: diesel::Table + diesel::query_dsl::methods::FilterDsl<F>,

@@ -4,6 +4,7 @@
  * TAGS: ['components']
  */
 export * from './chat/ChatPage'
+export * from './chat_empty/ChatEmptyPage'
 export * from './error/ErrorPage'
 export * from './general/GeneralPage'
 export * from './main/MainPage'

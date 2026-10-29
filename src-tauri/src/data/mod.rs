@@ -9,6 +9,12 @@
 //! - `app_info` — `AppInfoData`: the app version and debug flag.
 //! - `event_data` — `EventKey` and `EventData`: the uniform event
 //!   payload of the event channels.
+//! - `groups_chat_state` — `GroupsChatData`: the fresh state of the
+//!   groups chat block, returned by its mutations.
+//! - `providers_state` — `ProvidersData`: the fresh state of the
+//!   providers block, returned by its mutations.
 
 pub(crate) mod app_info;
 pub(crate) mod event_data;
+pub(crate) mod groups_chat_state;
+pub(crate) mod providers_state;

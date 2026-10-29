@@ -3,35 +3,79 @@
 // TAGS: ['states']
 
 use anyhow::Result;
+use anyhow::anyhow;
 use diesel::prelude::*;
 
 use crate::Store;
 
 /// Auto-name pool: a fresh chat picks one at random. English keys —
 /// the UI translates them through the locale `backend` section.
-const CHAT_NAMES: [&str; 20] = [
-    "Conjuring a name...",
-    "Brewing the title...",
-    "Summoning the magic...",
-    "Whispering words...",
-    "Naming this thing...",
-    "Cooking up a title...",
-    "Chasing inspiration...",
-    "Forging a name...",
-    "Painting words...",
-    "Mixing the letters...",
-    "Weaving a title...",
-    "Stirring the muse...",
-    "Dreaming up a name...",
-    "Polishing the title...",
-    "Sharpening the words...",
-    "Catching the idea...",
-    "Baking a name...",
-    "Distilling the words...",
-    "Spinning the yarn...",
-    "Tuning the title...",
+const CHAT_NAMES: [&str; 56] = [
+    // -- fabrics
+    "Velvet Chat",
+    "Silk Chat",
+    "Satin Chat",
+    "Linen Chat",
+    "Woolen Chat",
+    "Corduroy Chat",
+    "Denim Chat",
+    "Knitted Chat",
+    "Plush Chat",
+    // -- metals
+    "Golden Chat",
+    "Silver Chat",
+    "Copper Chat",
+    "Bronze Chat",
+    "Iron Chat",
+    "Steel Chat",
+    "Lead Chat",
+    "Titanium Chat",
+    "Chrome Chat",
+    "Tin Chat",
+    "Platinum Chat",
+    // -- stone
+    "Marble Chat",
+    "Granite Chat",
+    "Slate Chat",
+    "Flint Chat",
+    "Obsidian Chat",
+    "Basalt Chat",
+    "Onyx Chat",
+    "Amber Chat",
+    "Coral Chat",
+    "Pearl Chat",
+    // -- wood & paper
+    "Wooden Chat",
+    "Oak Chat",
+    "Cedar Chat",
+    "Bamboo Chat",
+    "Paper Chat",
+    "Parchment Chat",
+    "Straw Chat",
+    // -- glass & shine
+    "Glassy Chat",
+    "Porcelain Chat",
+    "Crystal Chat",
+    "Mirrored Chat",
+    "Glossy Chat",
+    // -- surface & texture
+    "Smooth Chat",
+    "Rough Chat",
+    "Matte Chat",
+    "Polished Chat",
+    "Waxy Chat",
+    "Clay Chat",
+    // -- hide & tech
+    "Leather Chat",
+    "Suede Chat",
+    "Carbon Chat",
+    "Graphite Chat",
+    // -- natural texture
+    "Sandy Chat",
+    "Mossy Chat",
+    "Icy Chat",
+    "Fluffy Chat",
 ];
-
 /// Picks a random pool name: no `rand` dependency, the millisecond
 /// clock is enough for a name flavor.
 fn random_name() -> String {
@@ -103,14 +147,33 @@ impl From<&ChatData> for ChatNewData {
 }
 
 impl Store {
-    /// All chats, in id order — `id` is the rowid alias, the table
-    /// has no secondary indexes.
+    /// All chats, in id descending order — newest first.
     pub(crate) fn get_chats(&self) -> Result<Vec<ChatData>> {
-        Ok(self
-            .select::<_, ChatRow>(chats::table)?
-            .into_iter()
+        let mut conn = self.lock();
+        let rows: Vec<ChatRow> = chats::table
+            .select(ChatRow::as_select())
+            .order_by(chats::id.desc())
+            .load(&mut *conn)?;
+        Ok(rows.into_iter().map(ChatData::from).collect())
+    }
+
+    /// The latest chat of the group; `None` = the group has no chats.
+    pub(crate) fn get_last_group_chat(&self, group_chat_id: i32) -> Result<Option<ChatData>> {
+        let mut conn = self.lock();
+        let row = chats::table
+            .filter(chats::group_chat_id.eq(group_chat_id))
+            .order_by(chats::id.desc())
+            .select(ChatRow::as_select())
+            .first(&mut *conn)
+            .optional()?;
+        Ok(row.map(ChatData::from))
+    }
+
+    /// Loads one chat by id.
+    pub(crate) fn get_chat(&self, id: i32) -> Result<ChatData> {
+        self.find_by_id::<_, ChatRow>(chats::table, id)?
             .map(ChatData::from)
-            .collect())
+            .ok_or_else(|| anyhow!("Chat {id} not found."))
     }
 
     /// Inserts a new chat (`id = None`) or updates the one with the

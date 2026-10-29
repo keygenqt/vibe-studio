@@ -8,7 +8,9 @@ import { useTranslation } from 'react-i18next'
 import { Box, Stack, Typography } from '@mui/material'
 
 import { PageHeader } from '../../components/views'
-import { ErrorState, WaitState } from '../../components/states'
+import { WaitState } from '../../components/states'
+
+import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
 import { useChat, useCoreGroupsChat } from '../../hooks'
 
 export function ChatPage() {
@@ -18,20 +20,12 @@ export function ChatPage() {
   const { chats, ready } = useCoreGroupsChat()
   const { messages } = useChat(cid)
   const chat = chats?.find(item => item.id === cid) ?? null
-  // chat names are dynamic keys: resolve against the backend object
-  // directly — dots in the names break the nested key path
-  const backend = t('backend', { returnObjects: true })
 
   return (
     <WaitState ready={ready}>
-      {chats !== null && !chat ? (
-        <ErrorState text={t('common.t_not_found')} />
-      ) : (
+      {chat ? (
         <Stack spacing={2} sx={{ padding: 2, minHeight: 1, boxSizing: 'border-box' }}>
-          <PageHeader
-            title={chat ? (backend?.[chat.name] ?? chat.name) : t('chat.t_title')}
-            subtitle={t('chat.t_subtitle')}
-          />
+          <PageHeader title={t(chat.name)} subtitle={t('chat.t_subtitle')} />
           <Stack spacing={1} alignItems={'flex-end'}>
             {messages.map(message => (
               <Box
@@ -50,6 +44,8 @@ export function ChatPage() {
             ))}
           </Stack>
         </Stack>
+      ) : (
+        <ChatEmptyPage />
       )}
     </WaitState>
   )

@@ -34,7 +34,7 @@ export function ChatItem(props) {
       <ListItemButton
         selected={props.active}
         onClick={props.onClick}
-        sx={{ borderRadius: 2, px: '8px', py: '6px' }}
+        sx={{ borderRadius: 2, px: '8px', py: '6px', transition: 'none' }}
       >
         <ListItemText
           primary={props.title}

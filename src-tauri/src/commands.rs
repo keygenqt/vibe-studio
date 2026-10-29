@@ -8,6 +8,7 @@ use tauri::WebviewWindow;
 
 use studio_core::ChatData;
 use studio_core::GroupChatData;
+use studio_core::GroupChatHistoryData;
 use studio_core::ModelInfoData;
 use studio_core::ProviderData;
 use studio_core::ProviderInfoData;
@@ -18,6 +19,8 @@ use studio_core::WorkspaceData;
 use crate::data::app_info::AppInfoData;
 use crate::data::event_data::EventData;
 use crate::data::event_data::EventKey;
+use crate::data::groups_chat_state::GroupsChatData;
+use crate::data::providers_state::ProvidersData;
 use crate::events::emit_event_groups_chat;
 use crate::events::emit_event_providers;
 use crate::events::emit_event_workspace;
@@ -67,30 +70,29 @@ pub fn get_provider(store: State<Store>, id: i32) -> Result<ProviderData, String
 }
 
 /// Validates and persists; `id: null` inserts, otherwise updates.
-/// Returns the stored row and broadcasts the fresh providers list.
+/// Emits and returns the fresh state of the providers block; the
+/// `provider` field carries the stored row.
 #[tauri::command]
 pub fn save_provider(
     window: WebviewWindow,
     store: State<Store>,
     provider: ProviderData,
-) -> Result<ProviderData, String> {
+) -> Result<ProvidersData, String> {
     let saved = studio_core::save_provider(&store, &provider).map_err(|e| e.to_string())?;
-    emit_event_providers(
-        &window,
-        EventData::new(EventKey::Providers, &studio_core::get_providers(&store)),
-    );
-    Ok(saved)
+    let mut state = ProvidersData::new(&store);
+    state.provider = Some(saved);
+    emit_event_providers(&window, EventData::new(EventKey::Providers, &state));
+    Ok(state)
 }
 
-/// Deletes the provider by id and broadcasts the fresh providers list.
+/// Deletes the provider by id; emits and returns the fresh state of
+/// the providers block.
 #[tauri::command]
-pub fn delete_provider(window: WebviewWindow, store: State<Store>, id: i32) -> Result<(), String> {
+pub fn delete_provider(window: WebviewWindow, store: State<Store>, id: i32) -> Result<ProvidersData, String> {
     studio_core::delete_provider(&store, id).map_err(|e| e.to_string())?;
-    emit_event_providers(
-        &window,
-        EventData::new(EventKey::Providers, &studio_core::get_providers(&store)),
-    );
-    Ok(())
+    let state = ProvidersData::new(&store);
+    emit_event_providers(&window, EventData::new(EventKey::Providers, &state));
+    Ok(state)
 }
 
 /// Fetches the live model catalog of a provider host.
@@ -105,9 +107,10 @@ pub async fn get_provider_models_by_type(
         .map_err(|e| e.to_string())
 }
 
-/// All models selected for a provider.
+/// All models, optionally of one provider — `None` takes the whole
+/// table behind the providers block state.
 #[tauri::command]
-pub fn get_provider_models(store: State<Store>, provider_id: i32) -> Vec<ProviderModelData> {
+pub fn get_provider_models(store: State<Store>, provider_id: Option<i32>) -> Vec<ProviderModelData> {
     studio_core::get_provider_models(&store, provider_id)
 }
 
@@ -117,39 +120,35 @@ pub fn get_provider_model(store: State<Store>, id: i32) -> Result<ProviderModelD
     studio_core::get_provider_model(&store, id).map_err(|e| e.to_string())
 }
 
-/// Validates and persists the model row. Returns the stored row and
-/// broadcasts the fresh model list of its provider.
+/// Validates and persists the model row. Emits and returns the
+/// fresh state of the providers block.
 #[tauri::command]
 pub fn save_provider_model(
     window: WebviewWindow,
     store: State<Store>,
     model: ProviderModelData,
-) -> Result<ProviderModelData, String> {
-    let saved = studio_core::save_provider_model(&store, &model).map_err(|e| e.to_string())?;
-    emit_event_providers(
-        &window,
-        EventData::new(
-            EventKey::ProviderModels,
-            &studio_core::get_provider_models(&store, saved.provider_id),
-        ),
-    );
-    Ok(saved)
+) -> Result<ProvidersData, String> {
+    studio_core::save_provider_model(&store, &model).map_err(|e| e.to_string())?;
+    let state = ProvidersData::new(&store);
+    emit_event_providers(&window, EventData::new(EventKey::Providers, &state));
+    Ok(state)
 }
 
-/// Persists the selection of the provider's model catalog. Returns
-/// the fresh model list of the provider.
+/// Persists the selection of the provider's model catalog. Emits
+/// and returns the fresh state of the providers block.
 #[tauri::command]
 pub async fn save_provider_models(
     window: WebviewWindow,
     store: State<'_, Store>,
     provider_id: i32,
     checked: Vec<String>,
-) -> Result<Vec<ProviderModelData>, String> {
-    let models = studio_core::save_provider_models(&store, provider_id, checked)
+) -> Result<ProvidersData, String> {
+    studio_core::save_provider_models(&store, provider_id, checked)
         .await
         .map_err(|e| e.to_string())?;
-    emit_event_providers(&window, EventData::new(EventKey::ProviderModels, &models));
-    Ok(models)
+    let state = ProvidersData::new(&store);
+    emit_event_providers(&window, EventData::new(EventKey::Providers, &state));
+    Ok(state)
 }
 
 // ─────────────────────────────────────────────
@@ -169,30 +168,27 @@ pub fn get_group_chat(store: State<Store>, id: i32) -> Result<GroupChatData, Str
 }
 
 /// Validates and persists; `id: null` inserts, otherwise updates.
-/// Returns the stored row and broadcasts the fresh groups chat list.
+/// Emits and returns the fresh state of the groups chat block.
 #[tauri::command]
 pub fn save_group_chat(
     window: WebviewWindow,
     store: State<Store>,
     group_chat: GroupChatData,
-) -> Result<GroupChatData, String> {
-    let saved = studio_core::save_group_chat(&store, &group_chat).map_err(|e| e.to_string())?;
-    emit_event_groups_chat(
-        &window,
-        EventData::new(EventKey::GroupsChat, &studio_core::get_groups_chat(&store)),
-    );
-    Ok(saved)
+) -> Result<GroupsChatData, String> {
+    studio_core::save_group_chat(&store, &group_chat).map_err(|e| e.to_string())?;
+    let state = GroupsChatData::new(&store);
+    emit_event_groups_chat(&window, EventData::new(EventKey::GroupsChat, &state));
+    Ok(state)
 }
 
-/// Deletes the group by id and broadcasts the fresh groups chat list.
+/// Deletes the group by id; emits and returns the fresh state of
+/// the groups chat block.
 #[tauri::command]
-pub fn delete_group_chat(window: WebviewWindow, store: State<Store>, id: i32) -> Result<(), String> {
+pub fn delete_group_chat(window: WebviewWindow, store: State<Store>, id: i32) -> Result<GroupsChatData, String> {
     studio_core::delete_group_chat(&store, id).map_err(|e| e.to_string())?;
-    emit_event_groups_chat(
-        &window,
-        EventData::new(EventKey::GroupsChat, &studio_core::get_groups_chat(&store)),
-    );
-    Ok(())
+    let state = GroupsChatData::new(&store);
+    emit_event_groups_chat(&window, EventData::new(EventKey::GroupsChat, &state));
+    Ok(state)
 }
 
 /// All chats.
@@ -202,27 +198,63 @@ pub fn get_chats(store: State<Store>) -> Vec<ChatData> {
 }
 
 /// Validates and persists; `id: null` inserts with a random pool
-/// name, otherwise updates. Returns the stored row and broadcasts
-/// the fresh chats list.
+/// name, otherwise updates. Emits and returns the fresh state of
+/// the groups chat block.
 #[tauri::command]
-pub fn save_chat(window: WebviewWindow, store: State<Store>, chat: ChatData) -> Result<ChatData, String> {
-    let saved = studio_core::save_chat(&store, &chat).map_err(|e| e.to_string())?;
-    emit_event_groups_chat(
-        &window,
-        EventData::new(EventKey::Chats, &studio_core::get_chats(&store)),
-    );
-    Ok(saved)
+pub fn save_chat(window: WebviewWindow, store: State<Store>, chat: ChatData) -> Result<GroupsChatData, String> {
+    studio_core::save_chat(&store, &chat).map_err(|e| e.to_string())?;
+    let state = GroupsChatData::new(&store);
+    emit_event_groups_chat(&window, EventData::new(EventKey::GroupsChat, &state));
+    Ok(state)
 }
 
-/// Deletes the chat by id and broadcasts the fresh chats list.
+/// Deletes the chat by id; emits and returns the fresh state of
+/// the groups chat block.
 #[tauri::command]
-pub fn delete_chat(window: WebviewWindow, store: State<Store>, id: i32) -> Result<(), String> {
+pub fn delete_chat(window: WebviewWindow, store: State<Store>, id: i32) -> Result<GroupsChatData, String> {
     studio_core::delete_chat(&store, id).map_err(|e| e.to_string())?;
-    emit_event_groups_chat(
-        &window,
-        EventData::new(EventKey::Chats, &studio_core::get_chats(&store)),
-    );
-    Ok(())
+    let state = GroupsChatData::new(&store);
+    emit_event_groups_chat(&window, EventData::new(EventKey::GroupsChat, &state));
+    Ok(state)
+}
+
+/// All group chat history rows.
+#[tauri::command]
+pub fn get_group_chat_histories(store: State<Store>) -> Vec<GroupChatHistoryData> {
+    studio_core::get_group_chat_histories(&store)
+}
+
+/// Persists the view flags of a group; emits and returns the fresh
+/// state of the groups chat block.
+#[tauri::command]
+pub fn set_group_chat_view(
+    window: WebviewWindow,
+    store: State<Store>,
+    group_chat_id: i32,
+    collapsed_group: bool,
+    collapsed_chats: bool,
+) -> Result<GroupsChatData, String> {
+    studio_core::set_group_chat_view(&store, group_chat_id, collapsed_group, collapsed_chats)
+        .map_err(|e| e.to_string())?;
+    let state = GroupsChatData::new(&store);
+    emit_event_groups_chat(&window, EventData::new(EventKey::GroupsChat, &state));
+    Ok(state)
+}
+
+/// Selects the group (`chatId = null`) or its chat as the single
+/// active one; emits and returns the fresh state of the groups
+/// chat block.
+#[tauri::command]
+pub fn select_group_chat(
+    window: WebviewWindow,
+    store: State<Store>,
+    group_chat_id: i32,
+    chat_id: Option<i32>,
+) -> Result<GroupsChatData, String> {
+    studio_core::select_group_chat(&store, group_chat_id, chat_id).map_err(|e| e.to_string())?;
+    let state = GroupsChatData::new(&store);
+    emit_event_groups_chat(&window, EventData::new(EventKey::GroupsChat, &state));
+    Ok(state)
 }
 
 // ─────────────────────────────────────────────

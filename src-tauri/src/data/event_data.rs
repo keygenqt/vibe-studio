@@ -12,9 +12,7 @@ use serde::Serialize;
 pub(crate) enum EventKey {
     Workspace,
     Providers,
-    ProviderModels,
     GroupsChat,
-    Chats,
     SystemTheme,
 }
 

@@ -32,6 +32,9 @@ export const enLocalization = {
     chat: {
       t_subtitle: 'Coming soon...',
     },
+    chat_empty: {
+      t_no_chat: 'Select a chat',
+    },
     settings: {
       t_providers: 'Providers',
       t_providers_description: 'API providers and models',
@@ -105,36 +108,6 @@ export const enLocalization = {
     },
     error: {
       t_text: 'Hmm, this page does not exist.',
-    },
-    backend: {
-      // -- errors
-      'Name must not be blank': 'Name must not be blank.',
-      'Display name must not be blank': 'Display name must not be blank.',
-      'System prompt must not be blank': 'System prompt must not be blank.',
-      'Unknown model': 'Unknown model.',
-      'Unknown group': 'Unknown group.',
-
-      // -- chats
-      'Conjuring a name...': 'Conjuring a name...',
-      'Brewing the title...': 'Brewing the title...',
-      'Summoning the magic...': 'Summoning the magic...',
-      'Whispering words...': 'Whispering words...',
-      'Naming this thing...': 'Naming this thing...',
-      'Cooking up a title...': 'Cooking up a title...',
-      'Chasing inspiration...': 'Chasing inspiration...',
-      'Forging a name...': 'Forging a name...',
-      'Painting words...': 'Painting words...',
-      'Mixing the letters...': 'Mixing the letters...',
-      'Weaving a title...': 'Weaving a title...',
-      'Stirring the muse...': 'Stirring the muse...',
-      'Dreaming up a name...': 'Dreaming up a name...',
-      'Polishing the title...': 'Polishing the title...',
-      'Sharpening the words...': 'Sharpening the words...',
-      'Catching the idea...': 'Catching the idea...',
-      'Baking a name...': 'Baking a name...',
-      'Distilling the words...': 'Distilling the words...',
-      'Spinning the yarn...': 'Spinning the yarn...',
-      'Tuning the title...': 'Tuning the title...',
     },
   },
 }
