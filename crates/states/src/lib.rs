@@ -14,6 +14,8 @@ pub(crate) mod data;
 pub(crate) mod db;
 
 pub use data::chat::ChatData;
+pub use data::chat_history::ChatHistoryData;
+pub use data::chat_history::ChatRole;
 pub use data::group_chat::GroupChatData;
 pub use data::group_chat_history::GroupChatHistoryData;
 pub use data::provider::ProviderData;
@@ -115,6 +117,27 @@ pub fn delete_chat(store: &Store, id: i32) -> Result<usize> {
 /// cleanup behind the group deletion.
 pub fn delete_group_chats(store: &Store, group_chat_id: i32) -> Result<usize> {
     store.delete_group_chats(group_chat_id)
+}
+
+/// All messages of the chat, oldest first.
+pub fn get_chat_histories(store: &Store, chat_id: i32) -> Result<Vec<ChatHistoryData>> {
+    store.get_chat_histories(chat_id)
+}
+
+/// Appends a message to the chat history; returns the stored row.
+pub fn add_chat_history(store: &Store, chat_id: i32, role: ChatRole, text: &str) -> Result<ChatHistoryData> {
+    store.add_chat_history(chat_id, role, text)
+}
+
+/// Deletes the message with the given id, returns affected rows.
+pub fn delete_chat_history(store: &Store, id: i32) -> Result<usize> {
+    store.delete_chat_history(id)
+}
+
+/// Deletes all messages of the chat, returns affected rows — the
+/// cleanup behind the chat deletion.
+pub fn delete_chat_histories(store: &Store, chat_id: i32) -> Result<usize> {
+    store.delete_chat_histories(chat_id)
 }
 
 /// All group chat history rows.

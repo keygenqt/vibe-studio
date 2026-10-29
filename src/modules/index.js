@@ -6,6 +6,7 @@
 import { debug } from '@tauri-apps/plugin-log'
 
 import { app, app_events } from './impl/app'
+import { chat, chat_events } from './impl/chat'
 import { groups_chat, groups_chat_events } from './impl/groups_chat'
 import { providers, providers_events } from './impl/providers'
 import { workspace, workspace_events } from './impl/workspace'
@@ -15,6 +16,7 @@ import { workspace, workspace_events } from './impl/workspace'
 export function bindEvents() {
   return Promise.all([
     ...app_events(),
+    ...chat_events(),
     ...providers_events(),
     ...groups_chat_events(),
     ...workspace_events(),
@@ -25,6 +27,7 @@ export function bindEvents() {
 // brings its own methods into the spread
 export const Methods = {
   ...app,
+  ...chat,
   ...providers,
   ...groups_chat,
   ...workspace,

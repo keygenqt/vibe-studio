@@ -29,9 +29,6 @@ export const ruLocalization = {
       t_chat_less: 'Свернуть',
       t_group_collapse: 'Свернуть / развернуть',
     },
-    chat: {
-      t_subtitle: 'Скоро...',
-    },
     chat_empty: {
       t_no_chat: 'Выберите чат',
     },
@@ -123,6 +120,7 @@ export const ruLocalization = {
     'Predict limit must not be empty.': 'Максимум токенов не должен быть пустым.',
     'Unknown group.': 'Неизвестная группа.',
     'Unknown chat.': 'Неизвестный чат.',
+    'Message must not be blank.': 'Сообщение не должно быть пустым.',
 
     // -- chats
     // fabrics

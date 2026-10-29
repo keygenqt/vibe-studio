@@ -11,10 +11,13 @@
 //!   payload of the event channels.
 //! - `groups_chat_state` — `GroupsChatData`: the fresh state of the
 //!   groups chat block, returned by its mutations.
+//! - `chat_state` — `ChatStateData`: the fresh state of the chat
+//!   block, returned by its mutations.
 //! - `providers_state` — `ProvidersData`: the fresh state of the
 //!   providers block, returned by its mutations.
 
 pub(crate) mod app_info;
+pub(crate) mod chat_state;
 pub(crate) mod event_data;
 pub(crate) mod groups_chat_state;
 pub(crate) mod providers_state;

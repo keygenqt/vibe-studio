@@ -11,6 +11,7 @@ use crate::data::event_data::EventData;
 pub(crate) const EVENT_WORKSPACE: &str = "event-workspace";
 pub(crate) const EVENT_PROVIDERS: &str = "event-providers";
 pub(crate) const EVENT_GROUPS_CHAT: &str = "event-groups-chat";
+pub(crate) const EVENT_CHAT: &str = "event-chat";
 pub(crate) const EVENT_APP: &str = "event-app";
 
 /// Workspace mutations end with the fresh stored row.
@@ -28,6 +29,12 @@ pub(crate) fn emit_event_providers(window: &WebviewWindow, value: EventData) {
 /// groups chat list.
 pub(crate) fn emit_event_groups_chat(window: &WebviewWindow, value: EventData) {
     emit_event(window, EVENT_GROUPS_CHAT, value);
+}
+
+/// Chat block mutations end with the fresh state: the chat row and
+/// its message history.
+pub(crate) fn emit_event_chat(window: &WebviewWindow, value: EventData) {
+    emit_event(window, EVENT_CHAT, value);
 }
 
 /// The OS theme watcher reports the current theme.

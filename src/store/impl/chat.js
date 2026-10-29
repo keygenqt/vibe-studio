@@ -9,20 +9,21 @@ const chatSlice = createSlice({
   name: 'chat',
   initialState: {
     draft: '',
-    messages: [],
+    chat: null,
+    history: null,
   },
   reducers: {
     chatDraftSet: (state, action) => {
       state.draft = action.payload
     },
-    chatMessagesSet: (state, action) => {
-      state.messages = action.payload
+    chatSet: (state, action) => {
+      state.chat = action.payload
     },
-    chatMessageAdd: (state, action) => {
-      state.messages.push(action.payload)
+    chatHistorySet: (state, action) => {
+      state.history = action.payload
     },
   },
 })
 
-export const { chatDraftSet, chatMessagesSet, chatMessageAdd } = chatSlice.actions
+export const { chatDraftSet, chatSet, chatHistorySet } = chatSlice.actions
 export default chatSlice.reducer

@@ -7,6 +7,7 @@ use tauri::State;
 use tauri::WebviewWindow;
 
 use studio_core::ChatData;
+use studio_core::ChatHistoryData;
 use studio_core::GroupChatData;
 use studio_core::GroupChatHistoryData;
 use studio_core::ModelInfoData;
@@ -17,10 +18,13 @@ use studio_core::Store;
 use studio_core::WorkspaceData;
 
 use crate::data::app_info::AppInfoData;
+use crate::data::chat_state::ChatStateData;
 use crate::data::event_data::EventData;
 use crate::data::event_data::EventKey;
 use crate::data::groups_chat_state::GroupsChatData;
 use crate::data::providers_state::ProvidersData;
+
+use crate::events::emit_event_chat;
 use crate::events::emit_event_groups_chat;
 use crate::events::emit_event_providers;
 use crate::events::emit_event_workspace;
@@ -254,6 +258,33 @@ pub fn select_group_chat(
     studio_core::select_group_chat(&store, group_chat_id, chat_id).map_err(|e| e.to_string())?;
     let state = GroupsChatData::new(&store);
     emit_event_groups_chat(&window, EventData::new(EventKey::GroupsChat, &state));
+    Ok(state)
+}
+
+// ─────────────────────────────────────────────
+// Chat
+// ─────────────────────────────────────────────
+
+/// All messages of the chat, oldest first.
+#[tauri::command]
+pub fn chat_get_history(store: State<Store>, chat_id: i32) -> Result<Vec<ChatHistoryData>, String> {
+    studio_core::chat_get_history(&store, chat_id).map_err(|e| e.to_string())
+}
+
+/// Sends the user's message to the chat's model and records the
+/// exchange; emits and returns the fresh state of the chat block.
+#[tauri::command]
+pub async fn chat_send_message(
+    window: WebviewWindow,
+    store: State<'_, Store>,
+    chat_id: i32,
+    text: String,
+) -> Result<ChatStateData, String> {
+    studio_core::chat_send_message(&store, chat_id, &text)
+        .await
+        .map_err(|e| e.to_string())?;
+    let state = ChatStateData::new(&store, chat_id);
+    emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
     Ok(state)
 }
 

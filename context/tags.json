@@ -40,6 +40,8 @@
   "crates/states/migrations/0005_chats/up.sql": ["states"],
   "crates/states/migrations/0006_group_chat_history/down.sql": ["states"],
   "crates/states/migrations/0006_group_chat_history/up.sql": ["states"],
+  "crates/states/migrations/0007_chat_history/down.sql": ["states"],
+  "crates/states/migrations/0007_chat_history/up.sql": ["states"],
   "data/app_icon.svg": ["misc"],
   "data/preview_2.png": ["misc"],
   "data/preview_big.png": ["misc"],

@@ -5,14 +5,14 @@
  */
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
-import { Box, IconButton, Stack, TextField } from '@mui/material'
+import { Box, CircularProgress, IconButton, Stack, TextField } from '@mui/material'
 import Send from '@mui/icons-material/Send'
 
-import { useChat } from '../../../hooks'
+import { useCoreChat } from '../../../hooks'
 
 export function InputView(props) {
   const { t } = useTranslation()
-  const { draft, setDraft, send } = useChat(props.chatId)
+  const { draft, setDraft, send, sending } = useCoreChat({ chatId: props.chatId })
 
   return (
     <Stack
@@ -43,6 +43,7 @@ export function InputView(props) {
           multiline
           fullWidth
           variant="standard"
+          disabled={sending}
           placeholder={t('main.t_placeholder')}
           value={draft}
           onChange={event => setDraft(event.target.value)}
@@ -59,6 +60,12 @@ export function InputView(props) {
               autoCorrect: 'off',
               autoCapitalize: 'off',
               spellCheck: false,
+              onKeyDown: event => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault()
+                  send()
+                }
+              },
             },
           }}
         />
@@ -69,8 +76,12 @@ export function InputView(props) {
           paddingTop: '6px',
         }}
       >
-        <IconButton color="primary" size="small" onClick={send}>
-          <Send />
+        <IconButton color="primary" size="small" onClick={send} disabled={sending}>
+          {sending ? (
+            <CircularProgress size={24} color={'inherit'} />
+          ) : (
+            <Send sx={{ fontSize: 24 }} />
+          )}
         </IconButton>
       </Box>
     </Stack>

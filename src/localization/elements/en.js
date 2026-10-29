@@ -29,9 +29,6 @@ export const enLocalization = {
       t_chat_less: 'Collapse',
       t_group_collapse: 'Collapse / expand',
     },
-    chat: {
-      t_subtitle: 'Coming soon...',
-    },
     chat_empty: {
       t_no_chat: 'Select a chat',
     },

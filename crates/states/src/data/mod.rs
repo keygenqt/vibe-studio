@@ -22,6 +22,9 @@
 //! - `group_chat_history` — the `group_chat_history` table:
 //!   `GroupChatHistoryData`, the per-group life record — view state,
 //!   the app-wide selection, the accumulated counters.
+//! - `chat_history` — the `chat_history` table: `ChatHistoryData`,
+//!   the chat messages, the `ChatRole` roles and the append-only API
+//!   on `Store`.
 //! - `workspace` — the `workspace` table: `WorkspaceData`, the shell
 //!   environment as a single row (id = 1).
 //!
@@ -29,6 +32,7 @@
 //! API in `lib.rs`.
 
 pub(crate) mod chat;
+pub(crate) mod chat_history;
 pub(crate) mod group_chat;
 pub(crate) mod group_chat_history;
 pub(crate) mod provider;

@@ -12,7 +12,7 @@ export const CHAT_INPUT_SIZE_DEFAULT = 48
 // Sidebar width: user-dragged, shared by chat and settings sidebars.
 export const SIDE_BAR_SIZE_MIN = 200
 export const SIDE_BAR_SIZE_MAX = 450
-export const SIDE_BAR_SIZE_DEFAULT = 330
+export const SIDE_BAR_SIZE_DEFAULT = 340
 
 // animation timing vs how long a success banner stays visible
 export const DURATION_DEFAULT = 150

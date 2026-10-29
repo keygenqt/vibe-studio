@@ -29,9 +29,6 @@ export const cnLocalization = {
       t_chat_less: '收起',
       t_group_collapse: '折叠 / 展开',
     },
-    chat: {
-      t_subtitle: '敬请期待...',
-    },
     chat_empty: {
       t_no_chat: '选择聊天',
     },
@@ -123,6 +120,7 @@ export const cnLocalization = {
     'Predict limit must not be empty.': '最大生成数不能为空。',
     'Unknown group.': '未知分组。',
     'Unknown chat.': '未知聊天。',
+    'Message must not be blank.': '消息不能为空。',
 
     // -- chats
     // fabrics

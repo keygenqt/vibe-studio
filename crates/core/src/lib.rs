@@ -13,6 +13,8 @@ pub(crate) mod theme;
 pub use studio_cluster::ModelInfoData;
 pub use studio_cluster::ProviderInfoData;
 pub use studio_states::ChatData;
+pub use studio_states::ChatHistoryData;
+pub use studio_states::ChatRole;
 pub use studio_states::GroupChatData;
 pub use studio_states::GroupChatHistoryData;
 pub use studio_states::ProviderData;
@@ -215,6 +217,12 @@ pub fn save_group_chat(store: &Store, group_chat: &GroupChatData) -> Result<Grou
 /// Deletes the group with its chats and history; a missing group is
 /// a no-op.
 pub fn delete_group_chat(store: &Store, id: i32) -> Result<()> {
+    for chat in studio_states::get_chats(store)?
+        .iter()
+        .filter(|chat| chat.group_chat_id == id)
+    {
+        studio_states::delete_chat_histories(store, chat.id.expect("stored chat id"))?;
+    }
     studio_states::delete_group_chats(store, id)?;
     studio_states::delete_group_chat(store, id)?;
     studio_states::delete_group_chat_history(store, id)?;
@@ -229,6 +237,11 @@ pub fn delete_group_chat(store: &Store, id: i32) -> Result<()> {
 /// blocks the UI.
 pub fn get_chats(store: &Store) -> Vec<ChatData> {
     studio_states::get_chats(store).unwrap_or_default()
+}
+
+/// Loads one chat by id.
+pub fn get_chat(store: &Store, id: i32) -> Result<ChatData> {
+    studio_states::get_chat(store, id)
 }
 
 /// Validates and persists the chat. The UI is not trusted: the group
@@ -255,6 +268,7 @@ pub fn delete_chat(store: &Store, id: i32) -> Result<()> {
     let chat = studio_states::get_chat(store, id).ok();
     studio_states::delete_chat(store, id)?;
     if let Some(chat) = chat {
+        studio_states::delete_chat_histories(store, id)?;
         if studio_states::clear_group_chat_history_selected_chat(store, id)? != 0 {
             if let Some(last) = studio_states::get_last_group_chat(store, chat.group_chat_id)? {
                 studio_states::set_active_group_chat(
@@ -265,6 +279,71 @@ pub fn delete_chat(store: &Store, id: i32) -> Result<()> {
             }
         }
     }
+    Ok(())
+}
+
+// ─────────────────────────────────────────────
+// Chat History
+// ─────────────────────────────────────────────
+
+/// All messages of the chat, oldest first. The UI is not trusted:
+/// the chat must exist.
+pub fn chat_get_history(store: &Store, chat_id: i32) -> Result<Vec<ChatHistoryData>> {
+    studio_states::get_chat(store, chat_id)?;
+    Ok(studio_states::get_chat_histories(store, chat_id)?)
+}
+
+/// Sends the user's message to the chat's model and records both
+/// sides of the exchange. The UI is not trusted: the chat must exist,
+/// a blank message is an error. The model prompt comes first, the
+/// group prompt completes it; empty prompts drop out. A failed request
+/// is kept in the history as an `Error` message with the error text.
+pub async fn chat_send_message(store: &Store, chat_id: i32, text: &str) -> Result<()> {
+    if text.trim().is_empty() {
+        anyhow::bail!("Message must not be blank.");
+    }
+    let chat = studio_states::get_chat(store, chat_id)?;
+    let group = studio_states::get_group_chat(store, chat.group_chat_id)?;
+    let model = studio_states::get_provider_model(store, group.model_id)?;
+    let provider = studio_states::get_provider(store, model.provider_id)?;
+
+    // the model context: everything said so far, in order; failed
+    // requests are not model messages — they stay out
+    let history = studio_states::get_chat_histories(store, chat_id)?
+        .into_iter()
+        .filter(|message| message.role != ChatRole::Error)
+        .map(|message| (message.role.as_str().to_string(), message.text))
+        .collect();
+
+    studio_states::add_chat_history(store, chat_id, ChatRole::User, text)?;
+
+    let system = [model.system_prompt.as_deref(), group.system_prompt.as_deref()]
+        .into_iter()
+        .flatten()
+        .map(str::trim)
+        .filter(|prompt| !prompt.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n\n");
+
+    let answer = studio_cluster::call_prompt(
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?,
+        &provider.host,
+        provider.api_key.as_deref(),
+        &model.name,
+        model.temperature.unwrap_or(0.7),
+        model.seed.unwrap_or(42),
+        model.num_ctx.unwrap_or(4096),
+        model.num_predict.unwrap_or(2048),
+        if system.is_empty() { None } else { Some(system) },
+        history,
+        text,
+    )
+    .await;
+
+    match answer {
+        Ok(text) => studio_states::add_chat_history(store, chat_id, ChatRole::Assistant, &text)?,
+        Err(e) => studio_states::add_chat_history(store, chat_id, ChatRole::Error, &format!("{e}"))?,
+    };
     Ok(())
 }
 
