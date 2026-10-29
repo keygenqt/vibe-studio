@@ -4,6 +4,7 @@
  * TAGS: ['hooks']
  */
 export * from './useEffectFocus'
+export * from './useChat'
 export * from './useCoreWorkspace'
 export * from './useCoreProviders'
 export * from './useCoreGroupsChat'

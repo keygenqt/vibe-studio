@@ -106,7 +106,9 @@ export function ModelForm(props) {
               onBlur={handleBlur}
               onChange={handleChange}
             />
-            <Typography variant={'h6'}>{t('model.t_parameters')}</Typography>
+            <Typography variant={'h6'} color={'text.primary'}>
+              {t('model.t_parameters')}
+            </Typography>
             <Box
               sx={{
                 display: 'grid',

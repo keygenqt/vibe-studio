@@ -29,6 +29,9 @@ export const ruLocalization = {
       t_chat_less: 'Свернуть',
       t_group_collapse: 'Свернуть / развернуть',
     },
+    chat: {
+      t_subtitle: 'Скоро...',
+    },
     settings: {
       t_providers: 'Провайдеры',
       t_providers_description: 'API-провайдеры и модели',

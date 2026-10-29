@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
  */
+export * from './chat/ChatPage'
 export * from './error/ErrorPage'
 export * from './general/GeneralPage'
 export * from './main/MainPage'

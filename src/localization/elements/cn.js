@@ -29,6 +29,9 @@ export const cnLocalization = {
       t_chat_less: '收起',
       t_group_collapse: '折叠 / 展开',
     },
+    chat: {
+      t_subtitle: '敬请期待...',
+    },
     settings: {
       t_providers: '提供商',
       t_providers_description: 'API 提供商与模型',

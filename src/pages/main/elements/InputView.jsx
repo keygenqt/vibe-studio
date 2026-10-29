@@ -4,14 +4,15 @@
  * TAGS: ['components']
  */
 import PropTypes from 'prop-types'
-import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Box, IconButton, Stack, TextField } from '@mui/material'
 import Send from '@mui/icons-material/Send'
 
-export function ComposerView(props) {
+import { useChat } from '../../../hooks'
+
+export function InputView(props) {
   const { t } = useTranslation()
-  const [value, setValue] = React.useState('')
+  const { draft, setDraft, send } = useChat(props.chatId)
 
   return (
     <Stack
@@ -43,8 +44,8 @@ export function ComposerView(props) {
           fullWidth
           variant="standard"
           placeholder={t('main.t_placeholder')}
-          value={value}
-          onChange={event => setValue(event.target.value)}
+          value={draft}
+          onChange={event => setDraft(event.target.value)}
           sx={{ height: '100%' }}
           slotProps={{
             input: {
@@ -54,6 +55,10 @@ export function ComposerView(props) {
             htmlInput: {
               className: 'ScrollArea',
               sx: { height: '100% !important', overflowY: 'auto !important' },
+              autoComplete: 'off',
+              autoCorrect: 'off',
+              autoCapitalize: 'off',
+              spellCheck: false,
             },
           }}
         />
@@ -64,7 +69,7 @@ export function ComposerView(props) {
           paddingTop: '6px',
         }}
       >
-        <IconButton color="primary" size="small">
+        <IconButton color="primary" size="small" onClick={send}>
           <Send />
         </IconButton>
       </Box>
@@ -72,6 +77,7 @@ export function ComposerView(props) {
   )
 }
 
-ComposerView.propTypes = {
+InputView.propTypes = {
   height: PropTypes.number.isRequired,
+  chatId: PropTypes.number,
 }

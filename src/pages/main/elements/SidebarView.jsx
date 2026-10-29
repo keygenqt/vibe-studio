@@ -35,8 +35,7 @@ export function SidebarView(props) {
   // directly — dots in the names break the nested key path
   const backend = t('backend', { returnObjects: true })
 
-  const chatTitle = chat =>
-    chat.name ? (backend?.[chat.name] ?? chat.name) : t('main.t_chat_untitled')
+  const chatTitle = chat => (chat.name ? (backend?.[chat.name] ?? chat.name) : '')
 
   if (props.groupsChat === null) {
     return <WaitState ready={false} />

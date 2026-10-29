@@ -29,6 +29,9 @@ export const enLocalization = {
       t_chat_less: 'Collapse',
       t_group_collapse: 'Collapse / expand',
     },
+    chat: {
+      t_subtitle: 'Coming soon...',
+    },
     settings: {
       t_providers: 'Providers',
       t_providers_description: 'API providers and models',

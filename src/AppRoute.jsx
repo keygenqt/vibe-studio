@@ -9,6 +9,7 @@ import { Box } from '@mui/material'
 
 import { AppRoutes } from './constants'
 import {
+  ChatPage,
   ErrorPage,
   GeneralPage,
   GroupChatPage,
@@ -29,7 +30,11 @@ const router = createBrowserRouter([
       </PageFade>
     ),
     children: [
-      { index: true, element: <MainPage /> },
+      {
+        path: AppRoutes.main(),
+        element: <MainPage />,
+        children: [{ index: true }, { path: AppRoutes.chat(), element: <ChatPage /> }],
+      },
       {
         path: AppRoutes.settings(),
         element: <SettingsPage />,
@@ -68,11 +73,9 @@ function PageFade(props) {
     mounted.current = true
   }, [])
   const fade = typeof document.startViewTransition !== 'function'
-  // one key per top-level section: internal settings navigation
-  // keeps the shell mounted — no flicker on back
-  const key = location.pathname.startsWith(AppRoutes.settings())
-    ? AppRoutes.settings()
-    : location.pathname
+  // one key per top-level section: navigation inside a section
+  // (settings, chats) keeps the shell mounted — no flicker on back
+  const key = '/' + (location.pathname.split('/')[1] ?? '')
   return (
     <Box key={key} className={fade && mounted.current ? 'PageFade' : undefined} sx={{ height: 1 }}>
       {props.children}

@@ -4,7 +4,8 @@
  * TAGS: ['components', 'hooks']
  */
 import * as React from 'react'
-import { useNavigate } from 'react-router'
+import { matchPath, Outlet, useLocation, useNavigate } from 'react-router'
+import { Box } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import ViewSidebar from '@mui/icons-material/ViewSidebar'
 import Settings from '@mui/icons-material/Settings'
@@ -19,16 +20,17 @@ import { AppNav } from '../../utils'
 
 import { SidebarTitle } from './elements/SidebarTitle'
 import { SidebarView } from './elements/SidebarView'
-import { ChatContent } from './elements/ChatContent'
-import { ComposerView } from './elements/ComposerView'
+import { InputView } from './elements/InputView'
 
 export function MainPage() {
   const workspace = useCoreWorkspace()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const { groupsChat, chats, models } = useCoreGroupsChat()
   const [activeId, setActiveId] = React.useState(null)
-  const [activeChatId, setActiveChatId] = React.useState(null)
+  // the active chat is the routed one: no mirror state
+  const chatId = Number(matchPath(AppRoutes.chat(), pathname)?.params.chatId) || null
 
   // the first group is active until the user picks another; a group
   // deletion falls back to the first remaining one
@@ -44,7 +46,7 @@ export function MainPage() {
   const createChat = () => {
     if (activeId === null) return
     Methods.save_chat({ id: null, name: '', group_chat_id: activeId })
-      .then(saved => setActiveChatId(saved.id))
+      .then(saved => AppNav.open(navigate, AppRoutes.chat(saved.id)))
       .catch(() => {})
   }
 
@@ -92,18 +94,29 @@ export function MainPage() {
             models={models}
             activeId={activeId}
             onActivate={setActiveId}
-            activeChatId={activeChatId}
-            onActivateChat={setActiveChatId}
+            activeChatId={chatId}
+            onActivateChat={id => AppNav.open(navigate, AppRoutes.chat(id))}
           />
         }
       >
-        <ChatContent />
+        {/* the paper shell of the chat area: pages render inside it */}
+        <Box
+          sx={{
+            flexGrow: 1,
+            minHeight: 0,
+            borderRadius: 2,
+            backgroundColor: 'background.paper',
+            overflow: 'hidden',
+          }}
+        >
+          <Outlet />
+        </Box>
         {/* horizontal mirror of the sidebar handle: dragging up grows the composer */}
         <HandleView
           orientation="horizontal"
           onPointerDown={workspace.onComposerHandlePointerDown}
         />
-        <ComposerView height={workspace.chatInputSize} />
+        <InputView height={workspace.chatInputSize} chatId={chatId} />
       </SidebarLayout>
     </ShellLayout>
   )
