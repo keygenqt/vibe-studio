@@ -50,6 +50,7 @@
   "package-lock.json": ["deps"],
   "package.json": ["deps"],
   "rustfmt.toml": ["misc"],
+  "scripts/check.sh": ["misc"],
   "scripts/common.sh": ["misc"],
   "scripts/format.sh": ["misc"],
   "scripts/reset.sh": ["misc"],

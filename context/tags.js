@@ -7,7 +7,8 @@
 // Tag scanner: collects file tags, prints tag slices, verifies coverage.
 // Usage:
 //   node context/tags.js --tags        list tags with file counts
-//   node context/tags.js t1 [t2 ...]   print tree of files with any of the tags
+//   node context/tags.js t1 [t2 ...] [--not t3 ...] [--filter dir ...]   print tree; --not excludes tags, --filter keeps only the given prefixes
+//   --show-info                                       append the INFO line to the tree names
 //   node context/tags.js --check       fail on untagged files, conflicts, headers without SPDX
 
 import { execSync } from 'node:child_process'
@@ -35,13 +36,15 @@ const listFiles = () =>
 
 const loadJson = () => JSON.parse(readFileSync(JSON_PATH, 'utf8'))
 
-// In-file tags live in the SPDX header of js/jsx/rs only; all other files are json-only.
+// In-file tags and INFO live in the SPDX header of js/jsx/rs only; all other files are json-only.
 const inFileHeader = file => {
   if (!IN_FILE_LANGS.has(file.slice(file.lastIndexOf('.')))) return null
   const head = readFileSync(join(ROOT, file), 'utf8').split('\n', HEADER_LINES)
   const line = head.find(l => /TAGS:\s*\[/.test(l))
+  const info = head.find(l => /INFO:\s*\S/.test(l))
   return {
     tags: line ? [...line.matchAll(/'([^']*)'/g)].map(m => m[1]).filter(Boolean) : null,
+    info: info ? info.match(/INFO:\s*(.+)$/)[1].trim() : null,
     spdx: head.some(l => /SPDX-License-Identifier/.test(l)),
   }
 }
@@ -50,6 +53,7 @@ function collect() {
   const files = listFiles()
   const json = loadJson()
   const index = new Map()
+  const info = new Map()
   const problems = []
   for (const file of files) {
     const fromJson = json[file]
@@ -61,6 +65,8 @@ function collect() {
     } else {
       index.set(file, fromJson ?? fromFile)
     }
+    // INFO describes content, not tagging — it is kept even for a json/header conflict
+    if (header?.info) info.set(file, header.info)
     if (fromFile && !header.spdx) {
       problems.push(`error: ${file} has TAGS but no SPDX-License-Identifier in the header`)
     }
@@ -70,20 +76,26 @@ function collect() {
       problems.push(`error: tags.json entry has no file: ${file}`)
     }
   }
-  return { index, problems }
+  return { index, info, problems }
 }
 
-// Render matched paths as a directory tree.
-function printTree(paths) {
+// Render matched paths as a directory tree; showInfo appends the INFO line.
+function printTree(entries, info, showInfo) {
   const tree = {}
-  for (const p of paths) {
+  let dirs = 0
+  let files = 0
+  for (const [p] of entries) {
     const parts = p.split('/')
     let node = tree
     for (let i = 0; i < parts.length; i++) {
       if (i === parts.length - 1) {
-        ;(node[''] ??= []).push(parts[i])
+        ;(node[''] ??= []).push(showInfo && info.get(p) ? `${parts[i]} — ${info.get(p)}` : parts[i])
+        files++
+      } else if (node[parts[i]]) {
+        node = node[parts[i]]
       } else {
         node = node[parts[i]] ??= {}
+        dirs++
       }
     }
   }
@@ -100,10 +112,11 @@ function printTree(paths) {
     })
   }
   walk(tree, '')
+  console.log(`\n${dirs} directories, ${files} files`)
 }
 
 const [command, ...args] = process.argv.slice(2)
-const { index, problems } = collect()
+const { index, info, problems } = collect()
 
 if (command === '--tags') {
   const counts = new Map()
@@ -123,21 +136,37 @@ if (command === '--tags') {
   }
   console.log('OK')
 } else if (command) {
-  const unknown = [command, ...args].filter(a => a.startsWith('--'))
+  // --not starts excluded tags, --filter starts kept path prefixes; empty wanted prints all
+  const showInfo = [command, ...args].includes('--show-info')
+  const all = [command, ...args].filter(a => a !== '--show-info')
+  const buckets = { wanted: new Set(), excluded: new Set(), filtered: [] }
+  let key = 'wanted'
+  for (const a of all) {
+    if (a === '--not') key = 'excluded'
+    else if (a === '--filter') key = 'filtered'
+    else if (key === 'filtered') buckets.filtered.push(a)
+    else buckets[key].add(a)
+  }
+  const { wanted, excluded, filtered } = buckets
+  const unknown = [...wanted, ...excluded, ...filtered].filter(a => a.startsWith('--'))
   if (unknown.length) {
     console.log(`error: unknown option(s): ${unknown.join(', ')}`)
     process.exit(1)
   }
-  const wanted = new Set([command, ...args])
   const matched = [...index.entries()]
-    .filter(([, tags]) => tags?.some(t => wanted.has(t)))
-    .map(([f]) => f)
-    .sort()
+    .filter(([f, tags]) => wanted.size === 0 || (tags?.some(t => wanted.has(t)) ?? false))
+    .filter(([f]) => filtered.length === 0 || filtered.some(d => f === d || f.startsWith(`${d}/`)))
+    .filter(([, tags]) => !tags?.some(t => excluded.has(t)))
+    .sort(([a], [b]) => (a > b ? 1 : a < b ? -1 : 0))
   if (matched.length) {
-    printTree(matched)
+    printTree(matched, info, showInfo)
   } else {
-    console.log(`no files for tags: ${[...wanted].join(', ')}`)
+    console.log(
+      `no files for tags: ${[...wanted].join(', ')}${[...excluded].length ? ` (excluding ${[...excluded].join(', ')})` : ''}`
+    )
   }
 } else {
-  console.log('usage: node context/tags.js [--tags | --check | t1 [t2 ...]]')
+  console.log(
+    'usage: node context/tags.js [--tags | --check | [--show-info] t1 [t2 ...] [--not t3 ...] [--filter dir ...]]'
+  )
 }

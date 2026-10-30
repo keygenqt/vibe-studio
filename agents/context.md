@@ -39,6 +39,10 @@ project slice it needs instead of the whole tree; the scanner is
 - An in-file tag is a `TAGS: ['task', ...]` line in the SPDX header,
   in the comment syntax of the language; the scanner looks for it in
   the first 10 lines of a file.
+- An optional `INFO:` line in the same header is a one-sentence
+  description of the file, up to 90 characters; it names the role,
+  not the feature list — the tags already hold it. It is not
+  checked and shows in the tree via `--show-info`.
 - In-file tags are for `.js/.jsx/.rs` only; the set is the
   `IN_FILE_LANGS` constant in the scanner — extend there. Every other
   file is a permanent resident of `context/tags.json`.
@@ -57,5 +61,8 @@ project slice it needs instead of the whole tree; the scanner is
 ```bash
 node context/tags.js --tags        # tag catalog: tag and file count
 node context/tags.js <tags...>     # file tree for files with any of these tags
+node context/tags.js --not <tags>     # file tree for files without these tags
+node context/tags.js --filter <dirs>  # file tree under these path prefixes
+                                      # --show-info, in any tree call, adds the INFO line
 node context/tags.js --check       # fails on untagged files, conflicts, dead entries
 ```
