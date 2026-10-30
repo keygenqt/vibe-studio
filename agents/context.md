@@ -39,10 +39,11 @@ project slice it needs instead of the whole tree; the scanner is
 - An in-file tag is a `TAGS: ['task', ...]` line in the SPDX header,
   in the comment syntax of the language; the scanner looks for it in
   the first 10 lines of a file.
-- An optional `INFO:` line in the same header is a one-sentence
-  description of the file, up to 90 characters; it names the role,
-  not the feature list — the tags already hold it. It is not
-  checked and shows in the tree via `--show-info`.
+- An `INFO:` line in the same header is a one-sentence description
+  of the file, up to 90 characters; it names the role, not the
+  feature list — the tags already hold it. Every in-file-language
+  file carries one; it is not checked and shows in the tree via
+  `--show-info`.
 - In-file tags are for `.js/.jsx/.rs` only; the set is the
   `IN_FILE_LANGS` constant in the scanner — extend there. Every other
   file is a permanent resident of `context/tags.json`.

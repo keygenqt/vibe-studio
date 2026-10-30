@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states']
+// INFO: The Store struct and generic table operations over its single connection.
 
 //! Generic store operations over the SQLite connection.
 //!

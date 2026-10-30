@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['facts']
+// INFO: Static provider catalog rows: kind id, title, default host, brand color.
 
 use super::ProviderTypeData;
 

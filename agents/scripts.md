@@ -17,4 +17,4 @@ logic.
 - `reset.sh` — full reset of the project: build artifacts, dependencies and the state database.
 - `run.sh` — quick launch of the dev application.
 - `stats.sh` — code statistics with filters.
-- `tree.sh` — project tree by tags, dir flags `crates`/`react`/`tauri`; no args — all but `misc`/`context` with INFO.
+- `tree.sh` — project tree by tags, dir flags `crates`/`react`/`tauri`; INFO by default, `misc`/`context` excluded unless requested.

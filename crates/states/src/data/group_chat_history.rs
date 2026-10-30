@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states']
+// INFO: The group_chat_history table: per-group view state, selection, counters.
 
 use anyhow::Result;
 use chrono::DateTime;

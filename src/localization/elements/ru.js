@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['i18n']
+ * INFO: The ru translation strings.
  */
 export const ruLocalization = {
   translation: {

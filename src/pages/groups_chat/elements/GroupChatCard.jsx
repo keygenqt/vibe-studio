@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
+ * INFO: A group row card: name, model, chevron.
  */
 import PropTypes from 'prop-types'
 import { Avatar, Box, Card, CardActionArea, Stack, Typography } from '@mui/material'

@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['theme']
+ * INFO: MUI component style overrides shared by both themes.
  */
 export const components = {
   MuiToolbar: {

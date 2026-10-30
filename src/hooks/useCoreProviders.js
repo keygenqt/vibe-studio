@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['hooks', 'states']
+ * INFO: Providers block access: catalog and provider/model slices.
  */
 import * as React from 'react'
 import { useSelector } from 'react-redux'

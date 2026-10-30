@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states']
+// INFO: The models table: provider catalog with sync-owned facts and user-owned config.
 
 use anyhow::Result;
 use anyhow::anyhow;

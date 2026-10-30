@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['hooks', 'facts']
+ * INFO: App facts for render: version, debug flag, OS theme copy.
  */
 import * as React from 'react'
 import { useSelector } from 'react-redux'

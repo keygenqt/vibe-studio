@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['theme']
+ * INFO: The light MUI theme: palette, typography, transitions, components.
  */
 import { createTheme } from '@mui/material/styles'
 import { typography } from './elements/typography'

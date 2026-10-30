@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
+ * INFO: Collapsible error banner with a close action.
  */
 import PropTypes from 'prop-types'
 import { Alert, Box, Collapse, Stack } from '@mui/material'

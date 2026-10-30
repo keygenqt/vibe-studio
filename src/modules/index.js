@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['states', 'facts']
+ * INFO: Methods — the single JS surface to Rust — and the event binding.
  */
 import { debug } from '@tauri-apps/plugin-log'
 

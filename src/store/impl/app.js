@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['states', 'facts']
+ * INFO: The app copy: version, debug flag, saved alert, OS theme.
  */
 import { createSlice } from '@reduxjs/toolkit'
 

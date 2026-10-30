@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['theme']
+// INFO: Theme choice facts and the OS theme detection with its change watcher.
 
 use anyhow::Result;
 

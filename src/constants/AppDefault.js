@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['facts']
+ * INFO: UI drag bounds, defaults and animation durations.
  */
 
 // Composer height: user-dragged between min and max.

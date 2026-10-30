@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['states']
+ * INFO: The workspace copy: shell environment with UI defaults applied.
  */
 import { createSlice } from '@reduxjs/toolkit'
 

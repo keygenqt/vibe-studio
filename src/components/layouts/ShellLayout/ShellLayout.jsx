@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'theme']
+ * INFO: The app shell frame: draggable title bar, rail, theme action.
  */
 import PropTypes from 'prop-types'
 import { AppBar, Box, Stack, Toolbar } from '@mui/material'

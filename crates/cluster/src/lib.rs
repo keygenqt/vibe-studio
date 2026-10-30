@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['facts']
+// INFO: Provider catalog and LLM requests: the crate's public flat API.
 
 //! Vibe Studio cluster — provider catalog and LLM requests.
 

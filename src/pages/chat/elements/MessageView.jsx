@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
+ * INFO: A chat message bubble: role styling and local time.
  */
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'

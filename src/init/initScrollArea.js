@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
+ * INFO: Watches ScrollArea elements: overflow padding and scroll memory.
  */
 
 // scroll positions are a pure UI detail — module map, no re-renders

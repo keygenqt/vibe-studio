@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['facts']
+ * INFO: Page paths: the route pattern bare, the concrete URL with an id.
  */
 
 // Single source of page routes. Call without arguments for the route

@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states', 'facts']
+// INFO: The JS surface: one command per core function, named after it.
 
 use tauri::AppHandle;
 use tauri::State;

@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'hooks']
+ * INFO: Provider add/edit page with its model list.
  */
 import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'

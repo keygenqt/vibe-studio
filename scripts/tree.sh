@@ -22,7 +22,18 @@ done
 args=()
 [ ${#tags[@]} -gt 0 ] && args+=("${tags[@]}")
 [ ${#dirs[@]} -gt 0 ] && args+=("--filter" "${dirs[@]}")
-# the plain default tree comes with INFO
-[ ${#tags[@]} -eq 0 ] && [ ${#dirs[@]} -eq 0 ] && args+=("--show-info")
+# the default tree and dir slices come with INFO
+[ ${#tags[@]} -eq 0 ] && args+=("--show-info")
 
-node context/tags.js "${args[@]}" --not misc context "${show[@]}"
+# misc/context are excluded by default — unless requested explicitly
+nots=()
+for tag in misc context; do
+  skip=false
+  for t in "${tags[@]}"; do
+    [ "$t" = "$tag" ] && skip=true
+  done
+  $skip || nots+=("$tag")
+done
+[ ${#nots[@]} -gt 0 ] && args+=("--not" "${nots[@]}")
+
+node context/tags.js "${args[@]}" "${show[@]}"

@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
+ * INFO: Selectable sidebar list row.
  */
 import PropTypes from 'prop-types'
 import { Card, ListItemButton, ListItemText } from '@mui/material'

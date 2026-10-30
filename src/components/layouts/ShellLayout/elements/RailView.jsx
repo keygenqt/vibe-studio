@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
+ * INFO: The shell rail: app icon, actions, footer.
  */
 import PropTypes from 'prop-types'
 import { Box, Stack } from '@mui/material'

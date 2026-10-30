@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states']
+// INFO: Event channels of the blocks and their emit helpers.
 
 use tauri::Emitter;
 use tauri::WebviewWindow;

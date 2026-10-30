@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'hooks']
+ * INFO: Model settings page over the providers block.
  */
 import { useParams } from 'react-router'
 import { Stack } from '@mui/material'

@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['hooks']
+ * INFO: Window focus state of the Tauri webview.
  */
 import * as React from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'

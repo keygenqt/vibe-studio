@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['hooks']
+ * INFO: The hooks zone barrel.
  */
 export * from './useCoreApp'
 export * from './useCoreChat'

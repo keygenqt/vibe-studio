@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['hooks', 'states']
+ * INFO: Chat block access: the draft, sending, and history readiness.
  */
 import * as React from 'react'
 import { useDispatch, useSelector } from 'react-redux'

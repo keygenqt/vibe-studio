@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'hooks']
+ * INFO: Model sync page: the live catalog with selection toggles.
  */
 import * as React from 'react'
 import { useParams } from 'react-router'

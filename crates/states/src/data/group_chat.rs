@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states']
+// INFO: The groups_chat table: GroupChatData and its Store access.
 
 use anyhow::Result;
 use anyhow::anyhow;

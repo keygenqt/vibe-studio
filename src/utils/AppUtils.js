@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['misc']
+ * INFO: Shared UI helpers: backend messages, form submit, validators, clamp.
  */
 export const AppUtils = {
   // the Rust message is the i18n key: unknown messages fall back to the raw string

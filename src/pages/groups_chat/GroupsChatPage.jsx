@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'hooks']
+ * INFO: Groups chat settings section: the group list.
  */
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'

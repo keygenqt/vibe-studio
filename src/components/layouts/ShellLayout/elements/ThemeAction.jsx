@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'theme']
+ * INFO: Theme cycle button: light, dark, system.
  */
 import { useTranslation } from 'react-i18next'
 import { IconButton, Tooltip } from '@mui/material'

@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['context']
+ * INFO: Tag scanner: tag slices, tree output, coverage check.
  */
 
 // Tag scanner: collects file tags, prints tag slices, verifies coverage.
