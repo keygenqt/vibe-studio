@@ -59,6 +59,7 @@ export const enLocalization = {
       t_host: 'Host',
       t_api_key: 'API key',
       t_api_key_hint: 'Leave empty if not required',
+      t_project: 'Project (folder ID)',
       t_sync_models: 'Sync models',
       t_models: 'Models',
       t_delete: 'Delete',

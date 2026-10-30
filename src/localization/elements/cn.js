@@ -59,6 +59,7 @@ export const cnLocalization = {
       t_host: '主机',
       t_api_key: 'API 密钥',
       t_api_key_hint: '如非必需请留空',
+      t_project: '项目 (folder ID)',
       t_sync_models: '同步模型',
       t_models: '模型',
       t_delete: '删除',

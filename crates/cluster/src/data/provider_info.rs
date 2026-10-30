@@ -28,6 +28,8 @@ impl From<ProviderTypeData> for ProviderInfoData {
             ProviderTypeData::Qwen => Self::new_qwen(),
             ProviderTypeData::Moonshot => Self::new_moonshot(),
             ProviderTypeData::Zhipu => Self::new_zhipu(),
+            ProviderTypeData::Yandex => Self::new_yandex(),
+            ProviderTypeData::GigaChat => Self::new_gigachat(),
         }
     }
 }
@@ -80,6 +82,26 @@ impl ProviderInfoData {
             name: "Zhipu",
             default_host: "https://open.bigmodel.cn/api/paas/v4",
             color: "#3859FF",
+        }
+    }
+
+    /// Yandex catalog row.
+    pub fn new_yandex() -> Self {
+        Self {
+            provider: "yandex",
+            name: "YandexGPT",
+            default_host: "https://ai.api.cloud.yandex.net/v1",
+            color: "#FC3F1D",
+        }
+    }
+
+    /// GigaChat catalog row.
+    pub fn new_gigachat() -> Self {
+        Self {
+            provider: "gigachat",
+            name: "GigaChat",
+            default_host: "https://api.giga.chat/v1",
+            color: "#21A038",
         }
     }
 }

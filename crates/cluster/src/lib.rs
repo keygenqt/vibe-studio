@@ -39,11 +39,13 @@ pub async fn get_provider_models_by_type(
     provider: ProviderTypeData,
     host: &str,
     api_key: Option<&str>,
+    project: Option<&str>,
 ) -> Result<Vec<ModelInfoData>> {
     let client = vibe_cluster::create_client(ConnectionParams {
         provider: provider.into(),
         host: host.to_string(),
         api_key: api_key.map(String::from),
+        project: project.map(String::from),
         ..Default::default()
     });
 
@@ -63,6 +65,7 @@ pub async fn call_prompt(
     provider: ProviderTypeData,
     host: &str,
     api_key: Option<&str>,
+    project: Option<&str>,
     model: &str,
     temperature: f64,
     seed: i64,
@@ -82,6 +85,7 @@ pub async fn call_prompt(
         num_ctx: Some(num_ctx.max(0) as usize),
         num_predict: Some(num_predict.max(0) as usize),
         api_key: api_key.map(String::from),
+        project: project.map(String::from),
         ..Default::default()
     }])?;
 

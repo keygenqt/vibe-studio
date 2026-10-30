@@ -14,16 +14,20 @@ pub enum ProviderTypeData {
     Qwen,
     Moonshot,
     Zhipu,
+    Yandex,
+    GigaChat,
 }
 
 impl ProviderTypeData {
     /// All supported providers, catalog order.
-    pub const ALL: [ProviderTypeData; 5] = [
+    pub const ALL: [ProviderTypeData; 7] = [
         ProviderTypeData::Ollama,
         ProviderTypeData::DeepSeek,
         ProviderTypeData::Qwen,
         ProviderTypeData::Moonshot,
         ProviderTypeData::Zhipu,
+        ProviderTypeData::Yandex,
+        ProviderTypeData::GigaChat,
     ];
 }
 
@@ -37,6 +41,8 @@ impl From<ProviderTypeData> for Provider {
             ProviderTypeData::Qwen => Provider::Qwen,
             ProviderTypeData::Moonshot => Provider::Moonshot,
             ProviderTypeData::Zhipu => Provider::Zhipu,
+            ProviderTypeData::Yandex => Provider::Yandex,
+            ProviderTypeData::GigaChat => Provider::GigaChat,
         }
     }
 }

@@ -47,6 +47,7 @@ export function ProviderForm(props) {
         name: props.name ?? current.name,
         host: props.host ?? current.default_host ?? '',
         apiKey: props.apiKey ?? '',
+        project: props.project ?? '',
       }}
       validationSchema={Yup.object().shape({
         name: Yup.string().trim().required(t('provider.t_validation_required')),
@@ -54,6 +55,7 @@ export function ProviderForm(props) {
           .required(t('provider.t_validation_required'))
           .test('host', t('provider.t_validation_url'), AppUtils.validUrl),
         apiKey: Yup.string().notRequired(),
+        project: Yup.string().notRequired(),
       })}
       onSubmit={async (values, { setErrors, setSubmitting }) => {
         const state = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
@@ -63,6 +65,7 @@ export function ProviderForm(props) {
             provider: values.provider,
             host: values.host,
             api_key: values.apiKey,
+            project: values.project || null,
           })
         )
         const saved = state?.provider
@@ -130,6 +133,7 @@ export function ProviderForm(props) {
                     }
                     prefill('host', prev?.default_host, next?.default_host ?? '')
                     prefill('name', prev?.name, next?.name)
+                    setFieldValue('project', '')
                     handleChange(e)
                   }}
                 >
@@ -183,6 +187,21 @@ export function ProviderForm(props) {
                 onChange={handleChange}
                 slotProps={{ htmlInput: { autoComplete: 'off' } }}
               />
+              {values.provider === 'yandex' && (
+                <TextField
+                  fullWidth
+                  label={t('provider.t_project')}
+                  name={'project'}
+                  variant={'filled'}
+                  value={values.project}
+                  helperText={touched.project && errors.project ? errors.project : ''}
+                  error={Boolean(touched.project && errors.project)}
+                  disabled={isSubmitting}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  slotProps={{ htmlInput: { autoComplete: 'off' } }}
+                />
+              )}
               <Stack direction={'row'} spacing={2}>
                 {isEdit && (
                   <Button variant={'outlined'} color={'error'} onClick={() => setOpenDelete(true)}>

@@ -97,14 +97,19 @@ pub fn get_provider_model(store: &Store, id: i32) -> Result<ProviderModelData> {
 /// Fetches the live model catalog of a provider host. The kind is not
 /// trusted: must be in the catalog; the host is trimmed, blank is an
 /// error. Embedding models are filtered out on the cluster layer.
-pub async fn get_provider_models_by_type(kind: &str, host: &str, api_key: Option<&str>) -> Result<Vec<ModelInfoData>> {
+pub async fn get_provider_models_by_type(
+    kind: &str,
+    host: &str,
+    api_key: Option<&str>,
+    project: Option<&str>,
+) -> Result<Vec<ModelInfoData>> {
     let host = host.trim();
     if host.is_empty() {
         anyhow::bail!("Host must not be blank.");
     }
     let provider =
         studio_cluster::get_provider_by_kind(kind).ok_or_else(|| anyhow::anyhow!("Unknown provider kind: {kind}."))?;
-    Ok(studio_cluster::get_provider_models_by_type(provider, host, api_key).await?)
+    Ok(studio_cluster::get_provider_models_by_type(provider, host, api_key, project).await?)
 }
 
 /// Validates and persists the model; the UI is not trusted: the id
@@ -158,8 +163,13 @@ pub async fn save_provider_models(
     checked: Vec<String>,
 ) -> Result<Vec<ProviderModelData>> {
     let provider = studio_states::get_provider(store, provider_id)?;
-    let models =
-        crate::get_provider_models_by_type(&provider.provider, &provider.host, provider.api_key.as_deref()).await?;
+    let models = crate::get_provider_models_by_type(
+        &provider.provider,
+        &provider.host,
+        provider.api_key.as_deref(),
+        provider.project.as_deref(),
+    )
+    .await?;
     let rows: Vec<ProviderModelData> = models
         .into_iter()
         .filter(|model| checked.iter().any(|name| *name == model.name))
@@ -330,6 +340,7 @@ pub async fn chat_send_message(store: &Store, chat_id: i32, text: &str) -> Resul
         studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?,
         &provider.host,
         provider.api_key.as_deref(),
+        provider.project.as_deref(),
         &model.name,
         model.temperature.unwrap_or(0.7),
         model.seed.unwrap_or(42),

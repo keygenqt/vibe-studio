@@ -23,6 +23,8 @@ pub struct ProviderData {
     pub host: String,
     /// API key for cloud providers; `None` = not needed (local Ollama).
     pub api_key: Option<String>,
+    /// Project/folder id for providers that route by it (Yandex).
+    pub project: Option<String>,
 }
 
 diesel::table! {
@@ -32,6 +34,7 @@ diesel::table! {
         provider -> Text,
         host -> Text,
         api_key -> Nullable<Text>,
+        project -> Nullable<Text>,
     }
 }
 
@@ -45,6 +48,7 @@ struct ProviderRow {
     provider: String,
     host: String,
     api_key: Option<String>,
+    project: Option<String>,
 }
 
 /// Insert or update values: the id is owned by SQLite.
@@ -55,6 +59,7 @@ struct ProviderNewData {
     provider: String,
     host: String,
     api_key: Option<String>,
+    project: Option<String>,
 }
 
 /// Maps the stored row to the public type: the id becomes `Some`.
@@ -66,6 +71,7 @@ impl From<ProviderRow> for ProviderData {
             provider: row.provider,
             host: row.host,
             api_key: row.api_key,
+            project: row.project,
         }
     }
 }
@@ -78,6 +84,7 @@ impl From<&ProviderData> for ProviderNewData {
             provider: data.provider.clone(),
             host: data.host.clone(),
             api_key: data.api_key.clone(),
+            project: data.project.clone(),
         }
     }
 }

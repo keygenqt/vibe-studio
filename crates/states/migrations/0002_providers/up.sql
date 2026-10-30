@@ -3,5 +3,6 @@ CREATE TABLE providers (
     name TEXT NOT NULL,
     provider TEXT NOT NULL,
     host TEXT NOT NULL,
-    api_key TEXT
+    api_key TEXT,
+    project TEXT
 );

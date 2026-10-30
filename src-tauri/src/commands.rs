@@ -106,8 +106,9 @@ pub async fn get_provider_models_by_type(
     kind: String,
     host: String,
     api_key: Option<String>,
+    project: Option<String>,
 ) -> Result<Vec<ModelInfoData>, String> {
-    studio_core::get_provider_models_by_type(&kind, &host, api_key.as_deref())
+    studio_core::get_provider_models_by_type(&kind, &host, api_key.as_deref(), project.as_deref())
         .await
         .map_err(|e| e.to_string())
 }

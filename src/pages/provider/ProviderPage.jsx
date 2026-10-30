@@ -63,6 +63,7 @@ export function ProviderPage() {
             provider={provider?.provider}
             host={provider?.host}
             apiKey={provider?.api_key}
+            project={provider?.project}
           />
         ) : null}
 

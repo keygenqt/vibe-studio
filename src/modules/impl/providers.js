@@ -51,6 +51,7 @@ export const providers = {
       kind: provider.provider,
       host: provider.host,
       apiKey: provider.api_key ?? null,
+      project: provider.project ?? null,
     })
   },
   get_provider_models: async function (providerId) {

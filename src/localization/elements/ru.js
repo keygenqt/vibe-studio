@@ -59,6 +59,7 @@ export const ruLocalization = {
       t_host: 'Хост',
       t_api_key: 'API-ключ',
       t_api_key_hint: 'Оставьте пустым, если ключ не обязателен',
+      t_project: 'Каталог (folder ID)',
       t_sync_models: 'Синхронизировать модели',
       t_models: 'Модели',
       t_delete: 'Удалить',
