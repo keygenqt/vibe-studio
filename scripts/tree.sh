@@ -22,5 +22,7 @@ done
 args=()
 [ ${#tags[@]} -gt 0 ] && args+=("${tags[@]}")
 [ ${#dirs[@]} -gt 0 ] && args+=("--filter" "${dirs[@]}")
+# the plain default tree comes with INFO
+[ ${#tags[@]} -eq 0 ] && [ ${#dirs[@]} -eq 0 ] && args+=("--show-info")
 
 node context/tags.js "${args[@]}" --not misc context "${show[@]}"
