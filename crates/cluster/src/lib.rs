@@ -12,6 +12,7 @@ use vibe_cluster::Cluster;
 use vibe_cluster::ConnectionParams;
 use vibe_cluster::HistoryMessage;
 use vibe_cluster::Prompt;
+use vibe_cluster::Role;
 
 pub use data::ModelInfoData;
 pub use data::ProviderInfoData;
@@ -92,7 +93,13 @@ pub async fn call_prompt(
     let mut prompt = Prompt::new(user, system, None);
     prompt.history = history
         .into_iter()
-        .map(|(role, content)| HistoryMessage { role, content })
+        .map(|(role, content)| HistoryMessage {
+            role: match role.as_str() {
+                "assistant" => Role::Assistant,
+                _ => Role::User,
+            },
+            content,
+        })
         .collect();
 
     let result = cluster.call(prompt).await?;
