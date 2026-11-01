@@ -42,4 +42,13 @@ export const components = {
     },
   },
   MuiChip: { styleOverrides: { root: { borderRadius: 13 } } },
+  MuiToggleButton: {
+    styleOverrides: {
+      root: {
+        textTransform: 'none',
+        paddingLeft: 12,
+        paddingRight: 12,
+      },
+    },
+  },
 }

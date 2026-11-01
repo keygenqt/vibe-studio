@@ -6,6 +6,8 @@
  */
 export * from './BadgeView'
 export * from './DeleteDialog'
+export * from './GroupRow'
+export * from './GroupView'
 export * from './HandleView'
 export * from './ModelCard'
 export * from './SidebarItem'

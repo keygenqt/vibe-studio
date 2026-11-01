@@ -8,6 +8,7 @@ import { createTheme } from '@mui/material/styles'
 import { typography } from './elements/typography'
 import { transitions } from './elements/transitions'
 import { components } from './elements/components'
+import { layout } from './elements/layout'
 
 export const ThemeLight = createTheme({
   palette: {
@@ -23,4 +24,5 @@ export const ThemeLight = createTheme({
   typography: typography,
   transitions: transitions,
   components: components,
+  layout: layout,
 })

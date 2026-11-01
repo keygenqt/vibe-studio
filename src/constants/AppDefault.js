@@ -15,6 +15,9 @@ export const SIDE_BAR_SIZE_MIN = 200
 export const SIDE_BAR_SIZE_MAX = 450
 export const SIDE_BAR_SIZE_DEFAULT = 340
 
-// animation timing vs how long a success banner stays visible
+// Animation timing vs how long a success banner stays visible
 export const DURATION_DEFAULT = 150
 export const DURATION_AUTO_HIDE = 4000
+
+// Compact page mode: content width below which rows drop controls under the text.
+export const COMPACT_PAGE_WIDTH = 480
