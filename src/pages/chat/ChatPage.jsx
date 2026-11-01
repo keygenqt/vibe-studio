@@ -12,9 +12,12 @@ import { Stack } from '@mui/material'
 import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
 
-import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
-import { useCoreChat, useCoreGroupsChat } from '../../hooks'
+import { Methods } from '../../modules'
 
+import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
+import { useCoreChat, useCoreGroupsChat, useCoreSettings } from '../../hooks'
+
+import { ChatTitleView } from './elements/ChatTitleView'
 import { MessageView } from './elements/MessageView'
 
 export function ChatPage() {
@@ -23,7 +26,9 @@ export function ChatPage() {
   const cid = Number(chatId)
   const { chats, ready: groupsReady } = useCoreGroupsChat()
   const { history, ready: chatReady } = useCoreChat({ chatId: cid })
+  const { settings } = useCoreSettings()
   const chat = chats?.find(item => item.id === cid) ?? null
+
   // the newest message stays in view: the scroll follows each
   // history change and the chat switch
   React.useEffect(() => {
@@ -34,13 +39,20 @@ export function ChatPage() {
   return (
     <WaitState ready={groupsReady && chatReady}>
       {chat ? (
-        <ScrollPanel scrollKey={'chat.history'} sx={{ height: 1 }}>
-          <Stack spacing={1.5}>
-            {(history ?? []).map(message => (
-              <MessageView key={`message-${message.id}`} message={message} />
-            ))}
-          </Stack>
-        </ScrollPanel>
+        <>
+          <ChatTitleView
+            name={t(chat.name)}
+            canRename={(history ?? []).length > 0 && settings.tasks_model_light !== null}
+            onRename={() => Methods.chat_regenerate_name(cid).catch(console.error)}
+          />
+          <ScrollPanel scrollKey={'chat.history'} sx={{ flexGrow: 1, minHeight: 0 }}>
+            <Stack spacing={1.5}>
+              {(history ?? []).map(message => (
+                <MessageView key={`message-${message.id}`} message={message} />
+              ))}
+            </Stack>
+          </ScrollPanel>
+        </>
       ) : (
         <ChatEmptyPage />
       )}

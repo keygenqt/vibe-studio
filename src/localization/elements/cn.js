@@ -29,6 +29,7 @@ export const cnLocalization = {
       t_chat_more: '更多 {{n}}',
       t_chat_less: '收起',
       t_group_collapse: '折叠 / 展开',
+      t_chat_rename: '更新聊天名称',
     },
     chat_empty: {
       t_no_chat: '选择聊天',
@@ -158,6 +159,8 @@ export const cnLocalization = {
     'Unknown group.': '未知分组。',
     'Unknown chat.': '未知聊天。',
     'Message must not be blank.': '消息不能为空。',
+    'Task model is not set.': '未选择任务模型。',
+    'Chat has no messages.': '聊天中还没有消息。',
 
     // -- chats
     // fabrics

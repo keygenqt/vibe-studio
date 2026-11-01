@@ -29,6 +29,7 @@ export const ruLocalization = {
       t_chat_more: 'Ещё {{n}}',
       t_chat_less: 'Свернуть',
       t_group_collapse: 'Свернуть / развернуть',
+      t_chat_rename: 'Обновить название чата',
     },
     chat_empty: {
       t_no_chat: 'Выберите чат',
@@ -159,6 +160,8 @@ export const ruLocalization = {
     'Unknown group.': 'Неизвестная группа.',
     'Unknown chat.': 'Неизвестный чат.',
     'Message must not be blank.': 'Сообщение не должно быть пустым.',
+    'Task model is not set.': 'Модель задач не выбрана.',
+    'Chat has no messages.': 'В чате нет сообщений.',
 
     // -- chats
     // fabrics

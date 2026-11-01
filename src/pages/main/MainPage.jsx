@@ -128,14 +128,15 @@ export function MainPage() {
           />
         }
       >
-        {/* the paper shell of the chat area: pages render inside it */}
+        {/* the chat area: pages render their own paper cards */}
         <Box
           sx={{
             flexGrow: 1,
+            minWidth: 0,
             minHeight: 0,
-            borderRadius: 2,
-            backgroundColor: 'background.paper',
-            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
           }}
         >
           <Outlet />

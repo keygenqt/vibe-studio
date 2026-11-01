@@ -40,6 +40,7 @@ export function AppearanceSection(props) {
           fullWidth
           color={'primary'}
           value={values.theme}
+          sx={{ minWidth: 250 }}
           onChange={(_, value) => onChange('theme', value)}
         >
           <ToggleButton value={'light'}>{t('general.t_theme_light')}</ToggleButton>
@@ -78,7 +79,7 @@ export function AppearanceSection(props) {
           variant={'filled'}
           value={values.language}
           onChange={e => onChange('language', e.target.value)}
-          sx={{ width: 230 }}
+          sx={{ width: 250 }}
         >
           {LANGUAGES.map(item => (
             <MenuItem key={`language-${item.value}`} value={item.value}>
@@ -98,7 +99,7 @@ export function AppearanceSection(props) {
             max={20}
             step={1}
             onChange={(_, value) => onChange('fontSize', value)}
-            sx={{ width: 180, flexGrow: 1 }}
+            sx={{ width: 150, flexGrow: 1 }}
           />
           <Typography sx={{ flexShrink: 0, fontSize: 20, pl: 1 }}>A</Typography>
           <Typography

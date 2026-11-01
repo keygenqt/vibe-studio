@@ -36,7 +36,7 @@ export function ChatSection(props) {
           variant={'filled'}
           value={values.keepMessages}
           onChange={e => onChange('keepMessages', Number(e.target.value))}
-          sx={{ width: 90 }}
+          sx={{ width: 250 }}
           slotProps={{ htmlInput: { min: 1, step: 1 } }}
         />
       </GroupRow>

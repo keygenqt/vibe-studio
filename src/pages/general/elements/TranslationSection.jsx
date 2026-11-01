@@ -46,7 +46,7 @@ export function TranslationSection(props) {
           variant={'filled'}
           value={values.translateMine}
           onChange={e => onChange('translateMine', e.target.value)}
-          sx={{ width: 230 }}
+          sx={{ width: 250 }}
         >
           {LANGUAGES.map(item => (
             <MenuItem key={`translate-mine-${item.value}`} value={item.value}>
@@ -66,7 +66,7 @@ export function TranslationSection(props) {
           variant={'filled'}
           value={values.translateAnswers}
           onChange={e => onChange('translateAnswers', e.target.value)}
-          sx={{ width: 230 }}
+          sx={{ width: 250 }}
         >
           {LANGUAGES.map(item => (
             <MenuItem key={`translate-answers-${item.value}`} value={item.value}>

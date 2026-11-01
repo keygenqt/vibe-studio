@@ -77,6 +77,13 @@ export const groups_chat = {
   select_group_chat: async function (groupChatId, chatId) {
     return invoke('select_group_chat', { groupChatId, chatId: chatId ?? null })
   },
+  chat_regenerate_name: async function (chatId) {
+    const state = await invoke('chat_regenerate_name', { chatId })
+    store.dispatch(groupsChatSet(state.groups_chat))
+    store.dispatch(chatsSet(state.chats))
+    store.dispatch(groupChatHistorySet(state.history))
+    return state
+  },
 }
 
 export function groups_chat_events() {

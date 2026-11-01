@@ -303,6 +303,51 @@ pub fn save_chat(store: &Store, chat: &ChatData) -> Result<ChatData> {
     Ok(saved)
 }
 
+/// Renames the chat with a model-generated name: the light task
+/// model names the chat by its last two messages. The UI is not
+/// trusted: the chat must exist, the light model must be set, the
+/// chat must have messages; a blank answer is an error.
+pub async fn chat_regenerate_name(store: &Store, chat_id: i32) -> Result<ChatData> {
+    let chat = studio_states::get_chat(store, chat_id)?;
+    let settings = studio_states::get_settings(store).unwrap_or_default();
+    let Some(model_id) = settings.tasks_model_light else {
+        anyhow::bail!("Task model is not set.");
+    };
+    let model = studio_states::get_provider_model(store, model_id)?;
+    let provider = studio_states::get_provider(store, model.provider_id)?;
+    let messages: Vec<ChatHistoryData> = studio_states::get_chat_histories(store, chat_id)?
+        .into_iter()
+        .filter(|message| message.role != ChatRole::Error)
+        .collect();
+    if messages.is_empty() {
+        anyhow::bail!("Chat has no messages.");
+    }
+    let start = messages.len().saturating_sub(2);
+    let history = messages[start..]
+        .iter()
+        .map(|message| (message.role.as_str().to_string(), message.text.clone()))
+        .collect();
+    let language = match settings.appearance_locale.as_str() {
+        "ru" => "Russian",
+        "cn" => "Chinese",
+        _ => "English",
+    };
+    let name = studio_cluster::call_chat_name(
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?,
+        &provider.host,
+        provider.api_key.as_deref(),
+        provider.project.as_deref(),
+        &model.name,
+        history,
+        language,
+    )
+    .await?;
+    if name.is_empty() {
+        anyhow::bail!("Name must not be blank.");
+    }
+    studio_states::save_chat(store, &ChatData { name, ..chat })
+}
+
 /// Deletes the chat; a missing row is a no-op. If the deleted chat
 /// was the selected one, the group falls back to its newest remaining
 /// chat — the same as a group click; a chatless group keeps no chat.

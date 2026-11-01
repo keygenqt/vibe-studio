@@ -89,6 +89,7 @@ pub fn run() {
             commands::select_group_chat,
             commands::chat_get_history,
             commands::chat_send_message,
+            commands::chat_regenerate_name,
             commands::get_system_theme,
             commands::get_app_info,
             commands::get_provider_models_by_type,

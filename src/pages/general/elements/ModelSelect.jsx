@@ -19,7 +19,7 @@ export function ModelSelect(props) {
       value={props.value ?? ''}
       onChange={e => props.onChange(e.target.value === '' ? null : Number(e.target.value))}
       disabled={props.disabled || models.length === 0}
-      sx={{ width: 230 }}
+      sx={{ width: 250 }}
     >
       {providers
         .filter(provider => models.some(model => model.provider_id === provider.id))

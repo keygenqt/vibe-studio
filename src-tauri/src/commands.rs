@@ -315,6 +315,22 @@ pub async fn chat_send_message(
     Ok(state)
 }
 
+/// Renames the chat with a model-generated name; the chat row lives
+/// in the groups chat block — emits and returns its fresh state.
+#[tauri::command]
+pub async fn chat_regenerate_name(
+    window: WebviewWindow,
+    store: State<'_, Store>,
+    chat_id: i32,
+) -> Result<GroupsChatData, String> {
+    studio_core::chat_regenerate_name(&store, chat_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    let state = GroupsChatData::new(&store);
+    emit_event_groups_chat(&window, EventData::new(EventKey::GroupsChat, &state));
+    Ok(state)
+}
+
 // ─────────────────────────────────────────────
 // App
 // ─────────────────────────────────────────────

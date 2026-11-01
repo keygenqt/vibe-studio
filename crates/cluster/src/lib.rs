@@ -18,6 +18,10 @@ pub use data::ModelInfoData;
 pub use data::ProviderInfoData;
 pub use data::ProviderTypeData;
 
+/// The answer cap of the chat naming task: a longer model answer is
+/// cut to this many chars and closed with `…`.
+const CHAT_NAME_MAX_CHARS: usize = 50;
+
 /// Catalog of supported provider kinds — the source for the add form.
 pub fn get_providers() -> Vec<ProviderInfoData> {
     ProviderTypeData::ALL
@@ -104,4 +108,47 @@ pub async fn call_prompt(
 
     let result = cluster.call(prompt).await?;
     Ok(result.text.unwrap_or_default())
+}
+
+/// Names a chat by its conversation: the messages go as the prompt
+/// history, the model answers with the name only. The config is the
+/// function's own — the task never uses the model's generation
+/// settings. The answer is trimmed to its first line and capped to
+/// 50 chars (unicode), closed with `…`.
+pub async fn call_chat_name(
+    provider: ProviderTypeData,
+    host: &str,
+    api_key: Option<&str>,
+    project: Option<&str>,
+    model: &str,
+    history: Vec<(String, String)>,
+    language: &str,
+) -> Result<String> {
+    let name = call_prompt(
+        provider,
+        host,
+        api_key,
+        project,
+        model,
+        0.7,
+        42,
+        4096,
+        64,
+        None,
+        history,
+        format!(
+            r#"
+Name this chat based on the messages. The title must be at most three words, written in {language}. Answer with the title only: no quotes, no punctuation.
+"#
+        )
+        .trim(),
+    )
+    .await?;
+    let name = name.trim().lines().next().unwrap_or("").trim();
+    let cut: String = name.chars().take(CHAT_NAME_MAX_CHARS).collect();
+    if cut.chars().count() < name.chars().count() {
+        Ok(format!("{cut}…"))
+    } else {
+        Ok(cut)
+    }
 }
