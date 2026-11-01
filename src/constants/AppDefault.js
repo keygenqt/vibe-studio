@@ -21,3 +21,12 @@ export const DURATION_AUTO_HIDE = 4000
 
 // Compact page mode: content width below which rows drop controls under the text.
 export const COMPACT_PAGE_WIDTH = 480
+
+// Accent theme names: each resolves to its theme pair in the theme zone.
+export const ACCENTS = ['default', 'wave', 'moss', 'twilight', 'sunset']
+export const ACCENT_DEFAULT = ACCENTS[0]
+
+// Settings UI defaults: applied to the untouched (null) stored values.
+export const CHAT_FONT_SIZE_DEFAULT = 15
+export const CHAT_KEEP_MESSAGES_DEFAULT = 50
+export const TRANSLATE_LOCALE_DEFAULT = 'ru'

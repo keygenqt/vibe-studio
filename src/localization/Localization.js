@@ -18,6 +18,6 @@ i18n.use(initReactI18next).init({
     cn: cnLocalization,
   },
   lng: 'ru',
-  fallbackLng: 'ru',
+  fallbackLng: 'en',
   interpolation: { escapeValue: false },
 })

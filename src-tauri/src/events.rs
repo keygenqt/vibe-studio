@@ -10,6 +10,7 @@ use crate::data::event_data::EventData;
 
 /// Event channel names — one per block.
 pub(crate) const EVENT_WORKSPACE: &str = "event-workspace";
+pub(crate) const EVENT_SETTINGS: &str = "event-settings";
 pub(crate) const EVENT_PROVIDERS: &str = "event-providers";
 pub(crate) const EVENT_GROUPS_CHAT: &str = "event-groups-chat";
 pub(crate) const EVENT_CHAT: &str = "event-chat";
@@ -18,6 +19,11 @@ pub(crate) const EVENT_APP: &str = "event-app";
 /// Workspace mutations end with the fresh stored row.
 pub(crate) fn emit_event_workspace(window: &WebviewWindow, value: EventData) {
     emit_event(window, EVENT_WORKSPACE, value);
+}
+
+/// Settings mutations end with the fresh stored row.
+pub(crate) fn emit_event_settings(window: &WebviewWindow, value: EventData) {
+    emit_event(window, EVENT_SETTINGS, value);
 }
 
 /// Provider-block mutations end with the fresh state: the

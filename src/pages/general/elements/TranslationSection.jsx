@@ -10,8 +10,7 @@ import { MenuItem, TextField } from '@mui/material'
 
 import { GroupRow, GroupView } from '../../../components/views'
 
-// mock list: the wired models arrive with the states task
-const MODELS = ['yandexgpt-5-lite', 'yandexgpt-5-pro']
+import { ModelSelect } from './ModelSelect'
 
 // native titles: language names are not translated
 const LANGUAGES = [
@@ -29,21 +28,12 @@ export function TranslationSection(props) {
         title={t('general.t_translation_model')}
         description={t('general.t_translation_model_description')}
       >
-        <TextField
-          select
-          size="small"
-          hiddenLabel
-          variant={'filled'}
+        <ModelSelect
           value={values.translateModel}
-          onChange={e => onChange('translateModel', e.target.value)}
-          sx={{ width: 230 }}
-        >
-          {MODELS.map(name => (
-            <MenuItem key={`translate-${name}`} value={name}>
-              {name}
-            </MenuItem>
-          ))}
-        </TextField>
+          onChange={value => onChange('translateModel', value)}
+          providers={props.providers}
+          models={props.models}
+        />
       </GroupRow>
       <GroupRow
         title={t('general.t_translation_mine')}
@@ -92,4 +82,6 @@ export function TranslationSection(props) {
 TranslationSection.propTypes = {
   values: PropTypes.object.isRequired,
   onChange: PropTypes.func.isRequired,
+  providers: PropTypes.array,
+  models: PropTypes.array,
 }

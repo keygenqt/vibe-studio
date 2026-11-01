@@ -21,6 +21,7 @@ pub use data::group_chat::GroupChatData;
 pub use data::group_chat_history::GroupChatHistoryData;
 pub use data::provider::ProviderData;
 pub use data::provider_model::ProviderModelData;
+pub use data::settings::SettingsData;
 pub use data::workspace::WorkspaceData;
 pub use db::store::Store;
 
@@ -200,4 +201,14 @@ pub fn get_workspace(store: &Store) -> Result<WorkspaceData> {
 /// Persists the shell environment as the single row, returns it.
 pub fn save_workspace(store: &Store, workspace: &WorkspaceData) -> Result<WorkspaceData> {
     store.save_workspace(workspace)
+}
+
+/// Loads the user preferences; a missing row falls back to `Default`.
+pub fn get_settings(store: &Store) -> Result<SettingsData> {
+    store.get_settings()
+}
+
+/// Persists the user preferences as the single row, returns it.
+pub fn save_settings(store: &Store, settings: &SettingsData) -> Result<SettingsData> {
+    store.save_settings(settings)
 }

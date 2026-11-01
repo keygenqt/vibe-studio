@@ -7,25 +7,28 @@
 import { ThemeProvider, Box } from '@mui/material'
 
 import { AppRoute } from './AppRoute'
-import { ThemeDark, ThemeLight } from './theme'
-import { useEffectFocus, useCoreApp, useCoreWorkspace } from './hooks'
-import { DURATION_DEFAULT } from './constants'
+import { THEMES } from './theme'
+import { useEffectFocus, useCoreApp, useCoreSettings, useCoreWorkspace } from './hooks'
+import { ACCENT_DEFAULT, DURATION_DEFAULT } from './constants'
 
 function App() {
   const isFocus = useEffectFocus()
   return <ThemedShell isFocus={isFocus} />
 }
 
-// the workspace model plus the app model: the persisted choice with
-// `system` resolved to the detected OS theme
+// the workspace and settings models plus the app model: the
+// persisted choice with `system` resolved to the detected OS theme
 function ThemedShell(props) {
   const workspace = useCoreWorkspace()
+  const { settings } = useCoreSettings()
   const { systemTheme } = useCoreApp()
-  const themeMode = workspace.themeChoice === 'system' ? systemTheme : workspace.themeChoice
+  const themeMode = settings.appearance_theme === 'system' ? systemTheme : settings.appearance_theme
+  // the accent picks the theme pair; an unknown or untouched name falls back to the default
+  const theme = (THEMES[settings.appearance_accent] ?? THEMES[ACCENT_DEFAULT])[themeMode]
 
-  if (!workspace.ready) return null
+  if (!workspace.ready || !settings.ready) return null
   return (
-    <ThemeProvider theme={themeMode === 'dark' ? ThemeDark : ThemeLight}>
+    <ThemeProvider theme={theme}>
       <Box
         height={1}
         sx={theme => ({

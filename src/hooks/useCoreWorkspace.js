@@ -2,11 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['hooks', 'states']
- * INFO: Workspace access: shell state, drag handles, theme and locale.
+ * INFO: Workspace access: shell state and drag handles.
  */
 import * as React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import i18next from 'i18next'
 
 import {
   CHAT_INPUT_SIZE_MAX,
@@ -27,17 +26,9 @@ export function useCoreWorkspace() {
     Methods.get_workspace()
   }, [])
 
-  React.useEffect(() => {
-    if (raw.ready && i18next.language !== raw.locale) {
-      i18next.changeLanguage(raw.locale)
-    }
-  }, [raw.ready, raw.locale])
-
   const wire = () => ({
     window_width: raw.window_width,
     window_height: raw.window_height,
-    theme: raw.theme,
-    locale: raw.locale,
     chat_input_size: raw.chat_input_size,
     side_bar_size: raw.side_bar_size,
     side_bar_collapsed: raw.side_bar_collapsed,
@@ -48,12 +39,6 @@ export function useCoreWorkspace() {
     const next = !raw.side_bar_collapsed
     dispatch(workspaceSet({ side_bar_collapsed: next }))
     Methods.save_workspace({ ...wire(), side_bar_collapsed: next })
-  }
-
-  const setTheme = theme => {
-    if (!raw.ready) return
-    dispatch(workspaceSet({ theme }))
-    Methods.save_workspace({ ...wire(), theme })
   }
 
   const onSidebarHandlePointerDown = event => {
@@ -118,14 +103,11 @@ export function useCoreWorkspace() {
 
   return {
     ready: raw.ready,
-    themeChoice: raw.theme,
-    locale: raw.locale,
     dragging,
     chatInputSize: raw.chat_input_size,
     sideBarSize: raw.side_bar_size,
     sideBarCollapsed: raw.side_bar_collapsed,
     toggleSidebar,
-    setTheme,
     onSidebarHandlePointerDown,
     onComposerHandlePointerDown,
   }

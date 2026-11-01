@@ -18,9 +18,8 @@ import {
 } from '@mui/material'
 
 import { GroupRow, GroupView } from '../../../components/views'
-
-// mock palette: the real accent set lands with the states task
-const ACCENTS = ['#1b7f5c', '#2aa47c', '#3574e0', '#8b48d6', '#d2691e']
+import { ACCENTS } from '../../../constants'
+import { THEMES } from '../../../theme'
 
 // native titles: language names are not translated
 const LANGUAGES = [
@@ -50,20 +49,23 @@ export function AppearanceSection(props) {
       </GroupRow>
       <GroupRow title={t('general.t_accent')} description={t('general.t_accent_description')}>
         <Stack direction={'row'} spacing={1.5}>
-          {ACCENTS.map(color => (
+          {ACCENTS.map(name => (
             <ButtonBase
-              key={`accent-${color}`}
-              onClick={() => onChange('accent', color)}
-              sx={theme => ({
-                width: 28,
-                height: 28,
-                borderRadius: 99,
-                bgcolor: color,
-                boxShadow:
-                  values.accent === color
-                    ? `0 0 0 2px ${theme.palette.background.paper}, 0 0 0 4px ${color}`
-                    : 'none',
-              })}
+              key={`accent-${name}`}
+              onClick={() => onChange('accent', name)}
+              sx={theme => {
+                const color = THEMES[name][theme.palette.mode].palette.primary.main
+                return {
+                  width: 28,
+                  height: 28,
+                  borderRadius: 99,
+                  bgcolor: color,
+                  boxShadow:
+                    values.accent === name
+                      ? `0 0 0 2px ${theme.palette.background.paper}, 0 0 0 4px ${color}`
+                      : 'none',
+                }
+              }}
             />
           ))}
         </Stack>
@@ -87,7 +89,7 @@ export function AppearanceSection(props) {
       </GroupRow>
       <GroupRow title={t('general.t_font_size')} description={t('general.t_font_size_description')}>
         <Stack direction={'row'} spacing={1} sx={{ alignItems: 'center' }}>
-          <Typography variant={'body2'} sx={{ flexShrink: 0 }}>
+          <Typography variant={'body2'} sx={{ flexShrink: 0, pr: 1 }}>
             A
           </Typography>
           <Slider
@@ -98,11 +100,11 @@ export function AppearanceSection(props) {
             onChange={(_, value) => onChange('fontSize', value)}
             sx={{ width: 180, flexGrow: 1 }}
           />
-          <Typography sx={{ flexShrink: 0, fontSize: 20 }}>A</Typography>
+          <Typography sx={{ flexShrink: 0, fontSize: 20, pl: 1 }}>A</Typography>
           <Typography
             variant={'body2'}
             color={'text.secondary'}
-            sx={{ flexShrink: 0, width: 44, textAlign: 'right' }}
+            sx={{ flexShrink: 0, textAlign: 'right' }}
           >
             {values.fontSize} px
           </Typography>

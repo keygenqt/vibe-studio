@@ -66,6 +66,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::get_workspace,
             commands::save_workspace,
+            commands::get_settings,
+            commands::save_settings,
             commands::get_providers_catalog,
             commands::get_providers,
             commands::get_provider,

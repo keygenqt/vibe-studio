@@ -10,6 +10,7 @@ import appReducer from './impl/app'
 import chatReducer from './impl/chat'
 import groupsChatReducer from './impl/groups_chat'
 import providersReducer from './impl/providers'
+import settingsReducer from './impl/settings'
 import workspaceReducer from './impl/workspace'
 
 export default configureStore({
@@ -18,6 +19,7 @@ export default configureStore({
     chat: chatReducer,
     groups_chat: groupsChatReducer,
     providers: providersReducer,
+    settings: settingsReducer,
     workspace: workspaceReducer,
   },
 })

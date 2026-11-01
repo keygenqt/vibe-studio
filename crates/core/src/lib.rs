@@ -20,6 +20,7 @@ pub use studio_states::GroupChatData;
 pub use studio_states::GroupChatHistoryData;
 pub use studio_states::ProviderData;
 pub use studio_states::ProviderModelData;
+pub use studio_states::SettingsData;
 pub use studio_states::Store;
 pub use studio_states::WorkspaceData;
 
@@ -38,6 +39,36 @@ pub fn get_workspace(store: &Store) -> WorkspaceData {
 /// Persists the shell environment as the single row, returns it.
 pub fn save_workspace(store: &Store, workspace: &WorkspaceData) -> Result<WorkspaceData> {
     studio_states::save_workspace(store, workspace)
+}
+
+// ─────────────────────────────────────────────
+// Settings
+// ─────────────────────────────────────────────
+
+/// Loads the user preferences; a missing row falls back to `Default`.
+/// Stale model references arrive already resolved to `null` — the
+/// states layer guarantees it. A store error yields the defaults —
+/// loading never blocks the UI.
+pub fn get_settings(store: &Store) -> SettingsData {
+    studio_states::get_settings(store).unwrap_or_default()
+}
+
+/// Persists the user preferences as the single row. The UI is not
+/// trusted: a set model id must exist; theme, locale and accent are
+/// stored as sent.
+pub fn save_settings(store: &Store, settings: &SettingsData) -> Result<SettingsData> {
+    for id in [
+        settings.tasks_model_light,
+        settings.tasks_model_heavy,
+        settings.translation_model,
+    ] {
+        if let Some(id) = id {
+            if studio_states::get_provider_model(store, id).is_err() {
+                anyhow::bail!("Unknown model.");
+            }
+        }
+    }
+    studio_states::save_settings(store, settings)
 }
 
 // ─────────────────────────────────────────────

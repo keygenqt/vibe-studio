@@ -26,6 +26,7 @@
 //! - `chat_history` — the `chat_history` table: `ChatHistoryData`,
 //!   the chat messages, the `ChatRole` roles and the append-only API
 //!   on `Store`.
+//! - `settings` — `SettingsData`: the user preferences as a single row.
 //! - `workspace` — the `workspace` table: `WorkspaceData`, the shell
 //!   environment as a single row (id = 1).
 //!
@@ -38,4 +39,5 @@ pub(crate) mod group_chat;
 pub(crate) mod group_chat_history;
 pub(crate) mod provider;
 pub(crate) mod provider_model;
+pub(crate) mod settings;
 pub(crate) mod workspace;

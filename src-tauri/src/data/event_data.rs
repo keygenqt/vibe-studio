@@ -12,6 +12,7 @@ use serde::Serialize;
 #[serde(rename_all = "snake_case")]
 pub(crate) enum EventKey {
     Workspace,
+    Settings,
     Providers,
     GroupsChat,
     Chat,

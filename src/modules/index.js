@@ -10,6 +10,7 @@ import { app, app_events } from './impl/app'
 import { chat, chat_events } from './impl/chat'
 import { groups_chat, groups_chat_events } from './impl/groups_chat'
 import { providers, providers_events } from './impl/providers'
+import { settings, settings_events } from './impl/settings'
 import { workspace, workspace_events } from './impl/workspace'
 
 // every block binds its own Rust channels; one call for the app
@@ -20,6 +21,7 @@ export function bindEvents() {
     ...chat_events(),
     ...providers_events(),
     ...groups_chat_events(),
+    ...settings_events(),
     ...workspace_events(),
   ])
 }
@@ -31,6 +33,7 @@ export const Methods = {
   ...chat,
   ...providers,
   ...groups_chat,
+  ...settings,
   ...workspace,
   // logging to the Rust log (not console.log)
   log: function (message) {

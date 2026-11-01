@@ -12,6 +12,9 @@ import { Box, Stack } from '@mui/material'
 import { SaveButton } from '../../components/buttons'
 import { PageHeader } from '../../components/views'
 import { ErrorAlert, SuccessAlert } from '../../components/alerts'
+import { useCoreProviders, useCoreSettings } from '../../hooks'
+import { AppUtils } from '../../utils'
+import { Methods } from '../../modules'
 
 import { AppearanceSection } from './elements/AppearanceSection'
 import { TasksSection } from './elements/TasksSection'
@@ -27,9 +30,13 @@ function isScrollable(node) {
 
 export function GeneralPage() {
   const { t } = useTranslation()
+  const { ready, settings } = useCoreSettings()
+  const { providers, models } = useCoreProviders()
   const [savedOpen, setSavedOpen] = React.useState(false)
   const [submitError, setSubmitError] = React.useState(null)
   const rootRef = React.useRef(null)
+
+  if (!ready) return null
 
   // the page scrolls in the shell's scroll area, not the window
   const scrollTop = () => {
@@ -40,28 +47,45 @@ export function GeneralPage() {
 
   return (
     <Formik
+      enableReinitialize
       initialValues={{
-        // mock values: the workspace wiring lands with the states task
-        theme: 'light',
-        accent: '#1b7f5c',
-        language: 'ru',
-        fontSize: 15,
-        taskModelLight: 'yandexgpt-5-lite',
-        taskModelHeavy: 'yandexgpt-5-lite',
-        translateModel: 'yandexgpt-5-lite',
-        translateMine: 'ru',
-        translateAnswers: 'ru',
-        streaming: true,
-        keepMessages: 50,
-        notifyReady: true,
-        notifyUpdates: true,
+        theme: settings.appearance_theme,
+        accent: settings.appearance_accent,
+        language: settings.appearance_locale,
+        fontSize: settings.appearance_chat_font_size,
+        taskModelLight: settings.tasks_model_light,
+        taskModelHeavy: settings.tasks_model_heavy,
+        translateModel: settings.translation_model,
+        translateMine: settings.translation_mine,
+        translateAnswers: settings.translation_answers,
+        streaming: settings.chat_streaming,
+        keepMessages: settings.chat_keep_messages,
+        notifyReady: settings.notifications_ready,
+        notifyUpdates: settings.notifications_updates,
       }}
-      onSubmit={async (_, { setSubmitting }) => {
-        // layout only: the save command arrives with the states task
-        await new Promise(resolve => setTimeout(resolve, 300))
-        setSubmitting(false)
-        setSavedOpen(true)
-        await new Promise(resolve => setTimeout(resolve, 100))
+      onSubmit={async (values, { setSubmitting }) => {
+        try {
+          await Methods.save_settings({
+            appearance_theme: values.theme,
+            appearance_locale: values.language,
+            appearance_accent: values.accent,
+            appearance_chat_font_size: values.fontSize,
+            tasks_model_light: values.taskModelLight,
+            tasks_model_heavy: values.taskModelHeavy,
+            chat_streaming: values.streaming,
+            chat_keep_messages: values.keepMessages,
+            translation_model: values.translateModel,
+            translation_mine: values.translateMine,
+            translation_answers: values.translateAnswers,
+            notifications_ready: values.notifyReady,
+            notifications_updates: values.notifyUpdates,
+          })
+          setSavedOpen(true)
+        } catch (error) {
+          setSubmitError(AppUtils.backendMessage(t, error))
+        } finally {
+          setSubmitting(false)
+        }
         scrollTop()
       }}
     >
@@ -84,9 +108,19 @@ export function GeneralPage() {
             />
             <Stack spacing={2}>
               <AppearanceSection values={values} onChange={setFieldValue} />
-              <TasksSection values={values} onChange={setFieldValue} />
+              <TasksSection
+                values={values}
+                onChange={setFieldValue}
+                providers={providers}
+                models={models}
+              />
               <ChatSection values={values} onChange={setFieldValue} />
-              <TranslationSection values={values} onChange={setFieldValue} />
+              <TranslationSection
+                values={values}
+                onChange={setFieldValue}
+                providers={providers}
+                models={models}
+              />
               <NotificationsSection values={values} onChange={setFieldValue} />
               <Stack direction={'row'} spacing={2}>
                 <Box sx={{ flexGrow: 1 }} />

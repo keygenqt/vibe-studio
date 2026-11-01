@@ -15,6 +15,7 @@ use studio_core::ModelInfoData;
 use studio_core::ProviderData;
 use studio_core::ProviderInfoData;
 use studio_core::ProviderModelData;
+use studio_core::SettingsData;
 use studio_core::Store;
 use studio_core::WorkspaceData;
 
@@ -28,6 +29,7 @@ use crate::data::providers_state::ProvidersData;
 use crate::events::emit_event_chat;
 use crate::events::emit_event_groups_chat;
 use crate::events::emit_event_providers;
+use crate::events::emit_event_settings;
 use crate::events::emit_event_workspace;
 
 // ─────────────────────────────────────────────
@@ -49,6 +51,29 @@ pub fn save_workspace(
 ) -> Result<WorkspaceData, String> {
     let saved = studio_core::save_workspace(&store, &workspace).map_err(|e| e.to_string())?;
     emit_event_workspace(&window, EventData::new(EventKey::Workspace, &saved));
+    Ok(saved)
+}
+
+// ─────────────────────────────────────────────
+// Settings
+// ─────────────────────────────────────────────
+
+/// Loads the user preferences; model references come resolved —
+/// a gone model reads as `null`.
+#[tauri::command]
+pub fn get_settings(store: State<Store>) -> SettingsData {
+    studio_core::get_settings(&store)
+}
+
+/// Persists the user preferences; every mutation ends with the emit.
+#[tauri::command]
+pub fn save_settings(
+    window: WebviewWindow,
+    store: State<Store>,
+    settings: SettingsData,
+) -> Result<SettingsData, String> {
+    let saved = studio_core::save_settings(&store, &settings).map_err(|e| e.to_string())?;
+    emit_event_settings(&window, EventData::new(EventKey::Settings, &saved));
     Ok(saved)
 }
 

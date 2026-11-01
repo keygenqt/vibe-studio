@@ -18,8 +18,12 @@ export function useCoreProviders({ providerId, modelId } = {}) {
   // the block state keeps the flat models of all providers: the page
   // takes its slice by provider
   const models = useSelector(state => state.providers.models)
-  const providerModels =
-    providerId && models ? models.filter(model => model.provider_id === providerId) : null
+  // no provider id = the whole flat list — the settings pickers take it
+  const providerModels = providerId
+    ? models
+      ? models.filter(model => model.provider_id === providerId)
+      : null
+    : models
   const model = useSelector(state => (modelId ? (state.providers.model[modelId] ?? null) : null))
   const [error, setError] = React.useState(null)
 

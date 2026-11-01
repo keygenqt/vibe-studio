@@ -10,23 +10,22 @@ import DarkMode from '@mui/icons-material/DarkMode'
 import DesktopWindows from '@mui/icons-material/DesktopWindows'
 import LightMode from '@mui/icons-material/LightMode'
 
-import { useCoreWorkspace } from '../../../../hooks'
+import { useCoreSettings } from '../../../../hooks'
 
 export function ThemeAction() {
   const { t } = useTranslation()
-  const { themeChoice, setTheme } = useCoreWorkspace()
+  const { settings, setTheme } = useCoreSettings()
+  const theme = settings.appearance_theme
   return (
     <Tooltip title={t('main.t_theme')}>
       <IconButton
         size="small"
         sx={{ p: '2px' }}
-        onClick={() =>
-          setTheme(themeChoice === 'light' ? 'dark' : themeChoice === 'dark' ? 'system' : 'light')
-        }
+        onClick={() => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')}
       >
-        {themeChoice === 'light' ? (
+        {theme === 'light' ? (
           <LightMode sx={{ fontSize: 16 }} />
-        ) : themeChoice === 'dark' ? (
+        ) : theme === 'dark' ? (
           <DarkMode sx={{ fontSize: 16 }} />
         ) : (
           <DesktopWindows sx={{ fontSize: 16 }} />

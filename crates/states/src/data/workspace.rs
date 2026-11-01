@@ -12,10 +12,8 @@ const WORKSPACE_ID: i32 = 1;
 
 /// Defaults for a missing row.
 const DEFAULT_SIDE_BAR_COLLAPSED: bool = false;
-const DEFAULT_THEME: &str = "system";
-const DEFAULT_LOCALE: &str = "ru";
 
-/// Shell environment: window and panel sizes, theme, locale.
+/// Shell environment: window and panel sizes.
 /// A single row (id = 1); a missing row falls back to `Default`.
 #[derive(Debug, Clone, PartialEq, Queryable, Identifiable, Selectable, serde::Serialize, serde::Deserialize)]
 #[diesel(table_name = workspace)]
@@ -34,14 +32,10 @@ pub struct WorkspaceData {
     pub side_bar_size: Option<i32>,
     /// Sidebar starts collapsed.
     pub side_bar_collapsed: bool,
-    /// Theme id: `"system"` tracks the OS, `"light"` / `"dark"` are explicit.
-    pub theme: String,
-    /// UI locale: `"ru"`, `"en"`, `"cn"`.
-    pub locale: String,
 }
 
 impl Default for WorkspaceData {
-    /// Fresh shell environment: untouched sizes, system theme, ru locale.
+    /// Fresh shell environment: untouched sizes.
     fn default() -> Self {
         Self {
             id: WORKSPACE_ID,
@@ -50,8 +44,6 @@ impl Default for WorkspaceData {
             chat_input_size: None,
             side_bar_size: None,
             side_bar_collapsed: DEFAULT_SIDE_BAR_COLLAPSED,
-            theme: DEFAULT_THEME.to_string(),
-            locale: DEFAULT_LOCALE.to_string(),
         }
     }
 }
@@ -65,8 +57,6 @@ struct WorkspaceNewData {
     chat_input_size: Option<i32>,
     side_bar_size: Option<i32>,
     side_bar_collapsed: bool,
-    theme: String,
-    locale: String,
 }
 
 /// Drops the id: insert and update values never carry it.
@@ -78,8 +68,6 @@ impl From<&WorkspaceData> for WorkspaceNewData {
             chat_input_size: data.chat_input_size,
             side_bar_size: data.side_bar_size,
             side_bar_collapsed: data.side_bar_collapsed,
-            theme: data.theme.clone(),
-            locale: data.locale.clone(),
         }
     }
 }
@@ -92,8 +80,6 @@ diesel::table! {
         chat_input_size -> Nullable<Integer>,
         side_bar_size -> Nullable<Integer>,
         side_bar_collapsed -> Bool,
-        theme -> Text,
-        locale -> Text,
     }
 }
 

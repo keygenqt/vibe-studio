@@ -5,6 +5,7 @@
  * INFO: The dark MUI theme: palette, typography, transitions, components.
  */
 import { createTheme } from '@mui/material/styles'
+import { paletteDark } from './elements/paletteDark'
 import { typography } from './elements/typography'
 import { transitions } from './elements/transitions'
 import { components } from './elements/components'
@@ -13,13 +14,9 @@ import { layout } from './elements/layout'
 export const ThemeDark = createTheme({
   palette: {
     mode: 'dark',
-    background: { default: '#333333', paper: '#1e1e1e' },
+    ...paletteDark,
     primary: { main: '#2dd4bf', contrastText: '#0f2a2c' },
     secondary: { main: '#14b8a6', light: '#22423c', contrastText: '#fff' },
-    success: { main: '#23a076' },
-    error: { main: '#ef5350' },
-    inherit: { main: '#f7f7f7', light: '#4a4a55' },
-    panel: { main: 'rgba(255, 255, 255, 0.03)' },
   },
   typography: typography,
   transitions: transitions,

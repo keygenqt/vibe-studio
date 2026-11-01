@@ -6,57 +6,37 @@
  */
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
-import { MenuItem, TextField } from '@mui/material'
 
 import { GroupRow, GroupView } from '../../../components/views'
 
-// mock list: the wired models arrive with the states task
-const MODELS = ['yandexgpt-5-lite', 'yandexgpt-5-pro']
+import { ModelSelect } from './ModelSelect'
 
 export function TasksSection(props) {
   const { t } = useTranslation()
-  const { values, onChange } = props
+  const { values, onChange, providers, models } = props
   return (
     <GroupView title={t('general.t_tasks')}>
       <GroupRow
         title={t('general.t_task_light')}
         description={t('general.t_task_light_description')}
       >
-        <TextField
-          select
-          size="small"
-          hiddenLabel
-          variant={'filled'}
+        <ModelSelect
           value={values.taskModelLight}
-          onChange={e => onChange('taskModelLight', e.target.value)}
-          sx={{ width: 230 }}
-        >
-          {MODELS.map(name => (
-            <MenuItem key={`task-light-${name}`} value={name}>
-              {name}
-            </MenuItem>
-          ))}
-        </TextField>
+          onChange={value => onChange('taskModelLight', value)}
+          providers={providers}
+          models={models}
+        />
       </GroupRow>
       <GroupRow
         title={t('general.t_task_heavy')}
         description={t('general.t_task_heavy_description')}
       >
-        <TextField
-          select
-          size="small"
-          hiddenLabel
-          variant={'filled'}
+        <ModelSelect
           value={values.taskModelHeavy}
-          onChange={e => onChange('taskModelHeavy', e.target.value)}
-          sx={{ width: 230 }}
-        >
-          {MODELS.map(name => (
-            <MenuItem key={`task-heavy-${name}`} value={name}>
-              {name}
-            </MenuItem>
-          ))}
-        </TextField>
+          onChange={value => onChange('taskModelHeavy', value)}
+          providers={providers}
+          models={models}
+        />
       </GroupRow>
     </GroupView>
   )
@@ -65,4 +45,6 @@ export function TasksSection(props) {
 TasksSection.propTypes = {
   values: PropTypes.object.isRequired,
   onChange: PropTypes.func.isRequired,
+  providers: PropTypes.array,
+  models: PropTypes.array,
 }
