@@ -10,11 +10,15 @@
 //! - `model_info` — a model as a provider host reports it.
 //! - `provider_type` — the provider kind.
 //! - `provider_info` — a static catalog row of a provider kind.
+//! - `stream` — the stream delta events and the aggregated answer.
 
 mod model_info;
 mod provider_info;
 mod provider_type;
+mod stream;
 
 pub use model_info::ModelInfoData;
 pub use provider_info::ProviderInfoData;
 pub use provider_type::ProviderTypeData;
+pub use stream::StreamAnswerData;
+pub use stream::StreamEvent;

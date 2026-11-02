@@ -14,3 +14,7 @@ studio-cluster = { path = "../cluster" }
 dark-light = "3"
 serde = { version = "1.0.229", features = ["derive"] }
 anyhow = "1.0.104"
+tokio = { version = "1", default-features = false, features = [
+    "sync",
+    "macros",
+] }

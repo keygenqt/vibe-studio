@@ -11,6 +11,7 @@ const appSlice = createSlice({
   initialState: {
     version: null,
     isDebug: false,
+    ready: false,
     formSuccess: null,
     systemTheme: 'light',
   },
@@ -18,6 +19,9 @@ const appSlice = createSlice({
     appSet: (state, action) => {
       state.version = action.payload.version
       state.isDebug = action.payload.isDebug
+    },
+    appReadySet: state => {
+      state.ready = true
     },
     formSuccessSet: (state, action) => {
       state.formSuccess = action.payload
@@ -31,5 +35,6 @@ const appSlice = createSlice({
   },
 })
 
-export const { appSet, formSuccessSet, formSuccessClear, systemThemeSet } = appSlice.actions
+export const { appSet, appReadySet, formSuccessSet, formSuccessClear, systemThemeSet } =
+  appSlice.actions
 export default appSlice.reducer

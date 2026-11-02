@@ -25,16 +25,21 @@ export function ChatPage() {
   const { t } = useTranslation()
   const cid = Number(chatId)
   const { chats, ready: groupsReady } = useCoreGroupsChat()
-  const { history, ready: chatReady } = useCoreChat({ chatId: cid })
+  const { history, stream, ready: chatReady } = useCoreChat({ chatId: cid })
   const { settings } = useCoreSettings()
   const chat = chats?.find(item => item.id === cid) ?? null
+  // the live answer paints over its progress row: the row carries
+  // the model name, the stream carries the growing text. findLast:
+  // while a newer send evicts the old stream, two progress rows
+  // coexist for a moment — the live one is the newest
+  const progressRow = (history ?? []).findLast(item => item.status === 'progress') ?? null
 
   // the newest message stays in view: the scroll follows each
   // history change and the chat switch
   React.useEffect(() => {
     const el = document.querySelector('[data-scroll-key="chat.history"]')
     if (el) el.scrollTop = el.scrollHeight
-  }, [history, chatId])
+  }, [history, stream, chatId])
 
   return (
     <WaitState ready={groupsReady && chatReady}>
@@ -47,9 +52,25 @@ export function ChatPage() {
           />
           <ScrollPanel scrollKey={'chat.history'} sx={{ flexGrow: 1, minHeight: 0 }}>
             <Stack spacing={1.5}>
-              {(history ?? []).map(message => (
-                <MessageView key={`message-${message.id}`} message={message} />
-              ))}
+              {(history ?? [])
+                .filter(message => message.status !== 'progress')
+                .map(message => (
+                  <MessageView key={`message-${message.id}`} message={message} />
+                ))}
+              {stream && (
+                <MessageView
+                  key={'message-stream'}
+                  message={{
+                    id: progressRow?.id ?? -1,
+                    provider: progressRow?.provider ?? null,
+                    model: progressRow?.model ?? null,
+                    status: 'progress',
+                    text: stream.text,
+                    thinking: stream.thinking,
+                    created_at: progressRow?.created_at ?? Date.now(),
+                  }}
+                />
+              )}
             </Stack>
           </ScrollPanel>
         </>

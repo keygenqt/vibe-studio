@@ -9,12 +9,13 @@ import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { Box, CircularProgress, IconButton, Stack, TextField } from '@mui/material'
 import Send from '@mui/icons-material/Send'
+import Stop from '@mui/icons-material/Stop'
 
 import { useCoreChat } from '../../../hooks'
 
 export function InputView(props) {
   const { t } = useTranslation()
-  const { draft, setDraft, send, sending } = useCoreChat({ chatId: props.chatId })
+  const { draft, setDraft, send, sending, streaming, stop } = useCoreChat({ chatId: props.chatId })
   const inputRef = React.useRef(null)
 
   // the disabled input can't take focus, so refocus after sending ends
@@ -52,7 +53,6 @@ export function InputView(props) {
           fullWidth
           variant="standard"
           inputRef={inputRef}
-          disabled={sending}
           placeholder={t('main.t_placeholder')}
           value={draft}
           onChange={event => setDraft(event.target.value)}
@@ -70,7 +70,7 @@ export function InputView(props) {
               autoCapitalize: 'off',
               spellCheck: false,
               onKeyDown: event => {
-                if (event.key === 'Enter' && !event.shiftKey) {
+                if (event.key === 'Enter' && !event.shiftKey && !streaming) {
                   event.preventDefault()
                   send()
                 }
@@ -85,13 +85,21 @@ export function InputView(props) {
           paddingTop: '6px',
         }}
       >
-        <IconButton color="primary" size="small" onClick={send} disabled={sending}>
-          {sending ? (
-            <CircularProgress size={24} color={'inherit'} />
-          ) : (
-            <Send sx={{ fontSize: 24 }} />
-          )}
-        </IconButton>
+        {streaming ? (
+          // the running generation stops here: the stream task
+          // finalizes its row and the state comes with its event
+          <IconButton color="primary" size="small" onClick={stop}>
+            <Stop sx={{ fontSize: 24 }} />
+          </IconButton>
+        ) : (
+          <IconButton color="primary" size="small" onClick={send} disabled={sending}>
+            {sending ? (
+              <CircularProgress size={24} color={'inherit'} />
+            ) : (
+              <Send sx={{ fontSize: 24 }} />
+            )}
+          </IconButton>
+        )}
       </Box>
     </Stack>
   )

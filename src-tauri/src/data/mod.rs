@@ -16,9 +16,12 @@
 //!   block, returned by its mutations.
 //! - `providers_state` — `ProvidersData`: the fresh state of the
 //!   providers block, returned by its mutations.
+//! - `stream_chunk` — `StreamChunk`: a live stream delta of the chat
+//!   command channel.
 
 pub(crate) mod app_info;
 pub(crate) mod chat_state;
 pub(crate) mod event_data;
 pub(crate) mod groups_chat_state;
 pub(crate) mod providers_state;
+pub(crate) mod stream_chunk;

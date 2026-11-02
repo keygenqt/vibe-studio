@@ -5,17 +5,20 @@
  * INFO: The no-chat placeholder of the chat area.
  */
 import { useTranslation } from 'react-i18next'
-import { Stack, Typography } from '@mui/material'
+import { Box, Stack, Typography } from '@mui/material'
 import ChatBubbleOutline from '@mui/icons-material/ChatBubbleOutline'
 
 export function ChatEmptyPage() {
   const { t } = useTranslation()
   return (
-    <Stack height={1} spacing={2} sx={{ justifyContent: 'center', alignItems: 'center' }}>
-      <ChatBubbleOutline sx={{ fontSize: 48, color: 'text.secondary' }} />
-      <Typography variant={'h6'} fontWeight={500} color={'text.primary'}>
-        {t('chat_empty.t_no_chat')}
-      </Typography>
-    </Stack>
+    // the same paper card as the sidebar: white, rounded, full area
+    <Box height={1} sx={{ backgroundColor: 'background.paper', borderRadius: 2 }}>
+      <Stack height={1} spacing={2} sx={{ justifyContent: 'center', alignItems: 'center' }}>
+        <ChatBubbleOutline sx={{ fontSize: 48, color: 'text.secondary' }} />
+        <Typography variant={'h6'} fontWeight={500} color={'text.primary'}>
+          {t('chat_empty.t_no_chat')}
+        </Typography>
+      </Stack>
+    </Box>
   )
 }

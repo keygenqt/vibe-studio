@@ -19,14 +19,17 @@ function App() {
 // the workspace and settings models plus the app model: the
 // persisted choice with `system` resolved to the detected OS theme
 function ThemedShell(props) {
+  const app = useCoreApp()
   const workspace = useCoreWorkspace()
   const { settings } = useCoreSettings()
-  const { systemTheme } = useCoreApp()
-  const themeMode = settings.appearance_theme === 'system' ? systemTheme : settings.appearance_theme
-  // the accent picks the theme pair; an unknown or untouched name falls back to the default
-  const theme = (THEMES[settings.appearance_accent] ?? THEMES[ACCENT_DEFAULT])[themeMode]
 
-  if (!workspace.ready || !settings.ready) return null
+  const mode = settings.appearance_theme === 'system' ? app.systemTheme : settings.appearance_theme
+  // the accent picks the theme pair; an unknown or untouched name falls back to the default
+  const theme = (THEMES[settings.appearance_accent] ?? THEMES[ACCENT_DEFAULT])[mode]
+
+  // every block owns its readiness; the shell paints when all landed
+  if (!workspace.ready || !settings.ready || !app.ready) return null
+
   return (
     <ThemeProvider theme={theme}>
       <Box

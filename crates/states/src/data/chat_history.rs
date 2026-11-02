@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states']
-// INFO: The chat_history table: chat messages, ChatRole, append-only Store access.
+// INFO: The chat_history table: chat messages with sender and status, growing in place.
 
 use anyhow::Result;
 use chrono::NaiveDateTime;
@@ -11,26 +11,29 @@ use serde_with::serde_as;
 
 use crate::Store;
 
-/// A message role in the chat history. Serialized lowercase; an
-/// unknown stored value reads as `Error` — broken data must not pass
-/// for a normal message.
+/// The outcome status of a message. Serialized lowercase; an unknown
+/// stored value reads as `Error` — broken data must not pass for a
+/// normal message.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum ChatRole {
-    /// A message from the user.
-    User,
-    /// A message from the model.
-    Assistant,
+pub enum ChatStatus {
+    /// A user message, or a full answer of the model.
+    Complete,
+    /// The model stream is running: the text grows in the row.
+    Progress,
+    /// The stream was cut: by the user, or by a newer request to the same model.
+    Cancelled,
     /// A failed request: the error text is kept as the message.
     Error,
 }
 
-impl ChatRole {
-    /// The string form stored in the `role` column.
+impl ChatStatus {
+    /// The string form stored in the `status` column.
     pub fn as_str(&self) -> &'static str {
         match self {
-            Self::User => "user",
-            Self::Assistant => "assistant",
+            Self::Complete => "complete",
+            Self::Progress => "progress",
+            Self::Cancelled => "cancelled",
             Self::Error => "error",
         }
     }
@@ -38,15 +41,17 @@ impl ChatRole {
     /// Parses the stored string; an unknown value falls back to `Error`.
     pub fn from_value(value: &str) -> Self {
         match value {
-            "user" => Self::User,
-            "assistant" => Self::Assistant,
+            "complete" => Self::Complete,
+            "progress" => Self::Progress,
+            "cancelled" => Self::Cancelled,
             _ => Self::Error,
         }
     }
 }
 
-/// A message of a chat. `id` is `None` until the row is stored —
-/// SQLite owns the id. Append-only: rows are added, never updated.
+/// A message of a chat. A user message carries no sender; a model
+/// answer carries the provider kind and the model name it ran on.
+/// `id` is `None` until the row is stored — SQLite owns the id.
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ChatHistoryData {
@@ -54,10 +59,18 @@ pub struct ChatHistoryData {
     pub id: Option<i32>,
     /// Id of the chat the message belongs to.
     pub chat_id: i32,
-    /// Who produced the message.
-    pub role: ChatRole,
+    /// Kind id of the answering provider ("ollama", ...); `None` = a user message.
+    pub provider: Option<String>,
+    /// Name of the answering model; `None` = a user message.
+    pub model: Option<String>,
+    /// What happened to the message.
+    pub status: ChatStatus,
     /// The message text; for `Error` — the error text.
     pub text: String,
+    /// The model reasoning behind the answer.
+    pub thinking: Option<String>,
+    /// Reserved for the future message translations.
+    pub translate: Option<String>,
     /// Store-owned: when the row was born; JS gets unix millis.
     #[serde_as(as = "TimestampMilliSeconds<i64>")]
     pub created_at: NaiveDateTime,
@@ -67,8 +80,12 @@ diesel::table! {
     chat_history (id) {
         id -> Integer,
         chat_id -> Integer,
-        role -> Text,
+        provider -> Nullable<Text>,
+        model -> Nullable<Text>,
+        status -> Text,
         text -> Text,
+        thinking -> Nullable<Text>,
+        translate -> Nullable<Text>,
         created_at -> Timestamp,
     }
 }
@@ -80,8 +97,12 @@ diesel::table! {
 struct ChatHistoryRow {
     id: i32,
     chat_id: i32,
-    role: String,
+    provider: Option<String>,
+    model: Option<String>,
+    status: String,
     text: String,
+    thinking: Option<String>,
+    translate: Option<String>,
     created_at: NaiveDateTime,
 }
 
@@ -90,20 +111,28 @@ impl From<ChatHistoryRow> for ChatHistoryData {
         ChatHistoryData {
             id: Some(row.id),
             chat_id: row.chat_id,
-            role: ChatRole::from_value(&row.role),
+            provider: row.provider,
+            model: row.model,
+            status: ChatStatus::from_value(&row.status),
             text: row.text,
+            thinking: row.thinking,
+            translate: row.translate,
             created_at: row.created_at,
         }
     }
 }
 
 /// Insert values: the id and the timestamp are owned by SQLite.
+/// `translate` is never written — the field waits for its feature.
 #[derive(Debug, Clone, Insertable, AsChangeset)]
 #[diesel(table_name = chat_history)]
 struct ChatHistoryNewData {
     chat_id: i32,
-    role: String,
+    provider: Option<String>,
+    model: Option<String>,
+    status: String,
     text: String,
+    thinking: Option<String>,
 }
 
 impl Store {
@@ -118,18 +147,73 @@ impl Store {
         Ok(rows.into_iter().map(ChatHistoryData::from).collect())
     }
 
-    /// Appends a message to the chat history; returns the stored row.
-    pub(crate) fn add_chat_history(&self, chat_id: i32, role: ChatRole, text: &str) -> Result<ChatHistoryData> {
+    /// Appends a message; returns the stored row. A model answer is
+    /// born with `ChatStatus::Progress` and grows in place until the
+    /// final status.
+    pub(crate) fn add_chat_history(
+        &self,
+        chat_id: i32,
+        provider: Option<&str>,
+        model: Option<&str>,
+        status: ChatStatus,
+        text: &str,
+        thinking: Option<&str>,
+    ) -> Result<ChatHistoryData> {
         let row: ChatHistoryRow = self.save(
             chat_history::table,
             None,
             ChatHistoryNewData {
                 chat_id,
-                role: role.as_str().to_string(),
+                provider: provider.map(String::from),
+                model: model.map(String::from),
+                status: status.as_str().to_string(),
                 text: text.to_string(),
+                thinking: thinking.map(String::from),
             },
         )?;
         Ok(ChatHistoryData::from(row))
+    }
+
+    /// Updates a growing message in place: the stream text/thinking
+    /// and the outcome status. Returns affected rows.
+    pub(crate) fn update_chat_history(
+        &self,
+        id: i32,
+        text: &str,
+        thinking: Option<&str>,
+        status: ChatStatus,
+    ) -> Result<usize> {
+        let affected = diesel::update(chat_history::table.find(id))
+            .set((
+                chat_history::text.eq(text.to_string()),
+                chat_history::thinking.eq(thinking.map(String::from)),
+                chat_history::status.eq(status.as_str().to_string()),
+            ))
+            .execute(&mut *self.lock())?;
+        Ok(affected)
+    }
+
+    /// Active streams of one provider+model pair, oldest first.
+    pub(crate) fn get_progress_chat_histories(&self, provider: &str, model: &str) -> Result<Vec<ChatHistoryData>> {
+        let mut conn = self.lock();
+        let rows: Vec<ChatHistoryRow> = chat_history::table
+            .filter(chat_history::provider.eq(provider))
+            .filter(chat_history::model.eq(model))
+            .filter(chat_history::status.eq(ChatStatus::Progress.as_str()))
+            .order_by(chat_history::id.asc())
+            .select(ChatHistoryRow::as_select())
+            .load(&mut *conn)?;
+        Ok(rows.into_iter().map(ChatHistoryData::from).collect())
+    }
+
+    /// Cancels every progress row of the whole table — the startup
+    /// sweep behind a killed process. Returns affected rows.
+    pub(crate) fn cancel_progress_chat_histories(&self) -> Result<usize> {
+        let affected = diesel::update(chat_history::table)
+            .filter(chat_history::status.eq(ChatStatus::Progress.as_str()))
+            .set(chat_history::status.eq(ChatStatus::Cancelled.as_str()))
+            .execute(&mut *self.lock())?;
+        Ok(affected)
     }
 
     /// Deletes the message with the given id, returns affected rows.

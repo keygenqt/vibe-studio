@@ -3993,6 +3993,7 @@ dependencies = [
  "serde",
  "studio-cluster",
  "studio-states",
+ "tokio",
 ]
 
 [[package]]

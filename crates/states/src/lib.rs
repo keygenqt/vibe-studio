@@ -16,7 +16,7 @@ pub(crate) mod db;
 
 pub use data::chat::ChatData;
 pub use data::chat_history::ChatHistoryData;
-pub use data::chat_history::ChatRole;
+pub use data::chat_history::ChatStatus;
 pub use data::group_chat::GroupChatData;
 pub use data::group_chat_history::GroupChatHistoryData;
 pub use data::provider::ProviderData;
@@ -126,9 +126,41 @@ pub fn get_chat_histories(store: &Store, chat_id: i32) -> Result<Vec<ChatHistory
     store.get_chat_histories(chat_id)
 }
 
-/// Appends a message to the chat history; returns the stored row.
-pub fn add_chat_history(store: &Store, chat_id: i32, role: ChatRole, text: &str) -> Result<ChatHistoryData> {
-    store.add_chat_history(chat_id, role, text)
+/// Appends a message to the chat history; returns the stored row. A
+/// model answer is born with `ChatStatus::Progress`.
+pub fn add_chat_history(
+    store: &Store,
+    chat_id: i32,
+    provider: Option<&str>,
+    model: Option<&str>,
+    status: ChatStatus,
+    text: &str,
+    thinking: Option<&str>,
+) -> Result<ChatHistoryData> {
+    store.add_chat_history(chat_id, provider, model, status, text, thinking)
+}
+
+/// Updates a growing message in place: the stream text/thinking and
+/// the outcome status. Returns affected rows.
+pub fn update_chat_history(
+    store: &Store,
+    id: i32,
+    text: &str,
+    thinking: Option<&str>,
+    status: ChatStatus,
+) -> Result<usize> {
+    store.update_chat_history(id, text, thinking, status)
+}
+
+/// Active streams of one provider+model pair, oldest first.
+pub fn get_progress_chat_histories(store: &Store, provider: &str, model: &str) -> Result<Vec<ChatHistoryData>> {
+    store.get_progress_chat_histories(provider, model)
+}
+
+/// Cancels every progress row of the whole table — the startup sweep
+/// behind a killed process. Returns affected rows.
+pub fn cancel_progress_chat_histories(store: &Store) -> Result<usize> {
+    store.cancel_progress_chat_histories()
 }
 
 /// Deletes the message with the given id, returns affected rows.

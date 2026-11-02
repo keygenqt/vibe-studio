@@ -23,7 +23,9 @@ impl Store {
             fs::create_dir_all(dir)?;
         }
         let mut conn = SqliteConnection::establish(&path.to_string_lossy())?;
-        conn.batch_execute("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;")?;
+        // WAL + NORMAL: no fsync per commit — an OS crash may drop the
+        // last commits, a process kill never does. No corruption either way.
+        conn.batch_execute("PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA foreign_keys = ON;")?;
         conn.run_pending_migrations(MIGRATIONS)
             .map_err(|e| anyhow::anyhow!("migration failed: {e}"))?;
         Ok(Self { conn: Mutex::new(conn) })

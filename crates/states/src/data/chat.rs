@@ -77,6 +77,7 @@ const CHAT_NAMES: [&str; 56] = [
     "Icy Chat",
     "Fluffy Chat",
 ];
+
 /// Picks a random pool name: no `rand` dependency, the millisecond
 /// clock is enough for a name flavor.
 fn random_name() -> String {

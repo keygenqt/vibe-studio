@@ -30,6 +30,11 @@ export const ruLocalization = {
       t_chat_less: 'Свернуть',
       t_group_collapse: 'Свернуть / развернуть',
       t_chat_rename: 'Обновить название чата',
+      t_stop: 'Остановить',
+      t_thinking: 'Размышления',
+      t_generating: 'Генерируется ответ...',
+      t_cancelled: 'Генерация отменена',
+      t_empty_answer: 'Пустой ответ модели',
     },
     chat_empty: {
       t_no_chat: 'Выберите чат',

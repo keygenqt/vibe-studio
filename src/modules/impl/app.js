@@ -8,9 +8,14 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
 import store from '../../store'
-import { appSet, systemThemeSet } from '../../store/impl/app'
+import { appReadySet, appSet, systemThemeSet } from '../../store/impl/app'
 
 export const app = {
+  // the startup order: sweeps the progress rows of a killed process
+  init: async function () {
+    await invoke('init', {})
+    store.dispatch(appReadySet(true))
+  },
   get_app_info: async function () {
     const info = await invoke('get_app_info', {})
     store.dispatch(appSet(info))

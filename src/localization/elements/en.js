@@ -29,6 +29,12 @@ export const enLocalization = {
       t_chat_more: 'More {{n}}',
       t_chat_less: 'Collapse',
       t_group_collapse: 'Collapse / expand',
+      t_chat_rename: 'Update chat name',
+      t_stop: 'Stop',
+      t_thinking: 'Thinking',
+      t_generating: 'Generating the answer...',
+      t_cancelled: 'Generation cancelled',
+      t_empty_answer: 'The model returned no answer',
     },
     chat_empty: {
       t_no_chat: 'Select a chat',

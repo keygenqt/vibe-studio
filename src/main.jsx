@@ -13,12 +13,14 @@ import store from './store'
 import './assets/css/index.css'
 import App from './App.jsx'
 import { initScrollArea } from './init'
-import { bindEvents } from './modules'
+import { bindEvents, Methods } from './modules'
 
 // App init: not tied to any component lifetime, runs once, never cleans up
 initScrollArea()
 // Rust events arrive here; async, fire and forget
 bindEvents()
+// The startup order: sweeps the progress rows of a killed process
+Methods.init()
 
 // MUI TextareaAutosize's internal ResizeObserver overflows WebKit's loop
 // depth during window drag-resize; the layout converges next frame. Harmless.

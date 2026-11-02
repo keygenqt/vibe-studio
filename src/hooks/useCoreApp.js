@@ -13,11 +13,12 @@ export function useCoreApp() {
   const version = useSelector(state => state.app.version)
   const isDebug = useSelector(state => state.app.isDebug)
   const systemTheme = useSelector(state => state.app.systemTheme)
+  const ready = useSelector(state => state.app.ready)
 
   React.useEffect(() => {
     Methods.get_app_info()
     Methods.get_system_theme()
   }, [])
 
-  return { version, isDebug, systemTheme, ready: version !== null }
+  return { version, isDebug, systemTheme, ready }
 }

@@ -30,6 +30,11 @@ export const cnLocalization = {
       t_chat_less: '收起',
       t_group_collapse: '折叠 / 展开',
       t_chat_rename: '更新聊天名称',
+      t_stop: '停止',
+      t_thinking: '思考',
+      t_generating: '正在生成回答...',
+      t_cancelled: '生成已取消',
+      t_empty_answer: '模型未返回回答',
     },
     chat_empty: {
       t_no_chat: '选择聊天',

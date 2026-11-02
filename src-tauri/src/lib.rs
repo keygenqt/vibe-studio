@@ -64,6 +64,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::init,
             commands::get_workspace,
             commands::save_workspace,
             commands::get_settings,
@@ -89,6 +90,7 @@ pub fn run() {
             commands::select_group_chat,
             commands::chat_get_history,
             commands::chat_send_message,
+            commands::chat_cancel_send,
             commands::chat_regenerate_name,
             commands::get_system_theme,
             commands::get_app_info,

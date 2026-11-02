@@ -9,13 +9,18 @@
 use anyhow::Result;
 use std::path::Path;
 
-pub(crate) mod theme;
+pub use studio_cluster::StreamEvent;
 
+mod data;
+pub(crate) mod theme;
+mod utils;
+
+pub use data::ChatStreamEvent;
 pub use studio_cluster::ModelInfoData;
 pub use studio_cluster::ProviderInfoData;
 pub use studio_states::ChatData;
 pub use studio_states::ChatHistoryData;
-pub use studio_states::ChatRole;
+pub use studio_states::ChatStatus;
 pub use studio_states::GroupChatData;
 pub use studio_states::GroupChatHistoryData;
 pub use studio_states::ProviderData;
@@ -317,7 +322,7 @@ pub async fn chat_regenerate_name(store: &Store, chat_id: i32) -> Result<ChatDat
     let provider = studio_states::get_provider(store, model.provider_id)?;
     let messages: Vec<ChatHistoryData> = studio_states::get_chat_histories(store, chat_id)?
         .into_iter()
-        .filter(|message| message.role != ChatRole::Error)
+        .filter(|message| message.status == ChatStatus::Complete)
         .collect();
     if messages.is_empty() {
         anyhow::bail!("Chat has no messages.");
@@ -325,7 +330,7 @@ pub async fn chat_regenerate_name(store: &Store, chat_id: i32) -> Result<ChatDat
     let start = messages.len().saturating_sub(2);
     let history = messages[start..]
         .iter()
-        .map(|message| (message.role.as_str().to_string(), message.text.clone()))
+        .map(|message| (utils::history_role(message), message.text.clone()))
         .collect();
     let language = match settings.appearance_locale.as_str() {
         "ru" => "Russian",
@@ -383,9 +388,16 @@ pub fn chat_get_history(store: &Store, chat_id: i32) -> Result<Vec<ChatHistoryDa
 /// Sends the user's message to the chat's model and records both
 /// sides of the exchange. The UI is not trusted: the chat must exist,
 /// a blank message is an error. The model prompt comes first, the
-/// group prompt completes it; empty prompts drop out. A failed request
-/// is kept in the history as an `Error` message with the error text.
-pub async fn chat_send_message(store: &Store, chat_id: i32, text: &str) -> Result<()> {
+/// group prompt completes it; empty prompts drop out. The answer is
+/// born as a `Progress` row and grows in the store as the deltas
+/// arrive; a failed request is finalized as an `Error` message, a
+/// cancelled one — as `Cancelled` with the partial text.
+pub async fn chat_send_message(
+    store: &Store,
+    chat_id: i32,
+    text: &str,
+    on_event: impl Fn(ChatStreamEvent) + Send + Sync + 'static,
+) -> Result<()> {
     if text.trim().is_empty() {
         anyhow::bail!("Message must not be blank.");
     }
@@ -393,16 +405,27 @@ pub async fn chat_send_message(store: &Store, chat_id: i32, text: &str) -> Resul
     let group = studio_states::get_group_chat(store, chat.group_chat_id)?;
     let model = studio_states::get_provider_model(store, group.model_id)?;
     let provider = studio_states::get_provider(store, model.provider_id)?;
+    let kind =
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?;
+    let settings = studio_states::get_settings(store).unwrap_or_default();
+    let streaming = settings.chat_streaming.unwrap_or(true);
 
-    // the model context: everything said so far, in order; failed
-    // requests are not model messages — they stay out
+    // a running stream of the same model gives way: its token is
+    // cancelled, its own task finalizes the row and reports itself
+    let key = (provider.provider.clone(), model.name.clone());
+    if !studio_states::get_progress_chat_histories(store, &provider.provider, &model.name)?.is_empty() {
+        utils::cancel_stream_token(&key);
+    }
+
+    // the model context: everything said so far, in order; only
+    // complete messages count — failed and cut answers stay out
     let history = studio_states::get_chat_histories(store, chat_id)?
         .into_iter()
-        .filter(|message| message.role != ChatRole::Error)
-        .map(|message| (message.role.as_str().to_string(), message.text))
+        .filter(|message| message.status == ChatStatus::Complete)
+        .map(|message| (utils::history_role(&message), message.text))
         .collect();
 
-    studio_states::add_chat_history(store, chat_id, ChatRole::User, text)?;
+    studio_states::add_chat_history(store, chat_id, None, None, ChatStatus::Complete, text, None)?;
 
     let system = [model.system_prompt.as_deref(), group.system_prompt.as_deref()]
         .into_iter()
@@ -412,8 +435,34 @@ pub async fn chat_send_message(store: &Store, chat_id: i32, text: &str) -> Resul
         .collect::<Vec<_>>()
         .join("\n\n");
 
-    let answer = studio_cluster::call_prompt(
-        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?,
+    // the answer row is born with the stream and grows in the store
+    let answer = studio_states::add_chat_history(
+        store,
+        chat_id,
+        Some(provider.provider.as_str()),
+        Some(model.name.as_str()),
+        ChatStatus::Progress,
+        "",
+        None,
+    )?;
+    let answer_id = answer.id.expect("stored answer id");
+
+    let cancel = utils::stream_token();
+    utils::stream_tokens()
+        .lock()
+        .expect("stream tokens poisoned")
+        .insert(key.clone(), cancel.clone());
+
+    on_event(ChatStreamEvent::UserStored {
+        chat: Some(chat),
+        history: studio_states::get_chat_histories(store, chat_id).unwrap_or_default(),
+    });
+
+    // the deltas ride a channel: the callback runs inside the cluster
+    // call and cannot touch the store — the pump below persists them
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<StreamEvent>();
+    let mut call = std::pin::pin!(studio_cluster::call_prompt_stream(
+        kind,
         &provider.host,
         provider.api_key.as_deref(),
         provider.project.as_deref(),
@@ -425,13 +474,85 @@ pub async fn chat_send_message(store: &Store, chat_id: i32, text: &str) -> Resul
         if system.is_empty() { None } else { Some(system) },
         history,
         text,
-    )
-    .await;
+        cancel.as_ref(),
+        {
+            let tx = tx.clone();
+            move |event| {
+                if streaming {
+                    let _ = tx.send(event.clone());
+                }
+            }
+        },
+    ));
 
-    match answer {
-        Ok(text) => studio_states::add_chat_history(store, chat_id, ChatRole::Assistant, &text)?,
-        Err(e) => studio_states::add_chat_history(store, chat_id, ChatRole::Error, &format!("{e}"))?,
+    let mut text_acc = String::new();
+    let mut thinking_acc = String::new();
+    // the growing row persists at most once per 300 ms — token
+    // streams must not turn into hundreds of UPDATEs per second
+    const PERSIST_INTERVAL_MS: u64 = 300;
+    let mut persisted_at = std::time::Instant::now();
+    // one delta: grow the accumulators, persist the row, forward to the shell
+    let mut handle = |event: StreamEvent| -> Result<()> {
+        match &event {
+            StreamEvent::Text(chunk) => text_acc.push_str(chunk),
+            StreamEvent::Thinking(chunk) => thinking_acc.push_str(chunk),
+        }
+        let thinking = if thinking_acc.is_empty() {
+            None
+        } else {
+            Some(thinking_acc.as_str())
+        };
+        if persisted_at.elapsed() >= std::time::Duration::from_millis(PERSIST_INTERVAL_MS) {
+            persisted_at = std::time::Instant::now();
+            studio_states::update_chat_history(store, answer_id, &text_acc, thinking, ChatStatus::Progress)?;
+        }
+        on_event(ChatStreamEvent::Delta(event));
+        Ok(())
     };
+    // a closed channel disables the rx arm: the senders are gone and
+    // the call resolves on its own — the arm must not spin on None
+    let mut rx_closed = false;
+    let outcome = loop {
+        tokio::select! {
+            biased;
+            delta = rx.recv(), if !rx_closed => match delta {
+                Some(event) => handle(event)?,
+                None => rx_closed = true,
+            },
+            done = &mut call => break done,
+        }
+    };
+    // the deltas that arrived before the call future resolved
+    while let Ok(event) = rx.try_recv() {
+        handle(event)?;
+    }
+
+    // the final write is the only authority: full text, thinking, status
+    let (final_text, final_thinking, status) = match outcome {
+        Err(error) => (format!("{error}"), None, ChatStatus::Error),
+        Ok(result) => (
+            result.text,
+            result.thinking,
+            if result.cancelled {
+                ChatStatus::Cancelled
+            } else {
+                ChatStatus::Complete
+            },
+        ),
+    };
+    studio_states::update_chat_history(store, answer_id, &final_text, final_thinking.as_deref(), status)?;
+    Ok(())
+}
+
+/// Cancels the running stream of the chat's model, if any. The
+/// stream task finalizes its row as `Cancelled` and its command
+/// returns the fresh state — the plates arrive with it.
+pub fn chat_cancel_send(store: &Store, chat_id: i32) -> Result<()> {
+    let chat = studio_states::get_chat(store, chat_id)?;
+    let group = studio_states::get_group_chat(store, chat.group_chat_id)?;
+    let model = studio_states::get_provider_model(store, group.model_id)?;
+    let provider = studio_states::get_provider(store, model.provider_id)?;
+    utils::cancel_stream_token(&(provider.provider, model.name));
     Ok(())
 }
 
@@ -485,6 +606,14 @@ pub fn select_group_chat(store: &Store, group_chat_id: i32, chat_id: Option<i32>
 /// Opens (or creates) the studio database in the given app data directory.
 pub fn store_open(dir: &Path) -> Result<Store> {
     Store::open(&dir.join("vibe-studio.db"))
+}
+
+/// The startup order of the app: a killed process leaves `Progress`
+/// rows behind, and no stream can be alive on a fresh start — they
+/// all read as cancelled, the partial texts stay.
+pub fn init(store: &Store) -> Result<()> {
+    studio_states::cancel_progress_chat_histories(store)?;
+    Ok(())
 }
 
 /// Detects the OS theme once — the startup value; changes come

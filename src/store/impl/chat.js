@@ -12,6 +12,8 @@ const chatSlice = createSlice({
     draft: '',
     chat: null,
     history: null,
+    // the growing answer of the active stream: {seq, chatId, thinking, text}
+    stream: null,
   },
   reducers: {
     chatDraftSet: (state, action) => {
@@ -21,10 +23,41 @@ const chatSlice = createSlice({
       state.chat = action.payload
     },
     chatHistorySet: (state, action) => {
-      state.history = action.payload
+      state.history = action.payload.history
+      state.historyChatId = action.payload.chatId
+    },
+    // the stream generations: `seq` marks the newest send — stale
+    // deltas and completions of a cancelled request change nothing
+    chatStreamStart: (state, action) => {
+      state.stream = {
+        seq: action.payload.seq,
+        chatId: action.payload.chatId,
+        thinking: '',
+        text: '',
+      }
+    },
+    chatStreamAppend: (state, action) => {
+      const { seq, chatId, kind, delta } = action.payload
+      if (state.stream && state.stream.seq > seq) return
+      if (state.stream === null || state.stream.seq !== seq) {
+        state.stream = { seq, chatId, thinking: '', text: '' }
+      }
+      state.stream[kind] = (state.stream[kind] ?? '') + delta
+    },
+    chatStreamFinal: (state, action) => {
+      if (state.stream && state.stream.seq <= action.payload) {
+        state.stream = null
+      }
     },
   },
 })
 
-export const { chatDraftSet, chatSet, chatHistorySet } = chatSlice.actions
+export const {
+  chatDraftSet,
+  chatSet,
+  chatHistorySet,
+  chatStreamStart,
+  chatStreamAppend,
+  chatStreamFinal,
+} = chatSlice.actions
 export default chatSlice.reducer

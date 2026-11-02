@@ -24,8 +24,8 @@
 //!   `GroupChatHistoryData`, the per-group life record — view state,
 //!   the app-wide selection, the accumulated counters.
 //! - `chat_history` — the `chat_history` table: `ChatHistoryData`,
-//!   the chat messages, the `ChatRole` roles and the append-only API
-//!   on `Store`.
+//!   the chat messages with sender and status, the growing rows and
+//!   the API on `Store`.
 //! - `settings` — `SettingsData`: the user preferences as a single row.
 //! - `workspace` — the `workspace` table: `WorkspaceData`, the shell
 //!   environment as a single row (id = 1).

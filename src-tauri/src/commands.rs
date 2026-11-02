@@ -6,9 +6,11 @@
 use tauri::AppHandle;
 use tauri::State;
 use tauri::WebviewWindow;
+use tauri::ipc::Channel;
 
 use studio_core::ChatData;
 use studio_core::ChatHistoryData;
+use studio_core::ChatStreamEvent;
 use studio_core::GroupChatData;
 use studio_core::GroupChatHistoryData;
 use studio_core::ModelInfoData;
@@ -25,6 +27,7 @@ use crate::data::event_data::EventData;
 use crate::data::event_data::EventKey;
 use crate::data::groups_chat_state::GroupsChatData;
 use crate::data::providers_state::ProvidersData;
+use crate::data::stream_chunk::StreamChunk;
 
 use crate::events::emit_event_chat;
 use crate::events::emit_event_groups_chat;
@@ -299,20 +302,38 @@ pub fn chat_get_history(store: State<Store>, chat_id: i32) -> Result<Vec<ChatHis
 }
 
 /// Sends the user's message to the chat's model and records the
-/// exchange; emits and returns the fresh state of the chat block.
+/// exchange; the stream deltas go to `on_delta`, every stored state
+/// ends with the event. Returns the fresh state of the chat block.
 #[tauri::command]
 pub async fn chat_send_message(
     window: WebviewWindow,
     store: State<'_, Store>,
     chat_id: i32,
     text: String,
+    on_delta: Channel<StreamChunk>,
 ) -> Result<ChatStateData, String> {
-    studio_core::chat_send_message(&store, chat_id, &text)
-        .await
-        .map_err(|e| e.to_string())?;
+    let event_window = window.clone();
+    studio_core::chat_send_message(&store, chat_id, &text, move |event| match event {
+        ChatStreamEvent::UserStored { chat, history } => {
+            let state = ChatStateData { chat, history };
+            emit_event_chat(&event_window, EventData::new(EventKey::Chat, &state));
+        }
+        ChatStreamEvent::Delta(delta) => {
+            let _ = on_delta.send(StreamChunk::of(&delta));
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?;
     let state = ChatStateData::new(&store, chat_id);
     emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
     Ok(state)
+}
+
+/// Cancels the running stream of the chat's model, if any; the
+/// stream task finalizes its row and its command returns the state.
+#[tauri::command]
+pub fn chat_cancel_send(store: State<Store>, chat_id: i32) -> Result<(), String> {
+    studio_core::chat_cancel_send(&store, chat_id).map_err(|e| e.to_string())
 }
 
 /// Renames the chat with a model-generated name; the chat row lives
@@ -334,6 +355,13 @@ pub async fn chat_regenerate_name(
 // ─────────────────────────────────────────────
 // App
 // ─────────────────────────────────────────────
+
+/// The startup order: a killed process leaves `Progress` rows behind,
+/// no stream can be alive on a fresh start — they read as cancelled.
+#[tauri::command]
+pub fn init(store: State<Store>) -> Result<(), String> {
+    studio_core::init(&store).map_err(|e| e.to_string())
+}
 
 /// The current OS theme — the startup value for the shell.
 #[tauri::command]

@@ -9,6 +9,7 @@ mod data;
 
 use anyhow::Result;
 use vibe_cluster::Cluster;
+use vibe_cluster::ClusterError;
 use vibe_cluster::ConnectionParams;
 use vibe_cluster::HistoryMessage;
 use vibe_cluster::Prompt;
@@ -17,6 +18,10 @@ use vibe_cluster::Role;
 pub use data::ModelInfoData;
 pub use data::ProviderInfoData;
 pub use data::ProviderTypeData;
+pub use data::StreamAnswerData;
+pub use data::StreamEvent;
+
+pub use vibe_cluster::CancelToken;
 
 /// The answer cap of the chat naming task: a longer model answer is
 /// cut to this many chars and closed with `…`.
@@ -108,6 +113,75 @@ pub async fn call_prompt(
 
     let result = cluster.call(prompt).await?;
     Ok(result.text.unwrap_or_default())
+}
+
+/// Streams one prompt on one host+model with the given generation
+/// config and the conversation history. The deltas go to `on_event`
+/// as they arrive; the aggregated answer comes back — on cancel it
+/// carries the partial text. Errors keep the cluster's message.
+pub async fn call_prompt_stream(
+    provider: ProviderTypeData,
+    host: &str,
+    api_key: Option<&str>,
+    project: Option<&str>,
+    model: &str,
+    temperature: f64,
+    seed: i64,
+    num_ctx: i32,
+    num_predict: i32,
+    system: Option<String>,
+    history: Vec<(String, String)>,
+    user: &str,
+    cancel: &CancelToken,
+    on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
+) -> Result<StreamAnswerData> {
+    // config bounds are validated in core; the casts keep u64 happy
+    let cluster = Cluster::new(vec![ConnectionParams {
+        provider: provider.into(),
+        host: host.to_string(),
+        model: model.to_string(),
+        temperature: Some(temperature),
+        seed: Some(seed.max(0) as u64),
+        num_ctx: Some(num_ctx.max(0) as usize),
+        num_predict: Some(num_predict.max(0) as usize),
+        api_key: api_key.map(String::from),
+        project: project.map(String::from),
+        ..Default::default()
+    }])?;
+
+    let mut prompt = Prompt::new(user, system, None);
+    prompt.history = history
+        .into_iter()
+        .map(|(role, content)| HistoryMessage {
+            role: match role.as_str() {
+                "assistant" => Role::Assistant,
+                _ => Role::User,
+            },
+            content,
+        })
+        .collect();
+
+    let result = cluster
+        .call_stream(prompt, cancel, move |event| match event {
+            vibe_cluster::PromptEvent::Thinking(chunk) => on_event(&StreamEvent::Thinking(chunk.clone())),
+            vibe_cluster::PromptEvent::Text(chunk) => on_event(&StreamEvent::Text(chunk.clone())),
+        })
+        .await?;
+
+    match result.error {
+        Some(ClusterError::Cancelled) => Ok(StreamAnswerData {
+            text: result.text.unwrap_or_default(),
+            thinking: result.thinking,
+            cancelled: true,
+        }),
+        // a failed stream is an error, not an empty answer
+        Some(error) => Err(error.into()),
+        None => Ok(StreamAnswerData {
+            text: result.text.unwrap_or_default(),
+            thinking: result.thinking,
+            cancelled: false,
+        }),
+    }
 }
 
 /// Names a chat by its conversation: the messages go as the prompt
