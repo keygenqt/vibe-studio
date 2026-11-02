@@ -42,7 +42,11 @@ export function MessageView(props) {
             {t('main.t_cancelled')}
           </Typography>
           {message.text && (
-            <Typography variant={'body2'} color={'text.secondary'} sx={{ fontStyle: 'italic' }}>
+            <Typography
+              variant={'body2'}
+              color={'text.secondary'}
+              sx={{ fontStyle: 'italic', whiteSpace: 'pre-line' }}
+            >
               {message.text}
             </Typography>
           )}
@@ -101,7 +105,11 @@ export function MessageView(props) {
                 maxWidth: '100%',
               }}
             >
-              <Typography variant={'body2'} color={'text.secondary'}>
+              <Typography
+                variant={'body2'}
+                color={'text.secondary'}
+                sx={{ whiteSpace: 'pre-line' }}
+              >
                 {message.thinking}
               </Typography>
             </Box>
@@ -111,7 +119,11 @@ export function MessageView(props) {
       <Box
         sx={{ paddingX: 1.5, paddingY: 1, borderRadius: 2, ...BUBBLES[isUser ? 'user' : 'model'] }}
       >
-        <Typography variant={'body2'} color={message.text ? undefined : 'text.secondary'}>
+        <Typography
+          variant={'body2'}
+          color={message.text ? undefined : 'text.secondary'}
+          sx={{ whiteSpace: 'pre-line' }}
+        >
           {/* the growing answer shows the placeholder until the first text */}
           {message.text ||
             (message.status === 'progress' ? t('main.t_generating') : t('main.t_empty_answer'))}
