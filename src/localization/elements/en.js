@@ -42,6 +42,13 @@ export const enLocalization = {
       t_generating: 'Generating the answer...',
       t_cancelled: 'Generation cancelled',
       t_empty_answer: 'The model returned no answer',
+      t_message_delete_title: 'Delete the message?',
+      t_message_delete_text:
+        "This message and all history below it will be deleted. The provider's prompt cache will probably be reset.",
+      t_message_resend: 'Resend',
+      t_message_resend_title: 'Resend the message?',
+      t_message_resend_text:
+        "The responses below will be deleted and the request will be sent again. The provider's prompt cache will probably be reset.",
     },
     chat_empty: {
       t_no_chat: 'Select a chat',

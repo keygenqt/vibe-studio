@@ -9,7 +9,7 @@ import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Box, Stack } from '@mui/material'
 
-import { HandleView } from '../../components/views'
+import { DeleteDialog, HandleView } from '../../components/views'
 import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
 import { useCoreChat, useCoreGroupsChat, useCoreSettings, useCoreWorkspace } from '../../hooks'
@@ -38,6 +38,8 @@ export function ChatPage() {
     sending,
     streaming,
     stop,
+    remove,
+    resend,
     history,
     stream,
     stats,
@@ -45,6 +47,8 @@ export function ChatPage() {
   } = useCoreChat({ chatId: cid })
   const { settings } = useCoreSettings()
   const [quick, setQuick] = React.useState([])
+  // the pending confirmation: {action: 'delete' | 'resend', messageId}
+  const [confirm, setConfirm] = React.useState(null)
   const chat = chats?.find(item => item.id === cid) ?? null
   // the newest progress row owns the live stream
   const progressRow = (history ?? []).findLast(item => item.status === 'progress') ?? null
@@ -64,9 +68,18 @@ export function ChatPage() {
   const renderMessage = (message, key) => {
     const view = viewMessage(message)
     return message.model === null && message.status === 'complete' ? (
-      <UserMessageView key={key} message={view} />
+      <UserMessageView
+        key={key}
+        message={view}
+        onRefresh={() => setConfirm({ action: 'resend', messageId: message.id })}
+        onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
+      />
     ) : (
-      <ModelMessageView key={key} message={view} />
+      <ModelMessageView
+        key={key}
+        message={view}
+        onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
+      />
     )
   }
 
@@ -134,6 +147,26 @@ export function ChatPage() {
               />
             </Stack>
           </Box>
+          <DeleteDialog
+            open={confirm !== null}
+            title={t(
+              confirm?.action === 'resend'
+                ? 'chat.t_message_resend_title'
+                : 'chat.t_message_delete_title'
+            )}
+            text={t(
+              confirm?.action === 'resend'
+                ? 'chat.t_message_resend_text'
+                : 'chat.t_message_delete_text'
+            )}
+            confirmText={confirm?.action === 'resend' ? t('chat.t_message_resend') : undefined}
+            onCancel={() => setConfirm(null)}
+            onConfirm={() => {
+              if (confirm?.action === 'resend') resend(confirm.messageId)
+              if (confirm?.action === 'delete') remove(confirm.messageId)
+              setConfirm(null)
+            }}
+          />
         </>
       ) : (
         <ChatEmptyPage />

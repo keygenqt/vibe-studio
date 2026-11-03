@@ -52,8 +52,28 @@ export const chat = {
   chat_cancel_send: async function (chatId) {
     return invoke('chat_cancel_send', { chatId })
   },
+  // the fresh state lands through the block event — nothing to dispatch
+  chat_delete_message: async function (chatId, messageId) {
+    return invoke('chat_delete_message', { chatId, messageId })
+  },
+  chat_resend_message: async function (chatId, messageId) {
+    const seq = ++streamSeq
+    store.dispatch(chatStreamStart({ seq, chatId }))
+    const channel = new Channel()
+    channel.onmessage = chunk => {
+      if (seq === streamSeq) {
+        store.dispatch(chatStreamAppend({ seq, chatId, kind: chunk.kind, delta: chunk.delta }))
+      }
+    }
+    try {
+      await invoke('chat_resend_message', { chatId, messageId, onDelta: channel })
+    } finally {
+      if (seq === streamSeq) {
+        store.dispatch(chatStreamFinal(seq))
+      }
+    }
+  },
 }
-
 export function chat_events() {
   return [
     listen('event-chat', event => {

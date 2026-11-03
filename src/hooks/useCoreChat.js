@@ -75,6 +75,18 @@ export function useCoreChat({ chatId } = {}) {
     if (chatId) Methods.chat_cancel_send(chatId).catch(console.error)
   }
 
+  // the message and everything below it go away; a running stream
+  // yields on the Rust side
+  const remove = messageId => {
+    if (!chatId) return
+    Methods.chat_delete_message(chatId, messageId).catch(console.error)
+  }
+
+  const resend = messageId => {
+    if (!chatId || sending) return
+    Methods.chat_resend_message(chatId, messageId).catch(console.error)
+  }
+
   return {
     draft,
     chatAttachments,
@@ -85,6 +97,8 @@ export function useCoreChat({ chatId } = {}) {
     streaming: stream !== null,
     stream,
     stop,
+    remove,
+    resend,
     chat,
     history,
     stats,

@@ -42,6 +42,13 @@ export const ruLocalization = {
       t_generating: 'Генерируется ответ...',
       t_cancelled: 'Генерация отменена',
       t_empty_answer: 'Пустой ответ модели',
+      t_message_delete_title: 'Удалить сообщение?',
+      t_message_delete_text:
+        'Будет удалено это сообщение и вся история ниже. Вероятно, кеш провайдера будет сброшен.',
+      t_message_resend: 'Переотправить',
+      t_message_resend_title: 'Переотправить сообщение?',
+      t_message_resend_text:
+        'Ответы ниже будут удалены, и запрос будет отправлен заново. Вероятно, кеш провайдера будет сброшен.',
     },
     chat_empty: {
       t_no_chat: 'Выберите чат',
@@ -171,6 +178,8 @@ export const ruLocalization = {
     'Predict limit must not be empty.': 'Максимум токенов не должен быть пустым.',
     'Unknown group.': 'Неизвестная группа.',
     'Unknown chat.': 'Неизвестный чат.',
+    'Unknown message.': 'Неизвестное сообщение.',
+    'Only a user message can be resent.': 'Переотправить можно только сообщение пользователя.',
     'Message must not be blank.': 'Сообщение не должно быть пустым.',
     'Task model is not set.': 'Модель задач не выбрана.',
     'Chat has no messages.': 'В чате нет сообщений.',

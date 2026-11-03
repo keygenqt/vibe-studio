@@ -72,8 +72,7 @@ export function ModelMessageView(props) {
                   message.thinking ? () => setThinkingOpen(!thinkingOpen) : undefined
                 }
                 thinkingActive={thinkingOpen}
-                onClickRefresh={() => console.log('Regenerate model message')}
-                onClickDelete={() => console.log('Delete model message')}
+                onClickDelete={props.onDelete}
               />
             )}
           </Stack>
@@ -141,4 +140,6 @@ ModelMessageView.propTypes = {
     thinking: PropTypes.string,
     translation: PropTypes.string,
   }).isRequired,
+  // opens the delete confirmation: the message and everything below
+  onDelete: PropTypes.func.isRequired,
 }

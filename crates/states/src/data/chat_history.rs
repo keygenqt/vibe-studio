@@ -245,4 +245,22 @@ impl Store {
     pub(crate) fn delete_chat_histories(&self, chat_id: i32) -> Result<usize> {
         self.delete_where(chat_history::table, chat_history::chat_id.eq(chat_id))
     }
+
+    /// Deletes the message with everything below it — the later
+    /// messages lose their context. Returns affected rows.
+    pub(crate) fn delete_chat_histories_from(&self, chat_id: i32, id: i32) -> Result<usize> {
+        self.delete_where(
+            chat_history::table,
+            chat_history::chat_id.eq(chat_id).and(chat_history::id.ge(id)),
+        )
+    }
+
+    /// Deletes everything below the message, the message stays — the
+    /// truncation behind the resend. Returns affected rows.
+    pub(crate) fn delete_chat_histories_after(&self, chat_id: i32, id: i32) -> Result<usize> {
+        self.delete_where(
+            chat_history::table,
+            chat_history::chat_id.eq(chat_id).and(chat_history::id.gt(id)),
+        )
+    }
 }

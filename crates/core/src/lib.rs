@@ -403,6 +403,74 @@ pub async fn chat_send_message(
     if text.trim().is_empty() {
         anyhow::bail!("Message must not be blank.");
     }
+    studio_states::get_chat(store, chat_id)?;
+    let user = studio_states::add_chat_history(
+        store,
+        chat_id,
+        None,
+        None,
+        ChatStatus::Complete,
+        text,
+        None,
+        studio_cluster::count_tokens(text) as i32,
+    )?;
+    chat_send_stream(store, chat_id, text, user.id.expect("stored user id"), on_event).await
+}
+
+/// Resends the user's message: everything below it is deleted and the
+/// message goes through the send path again. The UI is not trusted:
+/// the chat must exist, the message must belong to it and be a user
+/// message — a model answer has no request of its own to repeat.
+pub async fn chat_resend_message(
+    store: &Store,
+    chat_id: i32,
+    message_id: i32,
+    on_event: impl Fn(ChatStreamEvent) + Send + Sync + 'static,
+) -> Result<()> {
+    studio_states::get_chat(store, chat_id)?;
+    let histories = studio_states::get_chat_histories(store, chat_id)?;
+    let message = histories
+        .iter()
+        .find(|message| message.id == Some(message_id))
+        .ok_or_else(|| anyhow::anyhow!("Unknown message."))?;
+    if message.model.is_some() {
+        anyhow::bail!("Only a user message can be resent.");
+    }
+    studio_states::delete_chat_histories_after(store, chat_id, message_id)?;
+    chat_send_stream(store, chat_id, &message.text, message_id, on_event).await
+}
+
+/// Deletes the message with everything below it — the later messages
+/// lose their context, and the provider's prompt cache falls with the
+/// prefix. The UI is not trusted: the chat must exist, the message
+/// must belong to it. The running stream of the chat's model gives
+/// way: its answer row goes with the tail.
+pub fn chat_delete_message(store: &Store, chat_id: i32, message_id: i32) -> Result<()> {
+    let chat = studio_states::get_chat(store, chat_id)?;
+    let histories = studio_states::get_chat_histories(store, chat_id)?;
+    if !histories.iter().any(|message| message.id == Some(message_id)) {
+        anyhow::bail!("Unknown message.");
+    }
+    let group = studio_states::get_group_chat(store, chat.group_chat_id)?;
+    let model = studio_states::get_provider_model(store, group.model_id)?;
+    let provider = studio_states::get_provider(store, model.provider_id)?;
+    utils::cancel_stream_token(&(provider.provider, model.name));
+    studio_states::delete_chat_histories_from(store, chat_id, message_id)?;
+    Ok(())
+}
+
+/// The send path shared by send and resend: resolves the chat's
+/// model, yields a running stream of the same model, streams the
+/// answer — the answer row is born with the stream and grows in the
+/// store as the deltas arrive. The user message is already stored:
+/// `skip_id` keeps it out of the context — it goes as the prompt.
+async fn chat_send_stream(
+    store: &Store,
+    chat_id: i32,
+    text: &str,
+    skip_id: i32,
+    on_event: impl Fn(ChatStreamEvent) + Send + Sync + 'static,
+) -> Result<()> {
     let chat = studio_states::get_chat(store, chat_id)?;
     let group = studio_states::get_group_chat(store, chat.group_chat_id)?;
     let model = studio_states::get_provider_model(store, group.model_id)?;
@@ -419,24 +487,15 @@ pub async fn chat_send_message(
         utils::cancel_stream_token(&key);
     }
 
-    // the model context: everything said so far, in order; only
+    // the model context: everything said so far, in order, minus the
+    // stored user message — it goes as the prompt itself; only
     // complete messages count — failed and cut answers stay out
     let history = studio_states::get_chat_histories(store, chat_id)?
         .into_iter()
         .filter(|message| message.status == ChatStatus::Complete)
+        .filter(|message| message.id != Some(skip_id))
         .map(|message| (utils::history_role(&message), message.text))
         .collect();
-
-    studio_states::add_chat_history(
-        store,
-        chat_id,
-        None,
-        None,
-        ChatStatus::Complete,
-        text,
-        None,
-        studio_cluster::count_tokens(text) as i32,
-    )?;
 
     let system = [model.system_prompt.as_deref(), group.system_prompt.as_deref()]
         .into_iter()

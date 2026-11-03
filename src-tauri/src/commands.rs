@@ -343,6 +343,54 @@ pub fn chat_cancel_send(store: State<Store>, chat_id: i32) -> Result<(), String>
     studio_core::chat_cancel_send(&store, chat_id).map_err(|e| e.to_string())
 }
 
+/// Deletes the message with everything below it; emits and returns
+/// the fresh state of the chat block.
+#[tauri::command]
+pub fn chat_delete_message(
+    window: WebviewWindow,
+    store: State<Store>,
+    chat_id: i32,
+    message_id: i32,
+) -> Result<ChatStateData, String> {
+    studio_core::chat_delete_message(&store, chat_id, message_id).map_err(|e| e.to_string())?;
+    let state = ChatStateData::new(&store, chat_id);
+    emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
+    Ok(state)
+}
+
+/// Resends the user's message: everything below it is deleted and
+/// the message goes through the send path again; the stream deltas
+/// go to `on_delta`, every stored state ends with the event.
+/// Returns the fresh state of the chat block.
+#[tauri::command]
+pub async fn chat_resend_message(
+    window: WebviewWindow,
+    store: State<'_, Store>,
+    chat_id: i32,
+    message_id: i32,
+    on_delta: Channel<StreamChunk>,
+) -> Result<ChatStateData, String> {
+    let event_window = window.clone();
+    studio_core::chat_resend_message(&store, chat_id, message_id, move |event| match event {
+        ChatStreamEvent::UserStored { chat, history } => {
+            let state = ChatStateData {
+                chat,
+                stats: ChatStatsData::of(&history),
+                history,
+            };
+            emit_event_chat(&event_window, EventData::new(EventKey::Chat, &state));
+        }
+        ChatStreamEvent::Delta(delta) => {
+            let _ = on_delta.send(StreamChunk::of(&delta));
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    let state = ChatStateData::new(&store, chat_id);
+    emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
+    Ok(state)
+}
+
 /// Renames the chat with a model-generated name; the chat row lives
 /// in the groups chat block — emits and returns its fresh state.
 #[tauri::command]

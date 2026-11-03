@@ -91,6 +91,8 @@ pub fn run() {
             commands::chat_get_history,
             commands::chat_send_message,
             commands::chat_cancel_send,
+            commands::chat_delete_message,
+            commands::chat_resend_message,
             commands::chat_regenerate_name,
             commands::get_system_theme,
             commands::get_app_info,

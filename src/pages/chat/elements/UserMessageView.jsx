@@ -59,8 +59,8 @@ export function UserMessageView(props) {
             </Typography>
             <MessageActions
               onClickCopy={onClickCopy}
-              onClickRefresh={() => console.log('Regenerate from user message')}
-              onClickDelete={() => console.log('Delete user message')}
+              onClickRefresh={props.onRefresh}
+              onClickDelete={props.onDelete}
             />
           </Stack>
           <Typography variant={'body2'} color={'text.primary'} sx={{ whiteSpace: 'pre-line' }}>
@@ -79,4 +79,8 @@ UserMessageView.propTypes = {
     time: PropTypes.string.isRequired,
     text: PropTypes.string.isRequired,
   }).isRequired,
+  // opens the resend confirmation: everything below goes away
+  onRefresh: PropTypes.func.isRequired,
+  // opens the delete confirmation: the message and everything below
+  onDelete: PropTypes.func.isRequired,
 }

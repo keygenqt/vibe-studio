@@ -42,6 +42,13 @@ export const cnLocalization = {
       t_generating: '正在生成回答...',
       t_cancelled: '生成已取消',
       t_empty_answer: '模型未返回回答',
+      t_message_delete_title: '删除消息？',
+      t_message_delete_text:
+        '将删除此消息及其下方的全部历史记录。提供商的提示词缓存很可能会被重置。',
+      t_message_resend: '重新发送',
+      t_message_resend_title: '重新发送消息？',
+      t_message_resend_text:
+        '下方的回答将被删除，请求将重新发送。提供商的提示词缓存很可能会被重置。',
     },
     chat_empty: {
       t_no_chat: '选择聊天',
@@ -170,6 +177,8 @@ export const cnLocalization = {
     'Predict limit must not be empty.': '最大生成数不能为空。',
     'Unknown group.': '未知分组。',
     'Unknown chat.': '未知聊天。',
+    'Unknown message.': '未知消息。',
+    'Only a user message can be resent.': '只能重新发送用户消息。',
     'Message must not be blank.': '消息不能为空。',
     'Task model is not set.': '未选择任务模型。',
     'Chat has no messages.': '聊天中还没有消息。',

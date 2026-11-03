@@ -26,7 +26,7 @@ export function DeleteDialog(props) {
       <DialogActions>
         <Button onClick={props.onCancel}>{t('common.t_cancel')}</Button>
         <Button color={'error'} variant={'contained'} onClick={props.onConfirm}>
-          {t('common.t_delete')}
+          {props.confirmText ?? t('common.t_delete')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -37,6 +37,7 @@ DeleteDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   title: PropTypes.string.isRequired,
   text: PropTypes.string.isRequired,
+  confirmText: PropTypes.string,
   onCancel: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
 }

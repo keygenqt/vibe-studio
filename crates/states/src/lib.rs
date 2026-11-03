@@ -178,6 +178,16 @@ pub fn delete_chat_histories(store: &Store, chat_id: i32) -> Result<usize> {
     store.delete_chat_histories(chat_id)
 }
 
+/// Deletes the message with everything below it, returns affected rows.
+pub fn delete_chat_histories_from(store: &Store, chat_id: i32, id: i32) -> Result<usize> {
+    store.delete_chat_histories_from(chat_id, id)
+}
+
+/// Deletes everything below the message, the message stays; returns affected rows.
+pub fn delete_chat_histories_after(store: &Store, chat_id: i32, id: i32) -> Result<usize> {
+    store.delete_chat_histories_after(chat_id, id)
+}
+
 /// All group chat history rows.
 pub fn get_group_chat_histories(store: &Store) -> Result<Vec<GroupChatHistoryData>> {
     store.get_group_chat_histories()
