@@ -7,11 +7,10 @@
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
-import { Box, Stack } from '@mui/material'
+import { Stack } from '@mui/material'
 
-import { SaveButton } from '../../components/buttons'
 import { PageHeader } from '../../components/views'
-import { ErrorAlert, SuccessAlert } from '../../components/alerts'
+import { ErrorSnackbar } from '../../components/snackbars'
 import { useCoreProviders, useCoreSettings } from '../../hooks'
 import { AppUtils } from '../../utils'
 import { Methods } from '../../modules'
@@ -22,28 +21,49 @@ import { TranslationSection } from './elements/TranslationSection'
 import { ChatSection } from './elements/ChatSection'
 import { NotificationsSection } from './elements/NotificationsSection'
 
-// an ancestor that actually scrolls: overflow set and content taller than the box
-function isScrollable(node) {
-  const style = window.getComputedStyle(node)
-  return /(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight
+// autosave: persists the form after a short debounce, skips the initial load
+function Autosave(props) {
+  const { t } = useTranslation()
+  const [error, setError] = React.useState(null)
+  const savedRef = React.useRef(null)
+
+  React.useEffect(() => {
+    const payload = JSON.stringify(props.values)
+    if (savedRef.current === null) {
+      savedRef.current = payload
+      return
+    }
+    if (payload === savedRef.current) return
+    const timer = setTimeout(() => {
+      savedRef.current = payload
+      Methods.save_settings({
+        appearance_theme: props.values.theme,
+        appearance_locale: props.values.language,
+        appearance_accent: props.values.accent,
+        appearance_chat_font_size: props.values.fontSize,
+        tasks_model_light: props.values.taskModelLight,
+        tasks_model_heavy: props.values.taskModelHeavy,
+        chat_streaming: props.values.streaming,
+        chat_keep_messages: props.values.keepMessages,
+        translation_model: props.values.translateModel,
+        translation_mine: props.values.translateMine,
+        translation_answers: props.values.translateAnswers,
+        notifications_ready: props.values.notifyReady,
+        notifications_updates: props.values.notifyUpdates,
+      }).catch(err => setError(AppUtils.backendMessage(t, err)))
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [props.values, t])
+
+  return <ErrorSnackbar text={error} onClose={() => setError(null)} />
 }
 
 export function GeneralPage() {
   const { t } = useTranslation()
   const { ready, settings } = useCoreSettings()
   const { providers, models } = useCoreProviders()
-  const [savedOpen, setSavedOpen] = React.useState(false)
-  const [submitError, setSubmitError] = React.useState(null)
-  const rootRef = React.useRef(null)
 
   if (!ready) return null
-
-  // the page scrolls in the shell's scroll area, not the window
-  const scrollTop = () => {
-    let node = rootRef.current?.parentElement
-    while (node && !isScrollable(node)) node = node.parentElement
-    node?.scrollTo({ top: 0, behavior: 'smooth' })
-  }
 
   return (
     <Formik
@@ -63,71 +83,31 @@ export function GeneralPage() {
         notifyReady: settings.notifications_ready,
         notifyUpdates: settings.notifications_updates,
       }}
-      onSubmit={async (values, { setSubmitting }) => {
-        try {
-          await Methods.save_settings({
-            appearance_theme: values.theme,
-            appearance_locale: values.language,
-            appearance_accent: values.accent,
-            appearance_chat_font_size: values.fontSize,
-            tasks_model_light: values.taskModelLight,
-            tasks_model_heavy: values.taskModelHeavy,
-            chat_streaming: values.streaming,
-            chat_keep_messages: values.keepMessages,
-            translation_model: values.translateModel,
-            translation_mine: values.translateMine,
-            translation_answers: values.translateAnswers,
-            notifications_ready: values.notifyReady,
-            notifications_updates: values.notifyUpdates,
-          })
-          setSavedOpen(true)
-        } catch (error) {
-          setSubmitError(AppUtils.backendMessage(t, error))
-        } finally {
-          setSubmitting(false)
-        }
-        scrollTop()
-      }}
     >
-      {({ values, isSubmitting, setFieldValue, handleSubmit }) => (
-        <Stack ref={rootRef} spacing={2}>
+      {({ values, setFieldValue }) => (
+        <Stack spacing={2}>
           <PageHeader
             title={t('general.t_general')}
             subtitle={t('general.t_general_description')}
           />
-          <Box component={'form'} noValidate onSubmit={handleSubmit}>
-            <SuccessAlert
-              open={savedOpen}
-              text={t('general.t_saved')}
-              onClose={() => setSavedOpen(false)}
+          <Autosave values={values} />
+          <Stack spacing={2}>
+            <AppearanceSection values={values} onChange={setFieldValue} />
+            <TasksSection
+              values={values}
+              onChange={setFieldValue}
+              providers={providers}
+              models={models}
             />
-            <ErrorAlert
-              open={Boolean(submitError)}
-              text={submitError ?? ''}
-              onClose={() => setSubmitError(null)}
+            <ChatSection values={values} onChange={setFieldValue} />
+            <TranslationSection
+              values={values}
+              onChange={setFieldValue}
+              providers={providers}
+              models={models}
             />
-            <Stack spacing={2}>
-              <AppearanceSection values={values} onChange={setFieldValue} />
-              <TasksSection
-                values={values}
-                onChange={setFieldValue}
-                providers={providers}
-                models={models}
-              />
-              <ChatSection values={values} onChange={setFieldValue} />
-              <TranslationSection
-                values={values}
-                onChange={setFieldValue}
-                providers={providers}
-                models={models}
-              />
-              <NotificationsSection values={values} onChange={setFieldValue} />
-              <Stack direction={'row'} spacing={2}>
-                <Box sx={{ flexGrow: 1 }} />
-                <SaveButton isSubmitting={isSubmitting} />
-              </Stack>
-            </Stack>
-          </Box>
+            <NotificationsSection values={values} onChange={setFieldValue} />
+          </Stack>
         </Stack>
       )}
     </Formik>
