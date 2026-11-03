@@ -184,6 +184,7 @@ export const cnLocalization = {
     'Translation model is not set.': '未选择翻译模型。',
     'Translation language is not set.': '未选择翻译语言。',
     'Message must not be blank.': '消息不能为空。',
+    'Translation must not be blank.': '翻译不能为空。',
     'Task model is not set.': '未选择任务模型。',
     'Chat has no messages.': '聊天中还没有消息。',
     'Clipboard is not available.': '剪贴板不可用。',

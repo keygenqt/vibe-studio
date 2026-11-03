@@ -306,17 +306,20 @@ pub fn chat_get_history(store: State<Store>, chat_id: i32) -> Result<ChatStateDa
 
 /// Sends the user's message to the chat's model and records the
 /// exchange; the stream deltas go to `on_delta`, every stored state
-/// ends with the event. Returns the fresh state of the chat block.
+/// ends with the event. `translate` swaps the text for its
+/// translation before anything is stored. Returns the fresh state of
+/// the chat block.
 #[tauri::command]
 pub async fn chat_send_message(
     window: WebviewWindow,
     store: State<'_, Store>,
     chat_id: i32,
     text: String,
+    translate: bool,
     on_delta: Channel<StreamChunk>,
 ) -> Result<ChatStateData, String> {
     let event_window = window.clone();
-    studio_core::chat_send_message(&store, chat_id, &text, move |event| match event {
+    studio_core::chat_send_message(&store, chat_id, &text, translate, move |event| match event {
         ChatStreamEvent::UserStored { chat, history } => {
             let state = ChatStateData {
                 chat,

@@ -38,7 +38,9 @@ export function MessageActions(props) {
       )}
       {props.onClickTranslate && (
         <IconButton size={'small'} onClick={props.onClickTranslate}>
-          <Translate sx={{ fontSize: 16, color: 'text.secondary' }} />
+          <Translate
+            sx={{ fontSize: 16, color: props.translateActive ? 'primary.main' : 'text.secondary' }}
+          />
         </IconButton>
       )}
       {props.onClickThinking && (
@@ -68,6 +70,7 @@ MessageActions.propTypes = {
   onClickTranslate: PropTypes.func,
   onClickThinking: PropTypes.func,
   // true while the thinking block is displayed — accent paint
+  translateActive: PropTypes.bool,
   thinkingActive: PropTypes.bool,
   onClickRefresh: PropTypes.func,
   onClickDelete: PropTypes.func,

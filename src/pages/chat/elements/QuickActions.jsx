@@ -54,16 +54,18 @@ export function QuickActions(props) {
             />
           </ToggleButton>
         </Tooltip>
-        <Tooltip title={t('chat.t_translate')}>
-          <ToggleButton value={'translate'} sx={{ px: '8px' }}>
-            <Translate
-              sx={{
-                fontSize: 18,
-                color: props.quick.includes('translate') ? 'primary.main' : 'text.primary',
-              }}
-            />
-          </ToggleButton>
-        </Tooltip>
+        {props.translateEnabled && (
+          <Tooltip title={t('chat.t_translate')}>
+            <ToggleButton value={'translate'} sx={{ px: '8px' }}>
+              <Translate
+                sx={{
+                  fontSize: 18,
+                  color: props.quick.includes('translate') ? 'primary.main' : 'text.primary',
+                }}
+              />
+            </ToggleButton>
+          </Tooltip>
+        )}
         <Tooltip title={t('chat.t_menu')}>
           <ToggleButton value={'menu'} sx={{ px: '8px' }}>
             <MoreVert sx={{ fontSize: 18, color: 'text.primary' }} />
@@ -86,6 +88,7 @@ export function QuickActions(props) {
 QuickActions.propTypes = {
   quick: PropTypes.array.isRequired,
   onQuick: PropTypes.func.isRequired,
+  translateEnabled: PropTypes.bool.isRequired,
   attachCount: PropTypes.number,
   stats: PropTypes.string,
   loading: PropTypes.bool,

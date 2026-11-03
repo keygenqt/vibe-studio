@@ -36,7 +36,7 @@ export const chat = {
     store.dispatch(chatStatsSet(state.stats))
     return state
   },
-  chat_send_message: async function (chatId, text) {
+  chat_send_message: async function (chatId, text, translate) {
     const seq = ++streamSeq
     store.dispatch(chatStreamStart({ seq, chatId }))
     const channel = new Channel()
@@ -48,7 +48,7 @@ export const chat = {
     try {
       // the fresh state lands through the block event; the answer
       // stays undispatched — one channel per the contract
-      await invoke('chat_send_message', { chatId, text, onDelta: channel })
+      await invoke('chat_send_message', { chatId, text, translate, onDelta: channel })
     } finally {
       // the stream copy dies with the command: success or failure alike
       if (seq === streamSeq) {

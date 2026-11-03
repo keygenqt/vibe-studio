@@ -185,6 +185,7 @@ export const ruLocalization = {
     'Translation model is not set.': 'Модель перевода не выбрана.',
     'Translation language is not set.': 'Язык перевода не выбран.',
     'Message must not be blank.': 'Сообщение не должно быть пустым.',
+    'Translation must not be blank.': 'Перевод не должен быть пустым.',
     'Task model is not set.': 'Модель задач не выбрана.',
     'Chat has no messages.': 'В чате нет сообщений.',
     'Clipboard is not available.': 'Буфер обмена недоступен.',

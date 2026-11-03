@@ -57,6 +57,8 @@ export function ChatPage() {
   const chat = chats?.find(item => item.id === cid) ?? null
   // the message text size: the store resolves the untouched value
   const fontSize = settings.appearance_chat_font_size
+  // the translate actions live only with the translation model set
+  const canTranslate = settings.translation_model !== null
   // the newest progress row owns the live stream
   const progressRow = (history ?? []).findLast(item => item.status === 'progress') ?? null
 
@@ -93,8 +95,8 @@ export function ChatPage() {
             : message.translate
         }
         translating={translateStream?.messageId === message.id}
-        onTranslate={translate}
-        onTranslateClose={translateClear}
+        onTranslate={canTranslate ? translate : undefined}
+        onTranslateClose={canTranslate ? translateClear : undefined}
         onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
       />
     )
@@ -149,6 +151,7 @@ export function ChatPage() {
               <QuickActions
                 quick={quick}
                 onQuick={setQuick}
+                translateEnabled={canTranslate}
                 attachCount={chatAttachments.length}
                 stats={AppUtils.formatStats(stats)}
                 loading={streaming}
@@ -157,7 +160,7 @@ export function ChatPage() {
                 draft={draft}
                 setDraft={setDraft}
                 onAttachments={addAttachments}
-                send={send}
+                send={() => send(quick.includes('translate'))}
                 sending={sending}
                 streaming={streaming}
                 stop={stop}

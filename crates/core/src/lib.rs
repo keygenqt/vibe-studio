@@ -11,6 +11,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use studio_cluster::CancelToken;
 
+use data::TranslateTargetData;
+
 pub use studio_cluster::StreamEvent;
 
 mod clipboard;
@@ -385,9 +387,38 @@ pub fn chat_get_history(store: &Store, chat_id: i32) -> Result<Vec<ChatHistoryDa
     Ok(studio_states::get_chat_histories(store, chat_id)?)
 }
 
+/// Resolves the translation task target from the settings: the
+/// translation model with its provider. The language comes from the
+/// settings field of the caller — the input goes to
+/// `translation_mine`, the answers to `translation_answers`.
+fn translate_target(store: &Store, locale: Option<&str>) -> Result<TranslateTargetData> {
+    let settings = studio_states::get_settings(store).unwrap_or_default();
+    let Some(model_id) = settings.translation_model else {
+        anyhow::bail!("Translation model is not set.");
+    };
+    let Some(locale) = locale else {
+        anyhow::bail!("Translation language is not set.");
+    };
+    let model = studio_states::get_provider_model(store, model_id)?;
+    let provider = studio_states::get_provider(store, model.provider_id)?;
+    let kind =
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?;
+    Ok(TranslateTargetData {
+        kind,
+        host: provider.host,
+        api_key: provider.api_key,
+        project: provider.project,
+        model: model.name,
+        language: utils::locale_language(locale).to_string(),
+    })
+}
+
 /// Sends the user's message to the chat's model and records both
 /// sides of the exchange. The UI is not trusted: the chat must exist,
-/// a blank message is an error. The model prompt comes first, the
+/// a blank message is an error. `translate` swaps the text for its
+/// translation to the `translation_mine` language before anything is
+/// stored — the row and the prompt carry the translation. The model
+/// prompt comes first, the
 /// group prompt completes it; empty prompts drop out. The answer is
 /// born as a `Progress` row and grows in the store as the deltas
 /// arrive; a failed request is finalized as an `Error` message, a
@@ -396,12 +427,36 @@ pub async fn chat_send_message(
     store: &Store,
     chat_id: i32,
     text: &str,
+    translate: bool,
     on_event: impl Fn(ChatStreamEvent) + Send + Sync + 'static,
 ) -> Result<()> {
     if text.trim().is_empty() {
         anyhow::bail!("Message must not be blank.");
     }
     studio_states::get_chat(store, chat_id)?;
+    // the translation replaces the text before anything is stored:
+    // a failed or empty translation leaves the history untouched
+    let translated = if translate {
+        let settings = studio_states::get_settings(store).unwrap_or_default();
+        let target = translate_target(store, settings.translation_mine.as_deref())?;
+        let text = studio_cluster::call_translate(
+            target.kind,
+            &target.host,
+            target.api_key.as_deref(),
+            target.project.as_deref(),
+            &target.model,
+            &target.language,
+            text,
+        )
+        .await?;
+        if text.is_empty() {
+            anyhow::bail!("Translation must not be blank.");
+        }
+        Some(text)
+    } else {
+        None
+    };
+    let text = translated.as_deref().unwrap_or(text);
     let user = studio_states::add_chat_history(
         store,
         chat_id,
@@ -666,17 +721,7 @@ pub async fn chat_translate_message(
         anyhow::bail!("Only a model answer can be translated.");
     }
     let settings = studio_states::get_settings(store).unwrap_or_default();
-    let Some(model_id) = settings.translation_model else {
-        anyhow::bail!("Translation model is not set.");
-    };
-    let Some(locale) = settings.translation_answers.as_deref() else {
-        anyhow::bail!("Translation language is not set.");
-    };
-    let model = studio_states::get_provider_model(store, model_id)?;
-    let provider = studio_states::get_provider(store, model.provider_id)?;
-    let kind =
-        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?;
-    let language = utils::locale_language(locale);
+    let target = translate_target(store, settings.translation_answers.as_deref())?;
 
     // a fresh translation of the message gives way: the dying run
     // writes nothing — the column belongs to the newest translation
@@ -687,29 +732,14 @@ pub async fn chat_translate_message(
         .expect("translate tokens poisoned")
         .insert(message_id, cancel.clone());
 
-    // the task config is the function's own — the task never uses
-    // the model's generation settings
-    let prompt = format!(
-        r#"
-Translate the text to {language}. Answer with the translation only: keep the original formatting, no explanations.
-"#
-    )
-    .trim()
-    .to_string();
-
     if !settings.chat_streaming.unwrap_or(true) {
-        let text = studio_cluster::call_prompt(
-            kind,
-            &provider.host,
-            provider.api_key.as_deref(),
-            provider.project.as_deref(),
-            &model.name,
-            0.7,
-            42,
-            4096,
-            2048,
-            Some(prompt),
-            Vec::new(),
+        let text = studio_cluster::call_translate(
+            target.kind,
+            &target.host,
+            target.api_key.as_deref(),
+            target.project.as_deref(),
+            &target.model,
+            &target.language,
             &message.text,
         )
         .await?;
@@ -719,27 +749,19 @@ Translate the text to {language}. Answer with the translation only: keep the ori
     // the deltas ride a channel: the callback runs inside the cluster
     // call and cannot touch the store — the pump below persists them
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<StreamEvent>();
-    let mut call = std::pin::pin!(studio_cluster::call_prompt_stream(
-        kind,
-        &provider.host,
-        provider.api_key.as_deref(),
-        provider.project.as_deref(),
-        &model.name,
-        0.7,
-        42,
-        4096,
-        2048,
-        Some(prompt),
-        Vec::new(),
+    let mut call = std::pin::pin!(studio_cluster::call_translate_stream(
+        target.kind,
+        &target.host,
+        target.api_key.as_deref(),
+        target.project.as_deref(),
+        &target.model,
+        &target.language,
         &message.text,
         cancel.as_ref(),
         {
             let tx = tx.clone();
-            move |event| {
-                // thinking stays out: the translation is text only
-                if let StreamEvent::Text(_) = event {
-                    let _ = tx.send(event.clone());
-                }
+            move |delta| {
+                let _ = tx.send(StreamEvent::Text(delta.to_string()));
             }
         },
     ));
@@ -778,7 +800,7 @@ Translate the text to {language}. Answer with the translation only: keep the ori
     }
 
     match outcome {
-        Ok(result) => finish_translation(store, message_id, &cancel, Some(&result.text)),
+        Ok(result) => finish_translation(store, message_id, &cancel, Some(&result)),
         // a failed run clears the partial text, the error surfaces
         Err(error) => {
             finish_translation(store, message_id, &cancel, None)?;

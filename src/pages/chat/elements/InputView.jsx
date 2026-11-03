@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
- * INFO: The chat composer: the input, the EN sign and the send button.
+ * INFO: The chat composer: the input and the send button.
  */
 import * as React from 'react'
 import PropTypes from 'prop-types'

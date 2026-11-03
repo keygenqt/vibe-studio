@@ -86,10 +86,11 @@ export function ModelMessageView(props) {
             {!isCancelled && !isError && (
               <MessageActions
                 onClickCopy={message.text ? onClickCopy : undefined}
-                onClickTranslate={onClickTranslate}
+                onClickTranslate={props.onTranslate ? onClickTranslate : undefined}
                 onClickThinking={
                   message.thinking ? () => setThinkingOpen(!thinkingOpen) : undefined
                 }
+                translateActive={translationOpen}
                 thinkingActive={thinkingOpen}
                 onClickDelete={props.onDelete}
               />
@@ -171,9 +172,10 @@ ModelMessageView.propTypes = {
   translation: PropTypes.string,
   // a translation request is running for this message
   translating: PropTypes.bool,
-  // open translates anew, close clears
-  onTranslate: PropTypes.func.isRequired,
-  onTranslateClose: PropTypes.func.isRequired,
+  // open translates anew, close clears; undefined hides the action —
+  // the translation model is not set
+  onTranslate: PropTypes.func,
+  onTranslateClose: PropTypes.func,
   // opens the delete confirmation: the message and everything below
   onDelete: PropTypes.func.isRequired,
 }

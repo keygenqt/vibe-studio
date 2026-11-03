@@ -53,7 +53,7 @@ export function useCoreChat({ chatId } = {}) {
 
   const [sending, setSending] = React.useState(false)
 
-  const send = () => {
+  const send = (translate = false) => {
     if (!chatId || !draft.trim() || sending) return
     // the draft clears at once — the user message paints with the
     // `UserStored` event while the answer streams; a failed request
@@ -63,7 +63,7 @@ export function useCoreChat({ chatId } = {}) {
     dispatch(chatDraftSet(''))
     dispatch(chatAttachmentsClear())
     setSending(true)
-    Methods.chat_send_message(chatId, text)
+    Methods.chat_send_message(chatId, text, translate)
       // an early failure stored nothing — the draft and the
       // attachments come back
       .catch(() => {
