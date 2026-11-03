@@ -17,7 +17,8 @@ import { MessageActions } from './MessageActions'
 export function ModelMessageView(props) {
   const { t } = useTranslation()
   const [thinkingOpen, setThinkingOpen] = React.useState(false)
-  const [translationOpen, setTranslationOpen] = React.useState(false)
+  // a stored translation shows itself: the column holds the shown one
+  const [translationOpen, setTranslationOpen] = React.useState(Boolean(props.translation))
   const message = props.message
   const isCancelled = message.status === 'cancelled'
   const isError = message.status === 'error'
