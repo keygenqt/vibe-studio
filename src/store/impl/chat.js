@@ -17,6 +17,8 @@ const chatSlice = createSlice({
     stats: null,
     // the growing answer of the active stream: {seq, chatId, thinking, text}
     stream: null,
+    // the growing translation of one message: {seq, messageId, text}
+    translateStream: null,
   },
   reducers: {
     chatDraftSet: (state, action) => {
@@ -61,6 +63,28 @@ const chatSlice = createSlice({
         state.stream = null
       }
     },
+    // the translation generations: `seq` marks the newest request —
+    // stale deltas and completions of a replaced request change nothing
+    chatTranslateStart: (state, action) => {
+      state.translateStream = {
+        seq: action.payload.seq,
+        messageId: action.payload.messageId,
+        text: '',
+      }
+    },
+    chatTranslateAppend: (state, action) => {
+      const { seq, messageId, delta } = action.payload
+      if (state.translateStream && state.translateStream.seq > seq) return
+      if (state.translateStream === null || state.translateStream.seq !== seq) {
+        state.translateStream = { seq, messageId, text: '' }
+      }
+      state.translateStream.text += delta
+    },
+    chatTranslateFinal: (state, action) => {
+      if (state.translateStream && state.translateStream.seq <= action.payload) {
+        state.translateStream = null
+      }
+    },
   },
 })
 
@@ -74,5 +98,8 @@ export const {
   chatStreamStart,
   chatStreamAppend,
   chatStreamFinal,
+  chatTranslateStart,
+  chatTranslateAppend,
+  chatTranslateFinal,
 } = chatSlice.actions
 export default chatSlice.reducer

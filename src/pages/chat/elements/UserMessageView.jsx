@@ -63,7 +63,11 @@ export function UserMessageView(props) {
               onClickDelete={props.onDelete}
             />
           </Stack>
-          <Typography variant={'body2'} color={'text.primary'} sx={{ whiteSpace: 'pre-line' }}>
+          <Typography
+            variant={'body2'}
+            color={'text.primary'}
+            sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+          >
             {props.message.text}
           </Typography>
         </Box>
@@ -79,6 +83,8 @@ UserMessageView.propTypes = {
     time: PropTypes.string.isRequired,
     text: PropTypes.string.isRequired,
   }).isRequired,
+  // the message text size in px
+  fontSize: PropTypes.number.isRequired,
   // opens the resend confirmation: everything below goes away
   onRefresh: PropTypes.func.isRequired,
   // opens the delete confirmation: the message and everything below

@@ -8,6 +8,8 @@
 
 use anyhow::Result;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use studio_cluster::CancelToken;
 
 pub use studio_cluster::StreamEvent;
 
@@ -334,11 +336,7 @@ pub async fn chat_regenerate_name(store: &Store, chat_id: i32) -> Result<ChatDat
         .iter()
         .map(|message| (utils::history_role(message), message.text.clone()))
         .collect();
-    let language = match settings.appearance_locale.as_str() {
-        "ru" => "Russian",
-        "cn" => "Chinese",
-        _ => "English",
-    };
+    let language = utils::locale_language(&settings.appearance_locale);
     let name = studio_cluster::call_chat_name(
         studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?,
         &provider.host,
@@ -642,6 +640,186 @@ pub fn chat_cancel_send(store: &Store, chat_id: i32) -> Result<()> {
     let model = studio_states::get_provider_model(store, group.model_id)?;
     let provider = studio_states::get_provider(store, model.provider_id)?;
     utils::cancel_stream_token(&(provider.provider, model.name));
+    Ok(())
+}
+
+/// Translates the model answer with the translation task model. With
+/// the streaming output on, the text deltas go to `on_delta` and the
+/// growing translation persists in the row; off — the translation
+/// arrives at once. Every translation replaces the stored one: the
+/// column holds only the shown translation. A cancelled run writes
+/// nothing — the closer clears the column, a replaced run belongs to
+/// the newest translation; a failed run clears the partial text.
+pub async fn chat_translate_message(
+    store: &Store,
+    chat_id: i32,
+    message_id: i32,
+    on_delta: impl Fn(&str) + Send + Sync + 'static,
+) -> Result<()> {
+    studio_states::get_chat(store, chat_id)?;
+    let histories = studio_states::get_chat_histories(store, chat_id)?;
+    let message = histories
+        .iter()
+        .find(|message| message.id == Some(message_id))
+        .ok_or_else(|| anyhow::anyhow!("Unknown message."))?;
+    if message.model.is_none() {
+        anyhow::bail!("Only a model answer can be translated.");
+    }
+    let settings = studio_states::get_settings(store).unwrap_or_default();
+    let Some(model_id) = settings.translation_model else {
+        anyhow::bail!("Translation model is not set.");
+    };
+    let Some(locale) = settings.translation_answers.as_deref() else {
+        anyhow::bail!("Translation language is not set.");
+    };
+    let model = studio_states::get_provider_model(store, model_id)?;
+    let provider = studio_states::get_provider(store, model.provider_id)?;
+    let kind =
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?;
+    let language = utils::locale_language(locale);
+
+    // a fresh translation of the message gives way: the dying run
+    // writes nothing — the column belongs to the newest translation
+    utils::cancel_translate_token(message_id);
+    let cancel = utils::stream_token();
+    utils::translate_tokens()
+        .lock()
+        .expect("translate tokens poisoned")
+        .insert(message_id, cancel.clone());
+
+    // the task config is the function's own — the task never uses
+    // the model's generation settings
+    let prompt = format!(
+        r#"
+Translate the text to {language}. Answer with the translation only: keep the original formatting, no explanations.
+"#
+    )
+    .trim()
+    .to_string();
+
+    if !settings.chat_streaming.unwrap_or(true) {
+        let text = studio_cluster::call_prompt(
+            kind,
+            &provider.host,
+            provider.api_key.as_deref(),
+            provider.project.as_deref(),
+            &model.name,
+            0.7,
+            42,
+            4096,
+            2048,
+            Some(prompt),
+            Vec::new(),
+            &message.text,
+        )
+        .await?;
+        return finish_translation(store, message_id, &cancel, Some(&text));
+    }
+
+    // the deltas ride a channel: the callback runs inside the cluster
+    // call and cannot touch the store — the pump below persists them
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<StreamEvent>();
+    let mut call = std::pin::pin!(studio_cluster::call_prompt_stream(
+        kind,
+        &provider.host,
+        provider.api_key.as_deref(),
+        provider.project.as_deref(),
+        &model.name,
+        0.7,
+        42,
+        4096,
+        2048,
+        Some(prompt),
+        Vec::new(),
+        &message.text,
+        cancel.as_ref(),
+        {
+            let tx = tx.clone();
+            move |event| {
+                // thinking stays out: the translation is text only
+                if let StreamEvent::Text(_) = event {
+                    let _ = tx.send(event.clone());
+                }
+            }
+        },
+    ));
+
+    let mut text_acc = String::new();
+    const PERSIST_INTERVAL_MS: u64 = 300;
+    let mut persisted_at = std::time::Instant::now();
+    // one delta: grow the accumulator, persist the row, forward to the shell
+    let mut handle = |event: StreamEvent| -> Result<()> {
+        if let StreamEvent::Text(chunk) = &event {
+            text_acc.push_str(chunk);
+            if persisted_at.elapsed() >= std::time::Duration::from_millis(PERSIST_INTERVAL_MS) {
+                persisted_at = std::time::Instant::now();
+                studio_states::update_chat_history_translate(store, message_id, Some(text_acc.as_str()))?;
+            }
+            on_delta(chunk);
+        }
+        Ok(())
+    };
+    // a closed channel disables the rx arm: the senders are gone and
+    // the call resolves on its own — the arm must not spin on None
+    let mut rx_closed = false;
+    let outcome = loop {
+        tokio::select! {
+            biased;
+            delta = rx.recv(), if !rx_closed => match delta {
+                Some(event) => handle(event)?,
+                None => rx_closed = true,
+            },
+            done = &mut call => break done,
+        }
+    };
+    // the deltas that arrived before the call future resolved
+    while let Ok(event) = rx.try_recv() {
+        handle(event)?;
+    }
+
+    match outcome {
+        Ok(result) => finish_translation(store, message_id, &cancel, Some(&result.text)),
+        // a failed run clears the partial text, the error surfaces
+        Err(error) => {
+            finish_translation(store, message_id, &cancel, None)?;
+            Err(error)
+        }
+    }
+}
+
+/// Clears the translation of the message — the close of the
+/// translation view. The running translation of the message gives
+/// way: it writes nothing, the column holds only the shown one.
+pub fn chat_translate_clear(store: &Store, chat_id: i32, message_id: i32) -> Result<()> {
+    studio_states::get_chat(store, chat_id)?;
+    let histories = studio_states::get_chat_histories(store, chat_id)?;
+    if !histories.iter().any(|message| message.id == Some(message_id)) {
+        anyhow::bail!("Unknown message.");
+    }
+    utils::cancel_translate_token(message_id);
+    utils::translate_tokens()
+        .lock()
+        .expect("translate tokens poisoned")
+        .remove(&message_id);
+    studio_states::update_chat_history_translate(store, message_id, None)?;
+    Ok(())
+}
+
+/// The final write of a translation: only the run that still owns the
+/// message token writes — a cancelled or replaced run leaves the
+/// column alone. The owner's token leaves the registry.
+fn finish_translation(store: &Store, message_id: i32, token: &Arc<CancelToken>, text: Option<&str>) -> Result<()> {
+    let mut tokens = utils::translate_tokens().lock().expect("translate tokens poisoned");
+    let owned = tokens
+        .get(&message_id)
+        .is_some_and(|current| Arc::ptr_eq(current, token));
+    if owned {
+        tokens.remove(&message_id);
+    }
+    drop(tokens);
+    if owned {
+        studio_states::update_chat_history_translate(store, message_id, text)?;
+    }
     Ok(())
 }
 

@@ -42,6 +42,7 @@ export const enLocalization = {
       t_generating: 'Generating the answer...',
       t_cancelled: 'Generation cancelled',
       t_empty_answer: 'The model returned no answer',
+      t_translating: 'Translating...',
       t_message_delete_title: 'Delete the message?',
       t_message_delete_text:
         "This message and all history below it will be deleted. The provider's prompt cache will probably be reset.",

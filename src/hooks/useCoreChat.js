@@ -31,6 +31,9 @@ export function useCoreChat({ chatId } = {}) {
   const stream = useSelector(state =>
     state.chat.stream !== null && state.chat.stream.chatId === chatId ? state.chat.stream : null
   )
+  // the live translation copy: the messageId filter happens where
+  // the message is rendered
+  const translateStream = useSelector(state => state.chat.translateStream)
   const [error, setError] = React.useState(null)
 
   React.useEffect(() => {
@@ -96,6 +99,7 @@ export function useCoreChat({ chatId } = {}) {
     sending,
     streaming: stream !== null,
     stream,
+    translateStream,
     stop,
     remove,
     resend,

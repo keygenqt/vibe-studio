@@ -41,3 +41,31 @@ pub(crate) fn history_role(message: &ChatHistoryData) -> String {
         "assistant".to_string()
     }
 }
+
+/// The prompt language name of a locale code; an unknown code reads
+/// as English.
+pub(crate) fn locale_language(locale: &str) -> &'static str {
+    match locale {
+        "ru" => "Russian",
+        "cn" => "Chinese",
+        _ => "English",
+    }
+}
+
+/// The active translation tokens by message id — a registry of its
+/// own: a translation never cancels a chat answer stream.
+pub(crate) fn translate_tokens() -> &'static Mutex<HashMap<i32, Arc<CancelToken>>> {
+    static TOKENS: OnceLock<Mutex<HashMap<i32, Arc<CancelToken>>>> = OnceLock::new();
+    TOKENS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// Cancels the translation token of the message, if it runs.
+pub(crate) fn cancel_translate_token(message_id: i32) {
+    if let Some(token) = translate_tokens()
+        .lock()
+        .expect("translate tokens poisoned")
+        .get(&message_id)
+    {
+        token.cancel();
+    }
+}

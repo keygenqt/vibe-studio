@@ -42,6 +42,7 @@ export const ruLocalization = {
       t_generating: 'Генерируется ответ...',
       t_cancelled: 'Генерация отменена',
       t_empty_answer: 'Пустой ответ модели',
+      t_translating: 'Переводится...',
       t_message_delete_title: 'Удалить сообщение?',
       t_message_delete_text:
         'Будет удалено это сообщение и вся история ниже. Вероятно, кеш провайдера будет сброшен.',
@@ -180,6 +181,9 @@ export const ruLocalization = {
     'Unknown chat.': 'Неизвестный чат.',
     'Unknown message.': 'Неизвестное сообщение.',
     'Only a user message can be resent.': 'Переотправить можно только сообщение пользователя.',
+    'Only a model answer can be translated.': 'Перевести можно только ответ модели.',
+    'Translation model is not set.': 'Модель перевода не выбрана.',
+    'Translation language is not set.': 'Язык перевода не выбран.',
     'Message must not be blank.': 'Сообщение не должно быть пустым.',
     'Task model is not set.': 'Модель задач не выбрана.',
     'Chat has no messages.': 'В чате нет сообщений.',

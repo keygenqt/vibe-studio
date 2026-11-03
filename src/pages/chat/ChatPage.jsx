@@ -42,6 +42,7 @@ export function ChatPage() {
     resend,
     history,
     stream,
+    translateStream,
     stats,
     ready: chatReady,
   } = useCoreChat({ chatId: cid })
@@ -49,7 +50,13 @@ export function ChatPage() {
   const [quick, setQuick] = React.useState([])
   // the pending confirmation: {action: 'delete' | 'resend', messageId}
   const [confirm, setConfirm] = React.useState(null)
+  // the open of the translation view translates anew, the close
+  // clears — the errors surface in the view
+  const translate = messageId => Methods.chat_translate_message(cid, messageId)
+  const translateClear = messageId => Methods.chat_translate_clear(cid, messageId)
   const chat = chats?.find(item => item.id === cid) ?? null
+  // the message text size: the store resolves the untouched value
+  const fontSize = settings.appearance_chat_font_size
   // the newest progress row owns the live stream
   const progressRow = (history ?? []).findLast(item => item.status === 'progress') ?? null
 
@@ -71,6 +78,7 @@ export function ChatPage() {
       <UserMessageView
         key={key}
         message={view}
+        fontSize={fontSize}
         onRefresh={() => setConfirm({ action: 'resend', messageId: message.id })}
         onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
       />
@@ -78,6 +86,15 @@ export function ChatPage() {
       <ModelMessageView
         key={key}
         message={view}
+        fontSize={fontSize}
+        translation={
+          translateStream && translateStream.messageId === message.id
+            ? translateStream.text
+            : message.translate
+        }
+        translating={translateStream?.messageId === message.id}
+        onTranslate={translate}
+        onTranslateClose={translateClear}
         onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
       />
     )

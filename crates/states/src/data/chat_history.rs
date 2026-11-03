@@ -212,6 +212,16 @@ impl Store {
         Ok(affected)
     }
 
+    /// Writes the message translation. The column holds only the
+    /// shown translation: a fresh write replaces it, closing the
+    /// view clears it with `None`.
+    pub(crate) fn update_chat_history_translate(&self, id: i32, translate: Option<&str>) -> Result<usize> {
+        let affected = diesel::update(chat_history::table.find(id))
+            .set(chat_history::translate.eq(translate.map(String::from)))
+            .execute(&mut *self.lock())?;
+        Ok(affected)
+    }
+
     /// Active streams of one provider+model pair, oldest first.
     pub(crate) fn get_progress_chat_histories(&self, provider: &str, model: &str) -> Result<Vec<ChatHistoryData>> {
         let mut conn = self.lock();

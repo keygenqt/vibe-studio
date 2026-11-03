@@ -35,6 +35,27 @@ export function ModelMessageView(props) {
     }
   }
 
+  // the toggle: open translates anew, close clears — the column
+  // holds only the shown translation
+  const onClickTranslate = async () => {
+    if (translationOpen) {
+      setTranslationOpen(false)
+      try {
+        await props.onTranslateClose(message.id)
+      } catch (err) {
+        setError(t(String(err)))
+      }
+      return
+    }
+    setTranslationOpen(true)
+    try {
+      await props.onTranslate(message.id)
+    } catch (err) {
+      setTranslationOpen(false)
+      setError(t(String(err)))
+    }
+  }
+
   return (
     <>
       <Stack spacing={1}>
@@ -64,10 +85,7 @@ export function ModelMessageView(props) {
             {!isCancelled && !isError && (
               <MessageActions
                 onClickCopy={message.text ? onClickCopy : undefined}
-                onClickTranslate={() => {
-                  setTranslationOpen(!translationOpen)
-                  console.log('Translate model message')
-                }}
+                onClickTranslate={onClickTranslate}
                 onClickThinking={
                   message.thinking ? () => setThinkingOpen(!thinkingOpen) : undefined
                 }
@@ -81,7 +99,7 @@ export function ModelMessageView(props) {
               <Typography
                 variant={'body2'}
                 color={'text.secondary'}
-                sx={{ whiteSpace: 'pre-line' }}
+                sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
               >
                 {message.thinking}
               </Typography>
@@ -109,21 +127,28 @@ export function ModelMessageView(props) {
               color={
                 isError ? 'error.contrastText' : message.text ? 'text.primary' : 'text.secondary'
               }
-              sx={{ whiteSpace: 'pre-line' }}
+              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
             >
               {/* the growing answer shows the placeholder until the first text */}
               {message.text ||
                 (message.status === 'progress' ? t('chat.t_generating') : t('chat.t_empty_answer'))}
             </Typography>
           )}
-          {message.translation && translationOpen && !isCancelled && !isError && (
-            <>
-              <Box sx={{ my: 1, borderTop: '1px dashed', borderColor: 'divider' }} />
-              <Typography variant={'body2'} color={'text.secondary'} sx={{ minWidth: 0 }}>
-                {message.translation}
-              </Typography>
-            </>
-          )}
+          {(props.translation || props.translating) &&
+            translationOpen &&
+            !isCancelled &&
+            !isError && (
+              <>
+                <Box sx={{ my: 1, borderTop: '1px dashed', borderColor: 'divider' }} />
+                <Typography
+                  variant={'body2'}
+                  color={'text.secondary'}
+                  sx={{ minWidth: 0, whiteSpace: 'pre-line', fontSize: props.fontSize }}
+                >
+                  {props.translation || t('chat.t_translating')}
+                </Typography>
+              </>
+            )}
         </Box>
       </Stack>
       <ErrorSnackbar text={error} onClose={() => setError(null)} />
@@ -138,8 +163,16 @@ ModelMessageView.propTypes = {
     status: PropTypes.oneOf(['complete', 'progress', 'cancelled', 'error']).isRequired,
     text: PropTypes.string.isRequired,
     thinking: PropTypes.string,
-    translation: PropTypes.string,
   }).isRequired,
+  // the message text size in px
+  fontSize: PropTypes.number.isRequired,
+  // the shown translation: live while streaming, stored otherwise
+  translation: PropTypes.string,
+  // a translation request is running for this message
+  translating: PropTypes.bool,
+  // open translates anew, close clears
+  onTranslate: PropTypes.func.isRequired,
+  onTranslateClose: PropTypes.func.isRequired,
   // opens the delete confirmation: the message and everything below
   onDelete: PropTypes.func.isRequired,
 }

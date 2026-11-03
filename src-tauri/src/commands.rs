@@ -391,6 +391,42 @@ pub async fn chat_resend_message(
     Ok(state)
 }
 
+/// Translates the model answer; the text deltas go to `on_delta`
+/// when the streaming output is on. Emits and returns the fresh
+/// state of the chat block.
+#[tauri::command]
+pub async fn chat_translate_message(
+    window: WebviewWindow,
+    store: State<'_, Store>,
+    chat_id: i32,
+    message_id: i32,
+    on_delta: Channel<StreamChunk>,
+) -> Result<ChatStateData, String> {
+    studio_core::chat_translate_message(&store, chat_id, message_id, move |delta| {
+        let _ = on_delta.send(StreamChunk::of(&studio_core::StreamEvent::Text(delta.to_string())));
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    let state = ChatStateData::new(&store, chat_id);
+    emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
+    Ok(state)
+}
+
+/// Clears the translation of the message; emits and returns the
+/// fresh state of the chat block.
+#[tauri::command]
+pub fn chat_translate_clear(
+    window: WebviewWindow,
+    store: State<Store>,
+    chat_id: i32,
+    message_id: i32,
+) -> Result<ChatStateData, String> {
+    studio_core::chat_translate_clear(&store, chat_id, message_id).map_err(|e| e.to_string())?;
+    let state = ChatStateData::new(&store, chat_id);
+    emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
+    Ok(state)
+}
+
 /// Renames the chat with a model-generated name; the chat row lives
 /// in the groups chat block — emits and returns its fresh state.
 #[tauri::command]

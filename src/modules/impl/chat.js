@@ -15,11 +15,18 @@ import {
   chatStreamAppend,
   chatStreamFinal,
   chatStreamStart,
+  chatTranslateAppend,
+  chatTranslateFinal,
+  chatTranslateStart,
 } from '../../store/impl/chat'
 
 // the newest generation wins: a stale stream (cancelled by a newer
 // request to the same model) paints and resets nothing
 let streamSeq = 0
+
+// the newest translation wins: a stale stream (cancelled by closing
+// the view or by a newer translation of the message) paints nothing
+let translateSeq = 0
 
 export const chat = {
   chat_get_history: async function (chatId) {
@@ -73,7 +80,33 @@ export const chat = {
       }
     }
   },
+  // one button, two ways: open translates anew, close clears — the
+  // column holds only the shown translation
+  chat_translate_message: async function (chatId, messageId) {
+    const seq = ++translateSeq
+    store.dispatch(chatTranslateStart({ seq, messageId }))
+    const channel = new Channel()
+    channel.onmessage = chunk => {
+      if (seq === translateSeq && chunk.kind === 'text') {
+        store.dispatch(chatTranslateAppend({ seq, messageId, delta: chunk.delta }))
+      }
+    }
+    try {
+      await invoke('chat_translate_message', { chatId, messageId, onDelta: channel })
+    } finally {
+      if (seq === translateSeq) {
+        store.dispatch(chatTranslateFinal(seq))
+      }
+    }
+  },
+  chat_translate_clear: async function (chatId, messageId) {
+    // a fresh seq kills the running translation copy at once
+    const seq = ++translateSeq
+    store.dispatch(chatTranslateFinal(seq))
+    return invoke('chat_translate_clear', { chatId, messageId })
+  },
 }
+
 export function chat_events() {
   return [
     listen('event-chat', event => {
