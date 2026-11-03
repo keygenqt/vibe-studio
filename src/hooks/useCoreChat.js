@@ -8,11 +8,17 @@ import * as React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import { Methods } from '../modules'
-import { chatDraftSet, chatHistorySet } from '../store/impl/chat'
+import {
+  chatAttachmentsAdd,
+  chatAttachmentsClear,
+  chatDraftSet,
+  chatHistorySet,
+} from '../store/impl/chat'
 
 export function useCoreChat({ chatId } = {}) {
   const dispatch = useDispatch()
   const draft = useSelector(state => state.chat.draft)
+  const chatAttachments = useSelector(state => state.chat.chatAttachments)
   const chat = useSelector(state => state.chat.chat)
   // the copy paints only the routed chat: a stale final event of
   // another chat must not repaint here
@@ -40,6 +46,7 @@ export function useCoreChat({ chatId } = {}) {
   }, [chatId])
 
   const setDraft = value => dispatch(chatDraftSet(value))
+  const addAttachments = items => dispatch(chatAttachmentsAdd(items))
 
   const [sending, setSending] = React.useState(false)
 
@@ -49,11 +56,17 @@ export function useCoreChat({ chatId } = {}) {
     // `UserStored` event while the answer streams; a failed request
     // lands in the history as an `Error` message
     const text = draft
+    const attachments = chatAttachments
     dispatch(chatDraftSet(''))
+    dispatch(chatAttachmentsClear())
     setSending(true)
     Methods.chat_send_message(chatId, text)
-      // an early failure stored nothing — the draft comes back
-      .catch(() => dispatch(chatDraftSet(text)))
+      // an early failure stored nothing — the draft and the
+      // attachments come back
+      .catch(() => {
+        dispatch(chatDraftSet(text))
+        dispatch(chatAttachmentsAdd(attachments))
+      })
       .finally(() => setSending(false))
   }
 
@@ -64,6 +77,8 @@ export function useCoreChat({ chatId } = {}) {
 
   return {
     draft,
+    chatAttachments,
+    addAttachments,
     setDraft,
     send,
     sending,

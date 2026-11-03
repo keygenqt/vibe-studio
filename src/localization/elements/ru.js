@@ -174,6 +174,8 @@ export const ruLocalization = {
     'Message must not be blank.': 'Сообщение не должно быть пустым.',
     'Task model is not set.': 'Модель задач не выбрана.',
     'Chat has no messages.': 'В чате нет сообщений.',
+    'Clipboard is not available.': 'Буфер обмена недоступен.',
+    'Invalid image data.': 'Некорректные данные изображения.',
 
     // -- chats
     // fabrics

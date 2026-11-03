@@ -7,15 +7,17 @@
 //! crate only.
 
 use anyhow::Result;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub use studio_cluster::StreamEvent;
 
+mod clipboard;
 mod data;
 pub(crate) mod theme;
 mod utils;
 
 pub use data::ChatStreamEvent;
+pub use data::ClipboardRead;
 pub use studio_cluster::ModelInfoData;
 pub use studio_cluster::ProviderInfoData;
 pub use studio_states::ChatData;
@@ -654,4 +656,30 @@ pub fn get_system_theme() -> ThemeChoice {
 /// background watcher thread that lives for the app's lifetime.
 pub fn listen_system_theme(on_change: impl Fn(ThemeChoice) + Send + 'static) -> Result<()> {
     theme::listen_system_theme(on_change)
+}
+
+/// Sets the clipboard to plain text.
+pub fn clipboard_write_text(text: &str) -> Result<()> {
+    clipboard::write_text(text)
+}
+
+/// Decodes base64 PNG and sets the clipboard image.
+pub fn clipboard_write_image(png: &str) -> Result<()> {
+    clipboard::write_image(png)
+}
+
+/// Sets the clipboard to the file references.
+pub fn clipboard_write_files(paths: &[PathBuf]) -> Result<()> {
+    clipboard::write_files(paths)
+}
+
+/// Clears the system clipboard.
+pub fn clipboard_clear() -> Result<()> {
+    clipboard::clear()
+}
+
+/// The clipboard content by priority: text → files → image; `None`
+/// when the clipboard is empty or unsupported.
+pub fn clipboard_read() -> Option<ClipboardRead> {
+    clipboard::read_all()
 }

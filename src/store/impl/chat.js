@@ -10,6 +10,8 @@ const chatSlice = createSlice({
   name: 'chat',
   initialState: {
     draft: '',
+    // the composer attachments: {kind: 'file', path} | {kind: 'image', png}
+    chatAttachments: [],
     chat: null,
     history: null,
     stats: null,
@@ -19,6 +21,12 @@ const chatSlice = createSlice({
   reducers: {
     chatDraftSet: (state, action) => {
       state.draft = action.payload
+    },
+    chatAttachmentsAdd: (state, action) => {
+      state.chatAttachments = [...state.chatAttachments, ...action.payload]
+    },
+    chatAttachmentsClear: state => {
+      state.chatAttachments = []
     },
     chatSet: (state, action) => {
       state.chat = action.payload
@@ -58,6 +66,8 @@ const chatSlice = createSlice({
 
 export const {
   chatDraftSet,
+  chatAttachmentsAdd,
+  chatAttachmentsClear,
   chatSet,
   chatHistorySet,
   chatStatsSet,

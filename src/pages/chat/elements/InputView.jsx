@@ -11,15 +11,41 @@ import { Button, Stack, TextField } from '@mui/material'
 import Send from '@mui/icons-material/Send'
 import Stop from '@mui/icons-material/Stop'
 
+import { Methods } from '../../../modules'
+
 export function InputView(props) {
   const { t } = useTranslation()
-  const { draft, setDraft, send, sending, streaming, stop } = props
+  const { draft, setDraft, send, sending, streaming, stop, onAttachments } = props
   const inputRef = React.useRef(null)
 
   // the disabled input cannot take focus, so refocus after sending ends
   React.useEffect(() => {
     if (!sending) inputRef.current?.focus()
   }, [sending])
+
+  // the paste is intercepted: Rust resolves the clipboard kind — text
+  // goes to the draft at the cursor, files and images to the attachments
+  const onPaste = event => {
+    event.preventDefault()
+    Methods.clipboard_read()
+      .then(content => {
+        if (!content) return
+        if (content.kind === 'text') {
+          const input = inputRef.current
+          const start = input?.selectionStart ?? draft.length
+          const end = input?.selectionEnd ?? draft.length
+          setDraft(draft.slice(0, start) + content.text + draft.slice(end))
+          const cursor = start + content.text.length
+          // the cursor restores after the controlled update paints
+          requestAnimationFrame(() => input?.setSelectionRange(cursor, cursor))
+        } else if (content.kind === 'files') {
+          onAttachments(content.paths.map(path => ({ kind: 'file', path })))
+        } else {
+          onAttachments([{ kind: 'image', png: content.png }])
+        }
+      })
+      .catch(console.error)
+  }
 
   return (
     <Stack
@@ -61,6 +87,7 @@ export function InputView(props) {
                 send()
               }
             },
+            onPaste: onPaste,
           },
         }}
       />
@@ -97,4 +124,5 @@ InputView.propTypes = {
   sending: PropTypes.bool.isRequired,
   streaming: PropTypes.bool.isRequired,
   stop: PropTypes.func.isRequired,
+  onAttachments: PropTypes.func.isRequired,
 }

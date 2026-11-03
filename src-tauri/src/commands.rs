@@ -384,3 +384,35 @@ pub fn get_app_info(app: AppHandle) -> AppInfoData {
         is_debug: cfg!(debug_assertions),
     }
 }
+
+/// Sets the clipboard to plain text.
+#[tauri::command]
+pub fn clipboard_write_text(text: String) -> Result<(), String> {
+    studio_core::clipboard_write_text(&text).map_err(|e| e.to_string())
+}
+
+/// Decodes base64 PNG and sets the clipboard image.
+#[tauri::command]
+pub fn clipboard_write_image(png: String) -> Result<(), String> {
+    studio_core::clipboard_write_image(&png).map_err(|e| e.to_string())
+}
+
+/// Sets the clipboard to the file references.
+#[tauri::command]
+pub fn clipboard_write_files(paths: Vec<String>) -> Result<(), String> {
+    let paths: Vec<std::path::PathBuf> = paths.iter().map(std::path::PathBuf::from).collect();
+    studio_core::clipboard_write_files(&paths).map_err(|e| e.to_string())
+}
+
+/// Clears the system clipboard.
+#[tauri::command]
+pub fn clipboard_clear() -> Result<(), String> {
+    studio_core::clipboard_clear().map_err(|e| e.to_string())
+}
+
+/// The clipboard content by priority: text → files → image; `null`
+/// when the clipboard is empty or unsupported.
+#[tauri::command]
+pub fn clipboard_read() -> Option<studio_core::ClipboardRead> {
+    studio_core::clipboard_read()
+}

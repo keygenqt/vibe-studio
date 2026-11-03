@@ -31,6 +31,8 @@ export function ChatPage() {
   const { chats, ready: groupsReady } = useCoreGroupsChat()
   const {
     draft,
+    chatAttachments,
+    addAttachments,
     setDraft,
     send,
     sending,
@@ -117,12 +119,14 @@ export function ChatPage() {
               <QuickActions
                 quick={quick}
                 onQuick={setQuick}
+                attachCount={chatAttachments.length}
                 stats={AppUtils.formatStats(stats)}
                 loading={streaming}
               />
               <InputView
                 draft={draft}
                 setDraft={setDraft}
+                onAttachments={addAttachments}
                 send={send}
                 sending={sending}
                 streaming={streaming}

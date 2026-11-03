@@ -95,6 +95,11 @@ pub fn run() {
             commands::get_system_theme,
             commands::get_app_info,
             commands::get_provider_models_by_type,
+            commands::clipboard_write_text,
+            commands::clipboard_write_image,
+            commands::clipboard_write_files,
+            commands::clipboard_clear,
+            commands::clipboard_read,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

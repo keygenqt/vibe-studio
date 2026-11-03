@@ -26,6 +26,21 @@ export const app = {
     store.dispatch(systemThemeSet(theme))
     return theme
   },
+  clipboard_write_text: async function (text) {
+    return invoke('clipboard_write_text', { text })
+  },
+  clipboard_write_image: async function (png) {
+    return invoke('clipboard_write_image', { png })
+  },
+  clipboard_write_files: async function (paths) {
+    return invoke('clipboard_write_files', { paths })
+  },
+  clipboard_clear: async function () {
+    return invoke('clipboard_clear', {})
+  },
+  clipboard_read: async function () {
+    return invoke('clipboard_read', {})
+  },
 }
 
 // the block's Rust channel, bound once for the app lifetime: the OS

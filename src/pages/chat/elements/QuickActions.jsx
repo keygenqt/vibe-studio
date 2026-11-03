@@ -7,6 +7,7 @@
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import {
+  Badge,
   CircularProgress,
   Stack,
   ToggleButton,
@@ -37,9 +38,11 @@ export function QuickActions(props) {
         }
       >
         <Tooltip title={t('chat.t_attach_file')}>
-          <ToggleButton value={'attach'} sx={{ px: '8px' }}>
-            <AttachFile sx={{ fontSize: 18, color: 'text.primary' }} />
-          </ToggleButton>
+          <Badge badgeContent={props.attachCount} color={'primary'}>
+            <ToggleButton value={'attach'} sx={{ px: '8px' }}>
+              <AttachFile sx={{ fontSize: 18, color: 'text.primary' }} />
+            </ToggleButton>
+          </Badge>
         </Tooltip>
         <Tooltip title={t('chat.t_search')}>
           <ToggleButton value={'search'} sx={{ px: '8px' }}>
@@ -83,6 +86,7 @@ export function QuickActions(props) {
 QuickActions.propTypes = {
   quick: PropTypes.array.isRequired,
   onQuick: PropTypes.func.isRequired,
+  attachCount: PropTypes.number,
   stats: PropTypes.string,
   loading: PropTypes.bool,
 }
