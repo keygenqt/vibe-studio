@@ -71,6 +71,11 @@ pub struct ChatHistoryData {
     pub thinking: Option<String>,
     /// Reserved for the future message translations.
     pub translate: Option<String>,
+    /// Estimated tokens of the text; `None` = not counted.
+    pub tokens: Option<i32>,
+    /// Duration of the answer generation in milliseconds; `None` for
+    /// user messages and failed answers.
+    pub gen_ms: Option<i32>,
     /// Store-owned: when the row was born; JS gets unix millis.
     #[serde_as(as = "TimestampMilliSeconds<i64>")]
     pub created_at: NaiveDateTime,
@@ -86,6 +91,8 @@ diesel::table! {
         text -> Text,
         thinking -> Nullable<Text>,
         translate -> Nullable<Text>,
+        tokens -> Nullable<Integer>,
+        gen_ms -> Nullable<Integer>,
         created_at -> Timestamp,
     }
 }
@@ -103,6 +110,8 @@ struct ChatHistoryRow {
     text: String,
     thinking: Option<String>,
     translate: Option<String>,
+    tokens: Option<i32>,
+    gen_ms: Option<i32>,
     created_at: NaiveDateTime,
 }
 
@@ -117,6 +126,8 @@ impl From<ChatHistoryRow> for ChatHistoryData {
             text: row.text,
             thinking: row.thinking,
             translate: row.translate,
+            tokens: row.tokens,
+            gen_ms: row.gen_ms,
             created_at: row.created_at,
         }
     }
@@ -133,6 +144,7 @@ struct ChatHistoryNewData {
     status: String,
     text: String,
     thinking: Option<String>,
+    tokens: i32,
 }
 
 impl Store {
@@ -158,6 +170,7 @@ impl Store {
         status: ChatStatus,
         text: &str,
         thinking: Option<&str>,
+        tokens: i32,
     ) -> Result<ChatHistoryData> {
         let row: ChatHistoryRow = self.save(
             chat_history::table,
@@ -169,25 +182,31 @@ impl Store {
                 status: status.as_str().to_string(),
                 text: text.to_string(),
                 thinking: thinking.map(String::from),
+                tokens,
             },
         )?;
         Ok(ChatHistoryData::from(row))
     }
 
-    /// Updates a growing message in place: the stream text/thinking
-    /// and the outcome status. Returns affected rows.
+    /// Updates a growing message in place: the stream text/thinking,
+    /// the counted tokens with the generation time, and the outcome
+    /// status. Returns affected rows.
     pub(crate) fn update_chat_history(
         &self,
         id: i32,
         text: &str,
         thinking: Option<&str>,
         status: ChatStatus,
+        tokens: i32,
+        gen_ms: Option<i32>,
     ) -> Result<usize> {
         let affected = diesel::update(chat_history::table.find(id))
             .set((
                 chat_history::text.eq(text.to_string()),
                 chat_history::thinking.eq(thinking.map(String::from)),
                 chat_history::status.eq(status.as_str().to_string()),
+                chat_history::tokens.eq(tokens),
+                chat_history::gen_ms.eq(gen_ms),
             ))
             .execute(&mut *self.lock())?;
         Ok(affected)

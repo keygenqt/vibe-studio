@@ -33,7 +33,7 @@ export function InputView(props) {
         fullWidth
         variant={'standard'}
         inputRef={inputRef}
-        placeholder={t('main.t_placeholder')}
+        placeholder={t('chat.t_placeholder')}
         value={draft}
         onChange={event => setDraft(event.target.value)}
         sx={{

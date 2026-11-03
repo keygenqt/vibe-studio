@@ -19,6 +19,7 @@ export function useCoreChat({ chatId } = {}) {
   const history = useSelector(state =>
     state.chat.history !== null && state.chat.historyChatId === chatId ? state.chat.history : null
   )
+  const stats = useSelector(state => state.chat.stats)
   // the live answer of this chat only; a foreign stream keeps
   // running in the background without a bubble here
   const stream = useSelector(state =>
@@ -71,6 +72,7 @@ export function useCoreChat({ chatId } = {}) {
     stop,
     chat,
     history,
+    stats,
     error,
     ready: error !== null || history !== null,
   }

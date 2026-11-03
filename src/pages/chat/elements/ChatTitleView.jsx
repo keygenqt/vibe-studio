@@ -55,7 +55,7 @@ export function ChatTitleView(props) {
             {props.name}
           </Typography>
           {props.canRename && (
-            <TooltipIconButton size={'mini'} title={t('main.t_chat_rename')} onClick={onRename}>
+            <TooltipIconButton size={'mini'} title={t('chat.t_chat_rename')} onClick={onRename}>
               {renaming ? <CircularProgress size={20} color={'inherit'} /> : <Refresh />}
             </TooltipIconButton>
           )}
@@ -67,11 +67,11 @@ export function ChatTitleView(props) {
             onClick={() => console.log('Compress chat')}
             sx={{ color: 'text.secondary' }}
           >
-            Сжать
+            {t('chat.t_chat_compress')}
           </Button>
           <TooltipIconButton
             size={'mini'}
-            title={'Настройки чата'}
+            title={t('chat.t_chat_settings')}
             onClick={() => console.log('Open chat settings')}
           >
             <Tune />

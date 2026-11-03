@@ -5,17 +5,26 @@
  * INFO: The quick actions row: attach, the mode toggles and the menu in one group.
  */
 import PropTypes from 'prop-types'
-import { Stack, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material'
+import { useTranslation } from 'react-i18next'
+import {
+  CircularProgress,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 import AttachFile from '@mui/icons-material/AttachFile'
 import MoreVert from '@mui/icons-material/MoreVert'
 import Public from '@mui/icons-material/Public'
 import Translate from '@mui/icons-material/Translate'
 
 export function QuickActions(props) {
+  const { t } = useTranslation()
   return (
     <Stack
       direction={'row'}
-      spacing={1}
+      spacing={2}
       justifyContent={'space-between'}
       alignItems={'center'}
       sx={{ width: 1 }}
@@ -27,12 +36,12 @@ export function QuickActions(props) {
           props.onQuick(value.filter(item => item !== 'attach' && item !== 'menu'))
         }
       >
-        <Tooltip title={'Прикрепить файл'}>
+        <Tooltip title={t('chat.t_attach_file')}>
           <ToggleButton value={'attach'} sx={{ px: '8px' }}>
             <AttachFile sx={{ fontSize: 18, color: 'text.primary' }} />
           </ToggleButton>
         </Tooltip>
-        <Tooltip title={'Поиск'}>
+        <Tooltip title={t('chat.t_search')}>
           <ToggleButton value={'search'} sx={{ px: '8px' }}>
             <Public
               sx={{
@@ -42,7 +51,7 @@ export function QuickActions(props) {
             />
           </ToggleButton>
         </Tooltip>
-        <Tooltip title={'Перевод'}>
+        <Tooltip title={t('chat.t_translate')}>
           <ToggleButton value={'translate'} sx={{ px: '8px' }}>
             <Translate
               sx={{
@@ -52,15 +61,21 @@ export function QuickActions(props) {
             />
           </ToggleButton>
         </Tooltip>
-        <Tooltip title={'Меню'}>
+        <Tooltip title={t('chat.t_menu')}>
           <ToggleButton value={'menu'} sx={{ px: '8px' }}>
             <MoreVert sx={{ fontSize: 18, color: 'text.primary' }} />
           </ToggleButton>
         </Tooltip>
       </ToggleButtonGroup>
-      <Typography variant={'body2'} noWrap color={'text.secondary'}>
-        {props.stats}
-      </Typography>
+      {props.loading ? (
+        <CircularProgress size={14} color={'inherit'} />
+      ) : (
+        props.stats && (
+          <Typography variant={'caption'} noWrap color={'text.secondary'}>
+            {props.stats}
+          </Typography>
+        )
+      )}
     </Stack>
   )
 }
@@ -69,4 +84,5 @@ QuickActions.propTypes = {
   quick: PropTypes.array.isRequired,
   onQuick: PropTypes.func.isRequired,
   stats: PropTypes.string,
+  loading: PropTypes.bool,
 }

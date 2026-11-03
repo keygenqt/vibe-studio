@@ -68,7 +68,7 @@ export function ModelMessageView(props) {
         {isCancelled ? (
           <>
             <Typography variant={'body2'} color={'text.secondary'}>
-              {t('main.t_cancelled')}
+              {t('chat.t_cancelled')}
             </Typography>
             {message.text && (
               <Typography
@@ -90,7 +90,7 @@ export function ModelMessageView(props) {
           >
             {/* the growing answer shows the placeholder until the first text */}
             {message.text ||
-              (message.status === 'progress' ? t('main.t_generating') : t('main.t_empty_answer'))}
+              (message.status === 'progress' ? t('chat.t_generating') : t('chat.t_empty_answer'))}
           </Typography>
         )}
         {message.translation && translationOpen && !isCancelled && !isError && (

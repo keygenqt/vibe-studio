@@ -11,6 +11,7 @@ import store from '../../store'
 import {
   chatSet,
   chatHistorySet,
+  chatStatsSet,
   chatStreamAppend,
   chatStreamFinal,
   chatStreamStart,
@@ -22,9 +23,11 @@ let streamSeq = 0
 
 export const chat = {
   chat_get_history: async function (chatId) {
-    const history = await invoke('chat_get_history', { chatId })
-    store.dispatch(chatHistorySet({ chatId, history }))
-    return history
+    const state = await invoke('chat_get_history', { chatId })
+    store.dispatch(chatSet(state.chat))
+    store.dispatch(chatHistorySet({ chatId: state.chat?.id ?? null, history: state.history }))
+    store.dispatch(chatStatsSet(state.stats))
+    return state
   },
   chat_send_message: async function (chatId, text) {
     const seq = ++streamSeq
@@ -57,6 +60,7 @@ export function chat_events() {
       const state = event.payload.value
       store.dispatch(chatSet(state.chat))
       store.dispatch(chatHistorySet({ chatId: state.chat?.id ?? null, history: state.history }))
+      store.dispatch(chatStatsSet(state.stats))
     }),
   ]
 }

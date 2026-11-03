@@ -22,6 +22,7 @@ pub use data::StreamAnswerData;
 pub use data::StreamEvent;
 
 pub use vibe_cluster::CancelToken;
+pub use vibe_cluster::count_tokens;
 
 /// The answer cap of the chat naming task: a longer model answer is
 /// cut to this many chars and closed with `…`.
@@ -96,6 +97,7 @@ pub async fn call_prompt(
         num_predict: Some(num_predict.max(0) as usize),
         api_key: api_key.map(String::from),
         project: project.map(String::from),
+        stats: false,
         ..Default::default()
     }])?;
 
@@ -146,6 +148,7 @@ pub async fn call_prompt_stream(
         num_predict: Some(num_predict.max(0) as usize),
         api_key: api_key.map(String::from),
         project: project.map(String::from),
+        stats: true,
         ..Default::default()
     }])?;
 
@@ -173,6 +176,7 @@ pub async fn call_prompt_stream(
             text: result.text.unwrap_or_default(),
             thinking: result.thinking,
             cancelled: true,
+            completion_tokens: result.completion_tokens,
         }),
         // a failed stream is an error, not an empty answer
         Some(error) => Err(error.into()),
@@ -180,6 +184,7 @@ pub async fn call_prompt_stream(
             text: result.text.unwrap_or_default(),
             thinking: result.thinking,
             cancelled: false,
+            completion_tokens: result.completion_tokens,
         }),
     }
 }

@@ -8,7 +8,7 @@
 // Composer height: user-dragged between min and max.
 export const CHAT_INPUT_SIZE_MIN = 132
 export const CHAT_INPUT_SIZE_MAX = 285
-export const CHAT_INPUT_SIZE_DEFAULT = 48
+export const CHAT_INPUT_SIZE_DEFAULT = 132
 
 // Sidebar width: user-dragged, shared by chat and settings sidebars.
 export const SIDE_BAR_SIZE_MIN = 200

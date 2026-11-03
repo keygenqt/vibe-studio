@@ -12,6 +12,7 @@ const chatSlice = createSlice({
     draft: '',
     chat: null,
     history: null,
+    stats: null,
     // the growing answer of the active stream: {seq, chatId, thinking, text}
     stream: null,
   },
@@ -25,6 +26,9 @@ const chatSlice = createSlice({
     chatHistorySet: (state, action) => {
       state.history = action.payload.history
       state.historyChatId = action.payload.chatId
+    },
+    chatStatsSet: (state, action) => {
+      state.stats = action.payload
     },
     // the stream generations: `seq` marks the newest send — stale
     // deltas and completions of a cancelled request change nothing
@@ -56,6 +60,7 @@ export const {
   chatDraftSet,
   chatSet,
   chatHistorySet,
+  chatStatsSet,
   chatStreamStart,
   chatStreamAppend,
   chatStreamFinal,

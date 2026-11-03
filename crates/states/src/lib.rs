@@ -136,20 +136,24 @@ pub fn add_chat_history(
     status: ChatStatus,
     text: &str,
     thinking: Option<&str>,
+    tokens: i32,
 ) -> Result<ChatHistoryData> {
-    store.add_chat_history(chat_id, provider, model, status, text, thinking)
+    store.add_chat_history(chat_id, provider, model, status, text, thinking, tokens)
 }
 
-/// Updates a growing message in place: the stream text/thinking and
-/// the outcome status. Returns affected rows.
+/// Updates a growing message in place: the stream text/thinking, the
+/// counted tokens with the generation time, and the outcome status.
+/// Returns affected rows.
 pub fn update_chat_history(
     store: &Store,
     id: i32,
     text: &str,
     thinking: Option<&str>,
     status: ChatStatus,
+    tokens: i32,
+    gen_ms: Option<i32>,
 ) -> Result<usize> {
-    store.update_chat_history(id, text, thinking, status)
+    store.update_chat_history(id, text, thinking, status, tokens, gen_ms)
 }
 
 /// Active streams of one provider+model pair, oldest first.

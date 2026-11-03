@@ -425,7 +425,16 @@ pub async fn chat_send_message(
         .map(|message| (utils::history_role(&message), message.text))
         .collect();
 
-    studio_states::add_chat_history(store, chat_id, None, None, ChatStatus::Complete, text, None)?;
+    studio_states::add_chat_history(
+        store,
+        chat_id,
+        None,
+        None,
+        ChatStatus::Complete,
+        text,
+        None,
+        studio_cluster::count_tokens(text) as i32,
+    )?;
 
     let system = [model.system_prompt.as_deref(), group.system_prompt.as_deref()]
         .into_iter()
@@ -444,6 +453,7 @@ pub async fn chat_send_message(
         ChatStatus::Progress,
         "",
         None,
+        0,
     )?;
     let answer_id = answer.id.expect("stored answer id");
 
@@ -491,10 +501,18 @@ pub async fn chat_send_message(
     // streams must not turn into hundreds of UPDATEs per second
     const PERSIST_INTERVAL_MS: u64 = 300;
     let mut persisted_at = std::time::Instant::now();
+    // the text generation window: from the first text delta to the
+    // finalization — the thinking time stays out of the speed
+    let mut gen_start: Option<std::time::Instant> = None;
     // one delta: grow the accumulators, persist the row, forward to the shell
     let mut handle = |event: StreamEvent| -> Result<()> {
         match &event {
-            StreamEvent::Text(chunk) => text_acc.push_str(chunk),
+            StreamEvent::Text(chunk) => {
+                if gen_start.is_none() {
+                    gen_start = Some(std::time::Instant::now());
+                }
+                text_acc.push_str(chunk);
+            }
             StreamEvent::Thinking(chunk) => thinking_acc.push_str(chunk),
         }
         let thinking = if thinking_acc.is_empty() {
@@ -504,7 +522,8 @@ pub async fn chat_send_message(
         };
         if persisted_at.elapsed() >= std::time::Duration::from_millis(PERSIST_INTERVAL_MS) {
             persisted_at = std::time::Instant::now();
-            studio_states::update_chat_history(store, answer_id, &text_acc, thinking, ChatStatus::Progress)?;
+            // tokens land only with the final write — the authority
+            studio_states::update_chat_history(store, answer_id, &text_acc, thinking, ChatStatus::Progress, 0, None)?;
         }
         on_event(ChatStreamEvent::Delta(event));
         Ok(())
@@ -540,7 +559,16 @@ pub async fn chat_send_message(
             },
         ),
     };
-    studio_states::update_chat_history(store, answer_id, &final_text, final_thinking.as_deref(), status)?;
+    let gen_ms = gen_start.map(|start| start.elapsed().as_millis() as i32);
+    studio_states::update_chat_history(
+        store,
+        answer_id,
+        &final_text,
+        final_thinking.as_deref(),
+        status,
+        studio_cluster::count_tokens(&final_text) as i32,
+        gen_ms,
+    )?;
     Ok(())
 }
 

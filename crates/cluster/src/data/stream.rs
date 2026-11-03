@@ -23,4 +23,7 @@ pub struct StreamAnswerData {
     pub thinking: Option<String>,
     /// The stream was cancelled before the end.
     pub cancelled: bool,
+    /// Estimated completion tokens (text + thinking); `None` on a
+    /// failed request.
+    pub completion_tokens: Option<usize>,
 }

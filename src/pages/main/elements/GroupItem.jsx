@@ -41,7 +41,7 @@ export function GroupItem(props) {
               {props.name}
             </Typography>
             <Typography
-              variant={'body2'}
+              variant={'caption'}
               noWrap
               color={'text.secondary'}
               sx={{ fontFamily: 'monospace' }}

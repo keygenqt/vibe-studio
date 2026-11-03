@@ -14,6 +14,7 @@ import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
 import { useCoreChat, useCoreGroupsChat, useCoreSettings, useCoreWorkspace } from '../../hooks'
 import { Methods } from '../../modules'
+import { AppUtils } from '../../utils'
 
 import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
 import { ChatTitleView } from './elements/ChatTitleView'
@@ -21,12 +22,6 @@ import { UserMessageView } from './elements/UserMessageView'
 import { ModelMessageView } from './elements/ModelMessageView'
 import { QuickActions } from './elements/QuickActions'
 import { InputView } from './elements/InputView'
-
-// @todo - utils
-const LOCALES = { ru: 'ru', en: 'en', cn: 'zh-CN' }
-
-// @todo - crates
-const STATS = '49.2K Tokens · 38.3 Tokens/s'
 
 export function ChatPage() {
   const { chatId } = useParams()
@@ -43,6 +38,7 @@ export function ChatPage() {
     stop,
     history,
     stream,
+    stats,
     ready: chatReady,
   } = useCoreChat({ chatId: cid })
   const { settings } = useCoreSettings()
@@ -59,11 +55,8 @@ export function ChatPage() {
 
   const viewMessage = message => ({
     ...message,
-    author: message.model ?? 'Вы',
-    time: new Intl.DateTimeFormat(LOCALES[i18n.language], {
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(message.created_at)),
+    author: message.model ?? t('chat.t_you'),
+    time: AppUtils.formatTime(i18n.language, message.created_at),
   })
 
   const renderMessage = (message, key) => {
@@ -121,7 +114,12 @@ export function ChatPage() {
             }}
           >
             <Stack spacing={2} sx={{ height: '100%' }}>
-              <QuickActions quick={quick} onQuick={setQuick} stats={STATS} />
+              <QuickActions
+                quick={quick}
+                onQuick={setQuick}
+                stats={AppUtils.formatStats(stats)}
+                loading={streaming}
+              />
               <InputView
                 draft={draft}
                 setDraft={setDraft}

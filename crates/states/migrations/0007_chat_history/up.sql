@@ -7,6 +7,8 @@ CREATE TABLE chat_history (
     text TEXT NOT NULL,
     thinking TEXT NULL,
     translate TEXT NULL,
+    tokens INTEGER NULL,
+    gen_ms INTEGER NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

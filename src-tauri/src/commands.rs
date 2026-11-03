@@ -9,7 +9,6 @@ use tauri::WebviewWindow;
 use tauri::ipc::Channel;
 
 use studio_core::ChatData;
-use studio_core::ChatHistoryData;
 use studio_core::ChatStreamEvent;
 use studio_core::GroupChatData;
 use studio_core::GroupChatHistoryData;
@@ -23,6 +22,7 @@ use studio_core::WorkspaceData;
 
 use crate::data::app_info::AppInfoData;
 use crate::data::chat_state::ChatStateData;
+use crate::data::chat_state::ChatStatsData;
 use crate::data::event_data::EventData;
 use crate::data::event_data::EventKey;
 use crate::data::groups_chat_state::GroupsChatData;
@@ -295,10 +295,13 @@ pub fn select_group_chat(
 // Chat
 // ─────────────────────────────────────────────
 
-/// All messages of the chat, oldest first.
+/// The fresh state of the chat block: the chat row, its usage stats
+/// and the message history, oldest first.
 #[tauri::command]
-pub fn chat_get_history(store: State<Store>, chat_id: i32) -> Result<Vec<ChatHistoryData>, String> {
-    studio_core::chat_get_history(&store, chat_id).map_err(|e| e.to_string())
+pub fn chat_get_history(store: State<Store>, chat_id: i32) -> Result<ChatStateData, String> {
+    studio_core::chat_get_history(&store, chat_id).map_err(|e| e.to_string())?;
+    let state = ChatStateData::new(&store, chat_id);
+    Ok(state)
 }
 
 /// Sends the user's message to the chat's model and records the
@@ -315,7 +318,11 @@ pub async fn chat_send_message(
     let event_window = window.clone();
     studio_core::chat_send_message(&store, chat_id, &text, move |event| match event {
         ChatStreamEvent::UserStored { chat, history } => {
-            let state = ChatStateData { chat, history };
+            let state = ChatStateData {
+                chat,
+                stats: ChatStatsData::of(&history),
+                history,
+            };
             emit_event_chat(&event_window, EventData::new(EventKey::Chat, &state));
         }
         ChatStreamEvent::Delta(delta) => {
