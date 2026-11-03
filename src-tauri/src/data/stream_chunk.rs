@@ -5,37 +5,22 @@
 
 use serde::Serialize;
 
-use studio_core::StreamEvent;
-
-/// The kind of a live delta.
+/// The kind of the live answer chunk: a thinking delta or the whole
+/// balanced answer text.
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum StreamChunkKind {
-    /// A reasoning (thinking) chunk.
+    /// A reasoning (thinking) delta.
     Thinking,
-    /// A text chunk of the answer.
-    Text,
+    /// The whole answer text as it stands.
+    Snapshot,
 }
 
-/// A live delta of the growing answer, sent over the command channel.
+/// The live answer of the growing stream, sent over the command
+/// channel: thinking arrives in deltas, the answer text — as the
+/// whole balanced snapshot the shell replaces its copy with.
 #[derive(Serialize, Clone)]
 pub struct StreamChunk {
     pub kind: StreamChunkKind,
-    pub delta: String,
-}
-
-impl StreamChunk {
-    /// Builds the chunk from the cluster stream event.
-    pub(crate) fn of(event: &StreamEvent) -> Self {
-        match event {
-            StreamEvent::Thinking(delta) => Self {
-                kind: StreamChunkKind::Thinking,
-                delta: delta.clone(),
-            },
-            StreamEvent::Text(delta) => Self {
-                kind: StreamChunkKind::Text,
-                delta: delta.clone(),
-            },
-        }
-    }
+    pub text: String,
 }

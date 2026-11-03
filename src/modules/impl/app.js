@@ -41,6 +41,9 @@ export const app = {
   clipboard_read: async function () {
     return invoke('clipboard_read', {})
   },
+  open_in_browser: async function (url) {
+    return invoke('open_in_browser', { url })
+  },
 }
 
 // the block's Rust channel, bound once for the app lifetime: the OS

@@ -15,6 +15,7 @@ use data::TranslateTargetData;
 
 pub use studio_cluster::StreamEvent;
 
+mod browser;
 mod clipboard;
 mod data;
 pub(crate) mod theme;
@@ -615,6 +616,10 @@ async fn chat_send_stream(
     // streams must not turn into hundreds of UPDATEs per second
     const PERSIST_INTERVAL_MS: u64 = 300;
     let mut persisted_at = std::time::Instant::now();
+    // the shell copy refreshes at most once per 100 ms — the whole
+    // text per delta would flood the channel on fast models
+    const STREAM_INTERVAL_MS: u64 = 100;
+    let mut streamed_at = std::time::Instant::now();
     // the text generation window: from the first text delta to the
     // finalization — the thinking time stays out of the speed
     let mut gen_start: Option<std::time::Instant> = None;
@@ -626,8 +631,22 @@ async fn chat_send_stream(
                     gen_start = Some(std::time::Instant::now());
                 }
                 text_acc.push_str(chunk);
+                // the shell paints the balanced whole, at most once
+                // per the interval — the final write is the authority
+                if streamed_at.elapsed() >= std::time::Duration::from_millis(STREAM_INTERVAL_MS) {
+                    streamed_at = std::time::Instant::now();
+                    on_event(ChatStreamEvent::TextSnapshot(utils::balanced_markdown(&text_acc)));
+                }
             }
-            StreamEvent::Thinking(chunk) => thinking_acc.push_str(chunk),
+            StreamEvent::Thinking(chunk) => {
+                thinking_acc.push_str(chunk);
+                // thinking rides the same interval — fast reasoners
+                // flood the channel exactly like the text does
+                if streamed_at.elapsed() >= std::time::Duration::from_millis(STREAM_INTERVAL_MS) {
+                    streamed_at = std::time::Instant::now();
+                    on_event(ChatStreamEvent::Thinking(chunk.clone()));
+                }
+            }
         }
         let thinking = if thinking_acc.is_empty() {
             None
@@ -639,7 +658,6 @@ async fn chat_send_stream(
             // tokens land only with the final write — the authority
             studio_states::update_chat_history(store, answer_id, &text_acc, thinking, ChatStatus::Progress, 0, None)?;
         }
-        on_event(ChatStreamEvent::Delta(event));
         Ok(())
     };
     // a closed channel disables the rx arm: the senders are gone and
@@ -699,9 +717,9 @@ pub fn chat_cancel_send(store: &Store, chat_id: i32) -> Result<()> {
 }
 
 /// Translates the model answer with the translation task model. With
-/// the streaming output on, the text deltas go to `on_delta` and the
-/// growing translation persists in the row; off — the translation
-/// arrives at once. Every translation replaces the stored one: the
+/// the streaming output on, the whole balanced text goes to
+/// `on_delta` as it grows and persists in the row; off — the
+/// translation arrives at once. Every translation replaces the stored one: the
 /// column holds only the shown translation. A cancelled run writes
 /// nothing — the closer clears the column, a replaced run belongs to
 /// the newest translation; a failed run clears the partial text.
@@ -769,6 +787,10 @@ pub async fn chat_translate_message(
     let mut text_acc = String::new();
     const PERSIST_INTERVAL_MS: u64 = 300;
     let mut persisted_at = std::time::Instant::now();
+    // the shell copy refreshes at most once per 100 ms — the same
+    // guard the chat answer stream lives under
+    const STREAM_INTERVAL_MS: u64 = 100;
+    let mut streamed_at = std::time::Instant::now();
     // one delta: grow the accumulator, persist the row, forward to the shell
     let mut handle = |event: StreamEvent| -> Result<()> {
         if let StreamEvent::Text(chunk) = &event {
@@ -777,7 +799,12 @@ pub async fn chat_translate_message(
                 persisted_at = std::time::Instant::now();
                 studio_states::update_chat_history_translate(store, message_id, Some(text_acc.as_str()))?;
             }
-            on_delta(chunk);
+            // the shell paints the balanced whole, at most once per
+            // the interval — the final write is the authority
+            if streamed_at.elapsed() >= std::time::Duration::from_millis(STREAM_INTERVAL_MS) {
+                streamed_at = std::time::Instant::now();
+                on_delta(&utils::balanced_markdown(&text_acc));
+            }
         }
         Ok(())
     };
@@ -941,4 +968,10 @@ pub fn clipboard_clear() -> Result<()> {
 /// when the clipboard is empty or unsupported.
 pub fn clipboard_read() -> Option<ClipboardRead> {
     clipboard::read_all()
+}
+
+/// Opens the link in the default browser; only `http` and `https`
+/// pass.
+pub fn open_in_browser(url: &str) -> Result<()> {
+    browser::open_in_browser(url)
 }

@@ -42,7 +42,7 @@ export const chat = {
     const channel = new Channel()
     channel.onmessage = chunk => {
       if (seq === streamSeq) {
-        store.dispatch(chatStreamAppend({ seq, chatId, kind: chunk.kind, delta: chunk.delta }))
+        store.dispatch(chatStreamAppend({ seq, chatId, kind: chunk.kind, text: chunk.text }))
       }
     }
     try {
@@ -69,7 +69,7 @@ export const chat = {
     const channel = new Channel()
     channel.onmessage = chunk => {
       if (seq === streamSeq) {
-        store.dispatch(chatStreamAppend({ seq, chatId, kind: chunk.kind, delta: chunk.delta }))
+        store.dispatch(chatStreamAppend({ seq, chatId, kind: chunk.kind, text: chunk.text }))
       }
     }
     try {
@@ -87,8 +87,8 @@ export const chat = {
     store.dispatch(chatTranslateStart({ seq, messageId }))
     const channel = new Channel()
     channel.onmessage = chunk => {
-      if (seq === translateSeq && chunk.kind === 'text') {
-        store.dispatch(chatTranslateAppend({ seq, messageId, delta: chunk.delta }))
+      if (seq === translateSeq && chunk.kind === 'snapshot') {
+        store.dispatch(chatTranslateAppend({ seq, messageId, text: chunk.text }))
       }
     }
     try {

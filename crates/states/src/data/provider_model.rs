@@ -13,8 +13,8 @@ use crate::Store;
 const DEFAULT_SYSTEM_PROMPT: &str = "";
 const DEFAULT_TEMPERATURE: f64 = 0.7;
 const DEFAULT_SEED: i64 = 42;
-const DEFAULT_NUM_CTX: i32 = 4096;
-const DEFAULT_NUM_PREDICT: i32 = 2048;
+const DEFAULT_NUM_CTX: i32 = 8192;
+const DEFAULT_NUM_PREDICT: i32 = 4096;
 
 /// A model of a provider catalog. `id` is `None` until the row is
 /// stored — SQLite owns the id. Config `None` means the user has not

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { Box, Stack, Typography } from '@mui/material'
 
 import { ErrorSnackbar } from '../../../components/snackbars'
+import { MarkdownView } from '../../../components/views'
 import { Methods } from '../../../modules'
 
 import { MessageActions } from './MessageActions'
@@ -123,17 +124,12 @@ export function ModelMessageView(props) {
                 </Typography>
               )}
             </>
+          ) : message.text ? (
+            <MarkdownView text={message.text} fontSize={props.fontSize} />
           ) : (
-            <Typography
-              variant={'body2'}
-              color={
-                isError ? 'error.contrastText' : message.text ? 'text.primary' : 'text.secondary'
-              }
-              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-            >
+            <Typography variant={'body2'} color={'text.secondary'}>
               {/* the growing answer shows the placeholder until the first text */}
-              {message.text ||
-                (message.status === 'progress' ? t('chat.t_generating') : t('chat.t_empty_answer'))}
+              {message.status === 'progress' ? t('chat.t_generating') : t('chat.t_empty_answer')}
             </Typography>
           )}
           {(props.translation || props.translating) &&
@@ -142,13 +138,13 @@ export function ModelMessageView(props) {
             !isError && (
               <>
                 <Box sx={{ my: 1, borderTop: '1px dashed', borderColor: 'divider' }} />
-                <Typography
-                  variant={'body2'}
-                  color={'text.secondary'}
-                  sx={{ minWidth: 0, whiteSpace: 'pre-line', fontSize: props.fontSize }}
-                >
-                  {props.translation || t('chat.t_translating')}
-                </Typography>
+                {props.translation ? (
+                  <MarkdownView text={props.translation} fontSize={props.fontSize} />
+                ) : (
+                  <Typography variant={'body2'} color={'text.secondary'}>
+                    {t('chat.t_translating')}
+                  </Typography>
+                )}
               </>
             )}
         </Box>

@@ -28,6 +28,7 @@ use crate::data::event_data::EventKey;
 use crate::data::groups_chat_state::GroupsChatData;
 use crate::data::providers_state::ProvidersData;
 use crate::data::stream_chunk::StreamChunk;
+use crate::data::stream_chunk::StreamChunkKind;
 
 use crate::events::emit_event_chat;
 use crate::events::emit_event_groups_chat;
@@ -328,8 +329,17 @@ pub async fn chat_send_message(
             };
             emit_event_chat(&event_window, EventData::new(EventKey::Chat, &state));
         }
-        ChatStreamEvent::Delta(delta) => {
-            let _ = on_delta.send(StreamChunk::of(&delta));
+        ChatStreamEvent::TextSnapshot(text) => {
+            let _ = on_delta.send(StreamChunk {
+                kind: StreamChunkKind::Snapshot,
+                text,
+            });
+        }
+        ChatStreamEvent::Thinking(text) => {
+            let _ = on_delta.send(StreamChunk {
+                kind: StreamChunkKind::Thinking,
+                text,
+            });
         }
     })
     .await
@@ -383,8 +393,17 @@ pub async fn chat_resend_message(
             };
             emit_event_chat(&event_window, EventData::new(EventKey::Chat, &state));
         }
-        ChatStreamEvent::Delta(delta) => {
-            let _ = on_delta.send(StreamChunk::of(&delta));
+        ChatStreamEvent::TextSnapshot(text) => {
+            let _ = on_delta.send(StreamChunk {
+                kind: StreamChunkKind::Snapshot,
+                text,
+            });
+        }
+        ChatStreamEvent::Thinking(text) => {
+            let _ = on_delta.send(StreamChunk {
+                kind: StreamChunkKind::Thinking,
+                text,
+            });
         }
     })
     .await
@@ -405,8 +424,11 @@ pub async fn chat_translate_message(
     message_id: i32,
     on_delta: Channel<StreamChunk>,
 ) -> Result<ChatStateData, String> {
-    studio_core::chat_translate_message(&store, chat_id, message_id, move |delta| {
-        let _ = on_delta.send(StreamChunk::of(&studio_core::StreamEvent::Text(delta.to_string())));
+    studio_core::chat_translate_message(&store, chat_id, message_id, move |text| {
+        let _ = on_delta.send(StreamChunk {
+            kind: StreamChunkKind::Snapshot,
+            text: text.to_string(),
+        });
     })
     .await
     .map_err(|e| e.to_string())?;
@@ -502,4 +524,10 @@ pub fn clipboard_clear() -> Result<(), String> {
 #[tauri::command]
 pub fn clipboard_read() -> Option<studio_core::ClipboardRead> {
     studio_core::clipboard_read()
+}
+
+/// Opens the link in the default browser; only `http` and `https`.
+#[tauri::command]
+pub fn open_in_browser(url: String) -> Result<(), String> {
+    studio_core::open_in_browser(&url).map_err(|e| e.to_string())
 }

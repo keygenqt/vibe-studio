@@ -4762,6 +4762,7 @@ dependencies = [
  "clipboard-rs",
  "dark-light",
  "image",
+ "open",
  "serde",
  "studio-cluster",
  "studio-states",

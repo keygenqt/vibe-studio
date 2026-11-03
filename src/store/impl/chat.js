@@ -50,13 +50,19 @@ const chatSlice = createSlice({
         text: '',
       }
     },
+    // thinking grows in deltas, the answer text arrives as the whole
+    // balanced snapshot — the copy replaces, never accumulates
     chatStreamAppend: (state, action) => {
-      const { seq, chatId, kind, delta } = action.payload
+      const { seq, chatId, kind, text } = action.payload
       if (state.stream && state.stream.seq > seq) return
       if (state.stream === null || state.stream.seq !== seq) {
         state.stream = { seq, chatId, thinking: '', text: '' }
       }
-      state.stream[kind] = (state.stream[kind] ?? '') + delta
+      if (kind === 'thinking') {
+        state.stream.thinking += text
+      } else {
+        state.stream.text = text
+      }
     },
     chatStreamFinal: (state, action) => {
       if (state.stream && state.stream.seq <= action.payload) {
@@ -72,13 +78,14 @@ const chatSlice = createSlice({
         text: '',
       }
     },
+    // the whole balanced translation replaces the copy
     chatTranslateAppend: (state, action) => {
-      const { seq, messageId, delta } = action.payload
+      const { seq, messageId, text } = action.payload
       if (state.translateStream && state.translateStream.seq > seq) return
       if (state.translateStream === null || state.translateStream.seq !== seq) {
         state.translateStream = { seq, messageId, text: '' }
       }
-      state.translateStream.text += delta
+      state.translateStream.text = text
     },
     chatTranslateFinal: (state, action) => {
       if (state.translateStream && state.translateStream.seq <= action.payload) {

@@ -69,3 +69,14 @@ pub(crate) fn cancel_translate_token(message_id: i32) {
         token.cancel();
     }
 }
+
+/// The markdown kept whole on the fly: a code fence opened but not
+/// yet closed by the stream is closed in the copy for the shell.
+pub(crate) fn balanced_markdown(text: &str) -> String {
+    let open = text.lines().filter(|line| line.trim_start().starts_with("```")).count();
+    if open % 2 == 0 {
+        text.to_string()
+    } else {
+        format!("{text}\n```")
+    }
+}
