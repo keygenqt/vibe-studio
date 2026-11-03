@@ -5,7 +5,7 @@
  * INFO: The chat shell: group sidebar, chat area, composer.
  */
 import * as React from 'react'
-import { matchPath, Outlet, useLocation, useNavigate } from 'react-router'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 import { Box } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import ViewSidebar from '@mui/icons-material/ViewSidebar'
@@ -16,12 +16,10 @@ import { Methods } from '../../modules'
 import { AppRoutes } from '../../constants'
 import { ShellLayout, SidebarLayout } from '../../components/layouts'
 import { TooltipIconButton } from '../../components/buttons'
-import { HandleView } from '../../components/views'
 import { AppNav } from '../../utils'
 
 import { SidebarTitle } from './elements/SidebarTitle'
 import { SidebarView } from './elements/SidebarView'
-import { InputView } from './elements/InputView'
 
 export function MainPage() {
   const workspace = useCoreWorkspace()
@@ -29,13 +27,11 @@ export function MainPage() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { groupsChat, chats, models, history } = useCoreGroupsChat()
-  // the active chat is the routed one: no mirror state
-  const chatId = Number(matchPath(AppRoutes.chat(), pathname)?.params.chatId) || null
-  // the composer belongs to the open chat only
-  const hasChat = chatId !== null && Boolean(chats?.some(chat => chat.id === chatId))
+
   // the sidebar highlight is the persisted selection, not the route:
   // it lands together with the chat it belongs to — one paint
   const activeChatId = history?.find(item => item.current_is_active)?.current_active_chat_id || null
+
   // the active group is the persisted selection; until the user picks
   // one it falls back to the first group — highlight only, no write
   const activeId =
@@ -51,19 +47,6 @@ export function MainPage() {
     if (!restoredId || !chats.some(chat => chat.id === restoredId)) return
     AppNav.open(navigate, AppRoutes.chat(restoredId))
   }, [groupsChat, history, chats])
-
-  const createChat = () => {
-    if (activeId === null) return
-    Methods.save_chat({ id: null, name: '', group_chat_id: activeId })
-      .then(state => {
-        const savedId = state.history.find(item => item.current_is_active)?.current_active_chat_id
-        if (savedId) AppNav.open(navigate, AppRoutes.chat(savedId))
-      })
-      .catch(() => {})
-  }
-
-  // no render until the stored truth arrives — no startup animation
-  if (!workspace.ready) return null
 
   return (
     <ShellLayout
@@ -97,7 +80,20 @@ export function MainPage() {
           onHandlePointerDown: workspace.onSidebarHandlePointerDown,
         }}
         sidebarTitle={
-          <SidebarTitle canAdd={groupsChat !== null && groupsChat.length > 0} onAdd={createChat} />
+          <SidebarTitle
+            canAdd={groupsChat !== null && groupsChat.length > 0}
+            onAdd={() => {
+              if (activeId === null) return
+              Methods.save_chat({ id: null, name: '', group_chat_id: activeId })
+                .then(state => {
+                  const savedId = state.history.find(
+                    item => item.current_is_active
+                  )?.current_active_chat_id
+                  if (savedId) AppNav.open(navigate, AppRoutes.chat(savedId))
+                })
+                .catch(() => {})
+            }}
+          />
         }
         sidebarView={
           <SidebarView
@@ -128,7 +124,6 @@ export function MainPage() {
           />
         }
       >
-        {/* the chat area: pages render their own paper cards */}
         <Box
           sx={{
             flexGrow: 1,
@@ -141,16 +136,6 @@ export function MainPage() {
         >
           <Outlet />
         </Box>
-        {/* horizontal mirror of the sidebar handle: dragging up grows the composer */}
-        {hasChat && (
-          <>
-            <HandleView
-              orientation="horizontal"
-              onPointerDown={workspace.onComposerHandlePointerDown}
-            />
-            <InputView height={workspace.chatInputSize} chatId={chatId} />
-          </>
-        )}
       </SidebarLayout>
     </ShellLayout>
   )
