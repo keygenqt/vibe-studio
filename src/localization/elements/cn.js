@@ -39,7 +39,7 @@ export const cnLocalization = {
       t_search: '搜索',
       t_translate: '翻译',
       t_menu: '菜单',
-      t_generating: '正在生成回答...',
+      t_generating: '思考中...',
       t_cancelled: '生成已取消',
       t_empty_answer: '模型未返回回答',
       t_translating: '翻译中...',

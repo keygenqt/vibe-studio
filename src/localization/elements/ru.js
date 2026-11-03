@@ -39,7 +39,7 @@ export const ruLocalization = {
       t_search: 'Поиск',
       t_translate: 'Перевод',
       t_menu: 'Меню',
-      t_generating: 'Генерируется ответ...',
+      t_generating: 'Думаю...',
       t_cancelled: 'Генерация отменена',
       t_empty_answer: 'Пустой ответ модели',
       t_translating: 'Переводится...',
