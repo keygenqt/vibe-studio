@@ -10,6 +10,7 @@ use tauri::WebviewWindow;
 use tauri::ipc::Channel;
 
 use studio_core::ChatData;
+use studio_core::ChatShowType;
 use studio_core::ChatStreamEvent;
 use studio_core::GroupChatData;
 use studio_core::GroupChatHistoryData;
@@ -371,23 +372,24 @@ pub fn chat_cancel_send(store: State<Store>, chat_id: i32) -> Result<(), String>
     studio_core::chat_cancel_send(&store, chat_id).map_err(|e| e.to_string())
 }
 
-/// Persists the collapsed flag of the message bubble; emits and
-/// returns the fresh state of the chat block. A fresh collapse of an
-/// answer without a summary spawns the background summarization:
-/// when it lands, the block event carries the fresh state.
+/// Persists the show type of the message bubble; emits and returns
+/// the fresh state of the chat block. Switching to the summary view
+/// of a message without a summary spawns the background
+/// summarization: when it lands, the block event carries the fresh
+/// state.
 #[tauri::command]
-pub fn chat_set_message_collapsed(
+pub fn chat_set_message_show_type(
     app: AppHandle,
     window: WebviewWindow,
     store: State<Store>,
     chat_id: i32,
     message_id: i32,
-    collapsed: bool,
+    show_type: ChatShowType,
 ) -> Result<ChatStateData, String> {
-    studio_core::chat_set_message_collapsed(&store, chat_id, message_id, collapsed).map_err(|e| e.to_string())?;
-    // the summarization runs detached: the collapse answers at once,
+    studio_core::chat_set_message_show_type(&store, chat_id, message_id, show_type).map_err(|e| e.to_string())?;
+    // the summarization runs detached: the switch answers at once,
     // the summary arrives later through the block event
-    if collapsed && studio_core::get_settings(&store).tasks_model_light.is_some() {
+    if show_type == ChatShowType::Summary && studio_core::get_settings(&store).tasks_model_light.is_some() {
         let handle = app.clone();
         let window = window.clone();
         tauri::async_runtime::spawn(async move {
@@ -464,21 +466,6 @@ pub async fn chat_translate_message(
     })
     .await
     .map_err(|e| e.to_string())?;
-    let state = ChatStateData::new(&store, chat_id);
-    emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
-    Ok(state)
-}
-
-/// Clears the translation of the message; emits and returns the
-/// fresh state of the chat block.
-#[tauri::command]
-pub fn chat_translate_clear(
-    window: WebviewWindow,
-    store: State<Store>,
-    chat_id: i32,
-    message_id: i32,
-) -> Result<ChatStateData, String> {
-    studio_core::chat_translate_clear(&store, chat_id, message_id).map_err(|e| e.to_string())?;
     let state = ChatStateData::new(&store, chat_id);
     emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
     Ok(state)

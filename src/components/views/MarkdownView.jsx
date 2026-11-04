@@ -43,7 +43,6 @@ import { useTheme, alpha } from '@mui/material/styles'
 import ContentCopy from '@mui/icons-material/ContentCopy'
 
 import { Methods } from '../../modules'
-import { Perf } from '../../utils'
 
 // the highlight registry: a language outside it falls back to the
 // plain code — the fallback works for the stream with a partial
@@ -131,6 +130,7 @@ const REGISTERED = new Set([
 // the highlighted code block: the language caption and the copy in
 // the header, the prism colors over the theme mode
 function CodeBlockBase(props) {
+  const theme = useTheme()
   const [copied, setCopied] = React.useState(false)
   const timer = React.useRef(null)
   React.useEffect(() => () => timer.current && clearTimeout(timer.current), [])
@@ -160,9 +160,16 @@ function CodeBlockBase(props) {
         direction={'row'}
         justifyContent={'space-between'}
         alignItems={'center'}
-        sx={{ px: 1.5, py: 0.25, borderBottom: '1px solid', borderColor: 'divider' }}
+        sx={theme => ({
+          pl: 1.5,
+          pr: 0.5,
+          py: 0.25,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          backgroundColor: alpha(theme.palette.primary.main, 0.08),
+        })}
       >
-        <Typography variant={'caption'} color={'text.secondary'}>
+        <Typography variant={'caption'} color={'text.primary'}>
           {props.language}
         </Typography>
         <IconButton size={'small'} onClick={onClickCopy}>
@@ -177,6 +184,7 @@ function CodeBlockBase(props) {
           borderRadius: 0,
           fontSize: props.fontSize,
           lineHeight: 1.35,
+          background: theme.palette.background.paper,
         }}
         codeTagProps={{ style: { lineHeight: 'inherit', fontSize: '0.9em' } }}
       >
@@ -200,18 +208,6 @@ const CodeBlock = React.memo(CodeBlockBase)
 function MarkdownViewBase(props) {
   const theme = useTheme()
   const syntaxStyle = theme.palette.mode === 'dark' ? oneDark : oneLight
-
-  // the render cost of the markdown pipeline: the mark resets on
-  // every render, the read lands after the commit; only the slow
-  // ones pass the threshold — the stream would spam the log
-  const renderStart = React.useRef(performance.now())
-  renderStart.current = performance.now()
-  React.useLayoutEffect(() => {
-    const ms = performance.now() - renderStart.current
-    if (ms >= 8) {
-      Perf.log('markdown_render', ms, `${props.text.length} chars`)
-    }
-  })
 
   // the components map is stable per theme and font size — it must
   // not be rebuilt on every stream chunk
@@ -283,8 +279,8 @@ function MarkdownViewBase(props) {
         // keeps the regular weight
         fontWeight: theme => (theme.palette.mode === 'dark' ? 300 : 400),
         lineHeight: 1.5,
-        '& > *:first-of-type': { marginTop: 0 },
-        '& > *:last-of-type': { marginBottom: 0 },
+        '& > *:first-child': { marginTop: 0 },
+        '& > *:last-child': { marginBottom: 0 },
         '& p': { my: 1.5 },
         '& h1, & h2, & h3, & h4, & h5, & h6': {
           my: 1.5,
@@ -299,10 +295,12 @@ function MarkdownViewBase(props) {
           ml: 0,
           pl: 1.5,
           py: 0.5,
+          width: 1,
           borderLeft: '3px solid',
           borderColor: 'primary.main',
           backgroundColor: alpha(theme.palette.primary.main, 0.06),
           color: 'text.primary',
+          boxSizing: 'border-box',
         }),
         '& hr': { my: 2, borderColor: 'divider' },
         '& img': { maxWidth: 1, borderRadius: 2 },
@@ -328,8 +326,11 @@ function MarkdownViewBase(props) {
             borderRight: 'none',
           },
           '& td': {
+            px: 1.5,
+            py: 0.75,
             borderBottom: '1px solid',
             borderColor: 'divider',
+            backgroundColor: 'background.paper',
           },
           '& th': {
             fontWeight: 600,

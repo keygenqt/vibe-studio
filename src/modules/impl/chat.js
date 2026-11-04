@@ -19,29 +19,21 @@ import {
   chatTranslateFinal,
   chatTranslateStart,
 } from '../../store/impl/chat'
-import { Perf } from '../../utils'
 
 // the newest generation wins: a stale stream (cancelled by a newer
 // request to the same model) paints and resets nothing
 let streamSeq = 0
 
-// the newest translation wins: a stale stream (cancelled by closing
+// the newest translation wins: a stale stream (cancelled by switching
 // the view or by a newer translation of the message) paints nothing
 let translateSeq = 0
 
-// one stream lifecycle: the channel, the seq guard and the perf log;
-// every chunk is a whole snapshot — the copy replaces, not appends
+// one stream lifecycle: the channel and the seq guard; every chunk
+// is a whole snapshot — the copy replaces, not appends
 const runStream = async (seq, chatId, invokeStream) => {
-  const started = performance.now()
-  let firstAt = null
-  let chunks = 0
-  let chars = 0
   const channel = new Channel()
   channel.onmessage = chunk => {
     if (seq !== streamSeq) return
-    if (firstAt === null) firstAt = performance.now()
-    chunks += 1
-    chars = chunk.text.length
     store.dispatch(chatStreamAppend({ seq, chatId, kind: chunk.kind, text: chunk.text }))
   }
   try {
@@ -51,20 +43,12 @@ const runStream = async (seq, chatId, invokeStream) => {
     if (seq === streamSeq) {
       store.dispatch(chatStreamFinal(seq))
     }
-    const first = firstAt === null ? '—' : `${Math.round(firstAt - started)}ms`
-    Perf.log(
-      'chat_stream',
-      performance.now() - started,
-      `${chunks} chunks, ${chars} chars, first ${first}`
-    )
   }
 }
 
 export const chat = {
   chat_get_history: async function (chatId) {
-    const started = performance.now()
     const state = await invoke('chat_get_history', { chatId })
-    Perf.log('chat_get_history', performance.now() - started, `${state.history.length} messages`)
     store.dispatch(chatSet(state.chat))
     store.dispatch(chatHistorySet({ chatId: state.chat?.id ?? null, history: state.history }))
     store.dispatch(chatStatsSet(state.stats))
@@ -83,8 +67,8 @@ export const chat = {
     return invoke('chat_cancel_send', { chatId })
   },
   // the fresh state lands through the block event — nothing to dispatch
-  chat_set_message_collapsed: async function (chatId, messageId, collapsed) {
-    return invoke('chat_set_message_collapsed', { chatId, messageId, collapsed })
+  chat_set_message_show_type: async function (chatId, messageId, showType) {
+    return invoke('chat_set_message_show_type', { chatId, messageId, showType })
   },
   // the fresh state lands through the block event — nothing to dispatch
   chat_delete_message: async function (chatId, messageId) {
@@ -97,12 +81,11 @@ export const chat = {
       invoke('chat_resend_message', { chatId, messageId, onDelta: channel })
     )
   },
-  // one button, two ways: open translates anew, close clears — the
-  // column holds only the shown translation
+  // the column is the cache: a stored translation shows itself, an
+  // empty one generates once — the switch away cancels the run
   chat_translate_message: async function (chatId, messageId) {
     const seq = ++translateSeq
     store.dispatch(chatTranslateStart({ seq, messageId }))
-    const started = performance.now()
     const channel = new Channel()
     channel.onmessage = chunk => {
       if (seq === translateSeq && chunk.kind === 'text') {
@@ -115,14 +98,7 @@ export const chat = {
       if (seq === translateSeq) {
         store.dispatch(chatTranslateFinal(seq))
       }
-      Perf.log('chat_translate', performance.now() - started)
     }
-  },
-  chat_translate_clear: async function (chatId, messageId) {
-    // a fresh seq kills the running translation copy at once
-    const seq = ++translateSeq
-    store.dispatch(chatTranslateFinal(seq))
-    return invoke('chat_translate_clear', { chatId, messageId })
   },
 }
 

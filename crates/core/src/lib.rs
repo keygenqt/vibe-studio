@@ -7,7 +7,8 @@
 //! crate only.
 
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::path::PathBuf;
 use std::sync::Arc;
 use studio_cluster::CancelToken;
 
@@ -28,6 +29,7 @@ pub use studio_cluster::ModelInfoData;
 pub use studio_cluster::ProviderInfoData;
 pub use studio_states::ChatData;
 pub use studio_states::ChatHistoryData;
+pub use studio_states::ChatShowType;
 pub use studio_states::ChatStatus;
 pub use studio_states::GroupChatData;
 pub use studio_states::GroupChatHistoryData;
@@ -657,7 +659,16 @@ async fn chat_send_stream(
         if persisted_at.elapsed() >= std::time::Duration::from_millis(PERSIST_INTERVAL_MS) {
             persisted_at = std::time::Instant::now();
             // tokens land only with the final write — the authority
-            studio_states::update_chat_history(store, answer_id, &text_acc, thinking, ChatStatus::Progress, 0, None)?;
+            studio_states::update_chat_history(
+                store,
+                answer_id,
+                &text_acc,
+                thinking,
+                ChatStatus::Progress,
+                0,
+                None,
+                None,
+            )?;
         }
         Ok(())
     };
@@ -676,7 +687,7 @@ async fn chat_send_stream(
             },
         ),
     };
-    let gen_ms = gen_start.map(|start| start.elapsed().as_millis() as i32);
+    let tokens_gen_ms = gen_start.map(|start| start.elapsed().as_millis() as i32);
     studio_states::update_chat_history(
         store,
         answer_id,
@@ -684,7 +695,10 @@ async fn chat_send_stream(
         final_thinking.as_deref(),
         status,
         studio_cluster::count_tokens(&final_text) as i32,
-        gen_ms,
+        final_thinking
+            .as_deref()
+            .map(|text| studio_cluster::count_tokens(text) as i32),
+        tokens_gen_ms,
     )?;
     Ok(())
 }
@@ -701,13 +715,13 @@ pub fn chat_cancel_send(store: &Store, chat_id: i32) -> Result<()> {
     Ok(())
 }
 
-/// Translates the model answer with the translation task model. With
-/// the streaming output on, the whole balanced text goes to
-/// `on_delta` as it grows and persists in the row; off — the
-/// translation arrives at once. Every translation replaces the stored one: the
-/// column holds only the shown translation. A cancelled run writes
-/// nothing — the closer clears the column, a replaced run belongs to
-/// the newest translation; a failed run clears the partial text.
+/// Translates the model answer with the translation task model. A
+/// stored translation never calls the model again — the column is
+/// the cache, the task is requested once. With the streaming output
+/// on, the whole balanced text goes to `on_delta` as it grows; off —
+/// the translation arrives at once. Only a successful run writes:
+/// the final write lands the text with its counted tokens, a
+/// cancelled or failed run leaves the column alone.
 pub async fn chat_translate_message(
     store: &Store,
     chat_id: i32,
@@ -723,11 +737,15 @@ pub async fn chat_translate_message(
     if message.model.is_none() {
         anyhow::bail!("Only a model answer can be translated.");
     }
+    // the cache: an existing translation never calls the model again
+    if message.translate.is_some() {
+        return Ok(());
+    }
     let settings = studio_states::get_settings(store).unwrap_or_default();
     let target = translate_target(store, settings.translation_answers.as_deref())?;
 
     // a fresh translation of the message gives way: the dying run
-    // writes nothing — the column belongs to the newest translation
+    // writes nothing
     utils::cancel_translate_token(message_id);
     let cancel = utils::stream_token();
     utils::translate_tokens()
@@ -746,11 +764,11 @@ pub async fn chat_translate_message(
             &message.text,
         )
         .await?;
-        return finish_translation(store, message_id, &cancel, Some(&text));
+        return finish_translation(store, message_id, &cancel, &text);
     }
 
     // the deltas ride a channel: the callback runs inside the cluster
-    // call and cannot touch the store — the pump below persists them
+    // call and cannot touch the store — the pump below paints them
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<StreamEvent>();
     let call = std::pin::pin!(studio_cluster::call_translate_stream(
         target.kind,
@@ -770,19 +788,11 @@ pub async fn chat_translate_message(
     ));
 
     let mut text_acc = String::new();
-    // the growing row persists at most once per 300 ms — token
-    // streams must not turn into hundreds of UPDATEs per second
-    const PERSIST_INTERVAL_MS: u64 = 300;
-    let mut persisted_at = std::time::Instant::now();
     let mut gate = stream::StreamGate::default();
-    // one delta: grow the accumulator, persist the row, snapshot to the shell
+    // one delta: grow the accumulator, snapshot to the shell
     let handle = |event: StreamEvent| -> Result<()> {
         if let StreamEvent::Text(chunk) = &event {
             text_acc.push_str(chunk);
-            if persisted_at.elapsed() >= std::time::Duration::from_millis(PERSIST_INTERVAL_MS) {
-                persisted_at = std::time::Instant::now();
-                studio_states::update_chat_history_translate(store, message_id, Some(text_acc.as_str()))?;
-            }
             // the shell paints the balanced whole — the final write is the authority
             if gate.pass(text_acc.len()) {
                 let snapshot = utils::close_open_fence(&text_acc).unwrap_or_else(|| text_acc.clone());
@@ -791,40 +801,15 @@ pub async fn chat_translate_message(
         }
         Ok(())
     };
-    let outcome = stream::pump(call, &mut rx, handle).await?;
-
-    match outcome {
-        Ok(result) => finish_translation(store, message_id, &cancel, Some(&result)),
-        // a failed run clears the partial text, the error surfaces
-        Err(error) => {
-            finish_translation(store, message_id, &cancel, None)?;
-            Err(error)
-        }
-    }
-}
-
-/// Clears the translation of the message — the close of the
-/// translation view. The running translation of the message gives
-/// way: it writes nothing, the column holds only the shown one.
-pub fn chat_translate_clear(store: &Store, chat_id: i32, message_id: i32) -> Result<()> {
-    studio_states::get_chat(store, chat_id)?;
-    let histories = studio_states::get_chat_histories(store, chat_id)?;
-    if !histories.iter().any(|message| message.id == Some(message_id)) {
-        anyhow::bail!("Unknown message.");
-    }
-    utils::cancel_translate_token(message_id);
-    utils::translate_tokens()
-        .lock()
-        .expect("translate tokens poisoned")
-        .remove(&message_id);
-    studio_states::update_chat_history_translate(store, message_id, None)?;
-    Ok(())
+    // only the final write lands: a cancelled or failed run writes nothing
+    let result = stream::pump(call, &mut rx, handle).await??;
+    finish_translation(store, message_id, &cancel, &result)
 }
 
 /// The final write of a translation: only the run that still owns the
 /// message token writes — a cancelled or replaced run leaves the
 /// column alone. The owner's token leaves the registry.
-fn finish_translation(store: &Store, message_id: i32, token: &Arc<CancelToken>, text: Option<&str>) -> Result<()> {
+fn finish_translation(store: &Store, message_id: i32, token: &Arc<CancelToken>, text: &str) -> Result<()> {
     let mut tokens = utils::translate_tokens().lock().expect("translate tokens poisoned");
     let owned = tokens
         .get(&message_id)
@@ -834,20 +819,34 @@ fn finish_translation(store: &Store, message_id: i32, token: &Arc<CancelToken>, 
     }
     drop(tokens);
     if owned {
-        studio_states::update_chat_history_translate(store, message_id, text)?;
+        studio_states::update_chat_history_translate(
+            store,
+            message_id,
+            text,
+            studio_cluster::count_tokens(text) as i32,
+        )?;
     }
     Ok(())
 }
 
-/// Persists the collapsed flag of the message bubble. The UI is not
-/// trusted: the chat must exist and the message must belong to it.
-pub fn chat_set_message_collapsed(store: &Store, chat_id: i32, message_id: i32, collapsed: bool) -> Result<()> {
+/// Persists the show type of the message bubble. Switching away from
+/// the translate or summary view cancels its generation — the dying
+/// run loses ownership and writes nothing. The UI is not trusted:
+/// the chat must exist and the message must belong to it.
+pub fn chat_set_message_show_type(store: &Store, chat_id: i32, message_id: i32, show_type: ChatShowType) -> Result<()> {
     studio_states::get_chat(store, chat_id)?;
     let histories = studio_states::get_chat_histories(store, chat_id)?;
     if !histories.iter().any(|message| message.id == Some(message_id)) {
         anyhow::bail!("Unknown message.");
     }
-    studio_states::update_chat_history_collapsed(store, message_id, collapsed)?;
+    // the view being left gives way: its run writes nothing
+    if show_type != ChatShowType::Translate {
+        utils::drop_translate_token(message_id);
+    }
+    if show_type != ChatShowType::Summary {
+        utils::drop_summary_token(message_id);
+    }
+    studio_states::update_chat_history_show_type(store, message_id, show_type)?;
     Ok(())
 }
 
@@ -900,7 +899,12 @@ pub async fn chat_summarize_message(store: &Store, chat_id: i32, message_id: i32
     if summary.is_empty() {
         anyhow::bail!("Summary must not be blank.");
     }
-    studio_states::update_chat_history_summary(store, message_id, Some(&summary))?;
+    studio_states::update_chat_history_summary(
+        store,
+        message_id,
+        &summary,
+        studio_cluster::count_tokens(&summary) as i32,
+    )?;
     Ok(())
 }
 

@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
- * INFO: The model message bubble: thinking, the answer and the translation.
+ * INFO: The model message bubble: one view at a time — answer, translation, summary, thinking.
  */
 import * as React from 'react'
 import PropTypes from 'prop-types'
@@ -17,20 +17,35 @@ import { MessageActions } from './MessageActions'
 
 export function ModelMessageView(props) {
   const { t } = useTranslation()
-  const [thinkingOpen, setThinkingOpen] = React.useState(false)
-  // a stored translation shows itself: the column holds the shown one
-  const [translationOpen, setTranslationOpen] = React.useState(Boolean(props.translation))
   const message = props.message
   const isCancelled = message.status === 'cancelled'
   const isError = message.status === 'error'
-  const isCollapsed = Boolean(message.collapsed)
+  // the growing answer paints only the thinking switch: the text is
+  // not final, the artifacts are not generated
+  const isProgress = message.status === 'progress'
+  // the view toggles live only on a finished answer
+  const isFinal = message.status === 'complete'
   const [error, setError] = React.useState(null)
+  // error and cancelled answers always render as text — the broken
+  // bubble keeps its raw content whatever the stored view is
+  const showType = isCancelled || isError ? 'text' : message.show_type
+
+  // the copy takes the shown view: the active artifact, not the
+  // original text
+  const shownText =
+    showType === 'translate'
+      ? props.translation
+      : showType === 'summary'
+        ? message.summary
+        : showType === 'thinking'
+          ? message.thinking
+          : message.text
 
   // the handler resolves `true` on success for the accent paint;
   // a failure lands in the snackbar
   const onClickCopy = async () => {
     try {
-      await Methods.clipboard_write_text(message.text)
+      await Methods.clipboard_write_text(shownText)
       return true
     } catch (err) {
       setError(t(String(err)))
@@ -38,33 +53,33 @@ export function ModelMessageView(props) {
     }
   }
 
-  // the toggle flips the persisted flag; the summary lands through
-  // the block event
-  const onClickCollapse = async () => {
+  // the view switch persists the show type; switching to translate
+  // generates an empty column — the cache lives on the Rust side
+  const onClickTranslate = async () => {
+    const next = showType === 'translate' ? 'text' : 'translate'
     try {
-      await props.onCollapse(message.id, !message.collapsed)
+      await props.onShowType(message.id, next)
+      if (next === 'translate') await props.onTranslate(message.id)
     } catch (err) {
       setError(t(String(err)))
     }
   }
 
-  // the toggle: open translates anew, close clears — the column
-  // holds only the shown translation
-  const onClickTranslate = async () => {
-    if (translationOpen) {
-      setTranslationOpen(false)
-      try {
-        await props.onTranslateClose(message.id)
-      } catch (err) {
-        setError(t(String(err)))
-      }
-      return
-    }
-    setTranslationOpen(true)
+  // the view switch persists the show type; the summary of an empty
+  // column is spawned by the command itself
+  const onClickSummary = async () => {
     try {
-      await props.onTranslate(message.id)
+      await props.onShowType(message.id, showType === 'summary' ? 'text' : 'summary')
     } catch (err) {
-      setTranslationOpen(false)
+      setError(t(String(err)))
+    }
+  }
+
+  // the view switch persists the show type
+  const onClickThinking = async () => {
+    try {
+      await props.onShowType(message.id, showType === 'thinking' ? 'text' : 'thinking')
+    } catch (err) {
       setError(t(String(err)))
     }
   }
@@ -75,7 +90,8 @@ export function ModelMessageView(props) {
         <Box
           sx={{
             paddingX: 1.5,
-            paddingY: 1,
+            paddingTop: 1,
+            paddingBottom: 1.5,
             borderRadius: 2,
             backgroundColor: isError ? 'error.main' : 'panel.main',
           }}
@@ -95,92 +111,75 @@ export function ModelMessageView(props) {
             >
               {[message.author, message.time].filter(Boolean).join(' · ')}
             </Typography>
-            {!isCancelled && !isError && (
+            {(isFinal || isCancelled || (isProgress && message.thinking)) && (
               <MessageActions
-                onClickCopy={message.text ? onClickCopy : undefined}
-                onClickCollapse={props.onCollapse ? onClickCollapse : undefined}
-                collapseActive={isCollapsed}
-                onClickTranslate={props.onTranslate ? onClickTranslate : undefined}
-                onClickThinking={
-                  message.thinking ? () => setThinkingOpen(!thinkingOpen) : undefined
+                onClickCopy={!isProgress && shownText ? onClickCopy : undefined}
+                onClickTranslate={
+                  isFinal && props.onTranslate && props.onShowType ? onClickTranslate : undefined
                 }
-                translateActive={translationOpen}
-                thinkingActive={thinkingOpen}
-                onClickDelete={props.onDelete}
+                translateActive={showType === 'translate'}
+                onClickSummary={isFinal && props.canSummarize ? onClickSummary : undefined}
+                summaryActive={showType === 'summary'}
+                onClickThinking={message.thinking && props.onShowType ? onClickThinking : undefined}
+                thinkingActive={showType === 'thinking'}
+                onClickDelete={!isProgress ? props.onDelete : undefined}
               />
             )}
           </Stack>
-          {isCollapsed ? (
+          {showType === 'summary' ? (
             <Typography
               variant={'body2'}
-              color={'text.main'}
+              color={'text.secondary'}
               sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
             >
               {message.summary ?? t('chat.t_summarizing')}
             </Typography>
-          ) : (
+          ) : showType === 'translate' ? (
+            props.translation ? (
+              <DeferredMarkdown
+                text={props.translation}
+                fontSize={props.fontSize}
+                immediate={props.immediate}
+              />
+            ) : (
+              <Typography variant={'body2'} color={'text.secondary'}>
+                {t('chat.t_translating')}
+              </Typography>
+            )
+          ) : showType === 'thinking' ? (
+            <Typography
+              variant={'body2'}
+              color={'text.secondary'}
+              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+            >
+              {message.thinking}
+            </Typography>
+          ) : isCancelled ? (
             <>
-              {message.thinking && thinkingOpen && !isCancelled && !isError && (
-                <>
-                  <Typography
-                    variant={'body2'}
-                    color={'text.secondary'}
-                    sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-                  >
-                    {message.thinking}
-                  </Typography>
-                  <Box sx={{ my: 1, borderTop: '1px dashed', borderColor: 'divider' }} />
-                </>
-              )}
-              {isCancelled ? (
-                <>
-                  <Typography variant={'body2'} color={'text.secondary'}>
-                    {t('chat.t_cancelled')}
-                  </Typography>
-                  {message.text && (
-                    <Typography
-                      variant={'body2'}
-                      color={'text.secondary'}
-                      sx={{ fontStyle: 'italic', whiteSpace: 'pre-line' }}
-                    >
-                      {message.text}
-                    </Typography>
-                  )}
-                </>
-              ) : message.text ? (
-                <DeferredMarkdown
-                  text={message.text}
-                  fontSize={props.fontSize}
-                  immediate={props.immediate}
-                />
-              ) : (
-                <Typography variant={'body2'} color={'text.secondary'}>
-                  {/* the growing answer shows the placeholder until the first text */}
-                  {message.status === 'progress'
-                    ? t('chat.t_generating')
-                    : t('chat.t_empty_answer')}
+              <Typography variant={'body2'} color={'text.secondary'}>
+                {t('chat.t_cancelled')}
+              </Typography>
+              {message.text && (
+                <Typography
+                  variant={'body2'}
+                  color={'text.secondary'}
+                  sx={{ fontStyle: 'italic', whiteSpace: 'pre-line' }}
+                >
+                  {message.text}
                 </Typography>
               )}
-              {(props.translation || props.translating) &&
-                translationOpen &&
-                !isCancelled &&
-                !isError && (
-                  <>
-                    <Box sx={{ my: 1, borderTop: '1px dashed', borderColor: 'divider' }} />
-                    {props.translation ? (
-                      <DeferredMarkdown
-                        text={props.translation}
-                        fontSize={props.fontSize}
-                        immediate={props.immediate}
-                      />
-                    ) : (
-                      <Typography variant={'body2'} color={'text.secondary'}>
-                        {t('chat.t_translating')}
-                      </Typography>
-                    )}
-                  </>
-                )}
             </>
+          ) : message.text ? (
+            <DeferredMarkdown
+              text={message.text}
+              fontSize={props.fontSize}
+              immediate={props.immediate}
+            />
+          ) : (
+            <Typography variant={'body2'} color={'text.secondary'}>
+              {/* the growing answer shows the placeholder until the first text */}
+              {message.status === 'progress' ? t('chat.t_generating') : t('chat.t_empty_answer')}
+            </Typography>
           )}
         </Box>
       </Stack>
@@ -194,8 +193,11 @@ ModelMessageView.propTypes = {
     author: PropTypes.string,
     time: PropTypes.string.isRequired,
     status: PropTypes.oneOf(['complete', 'progress', 'cancelled', 'error']).isRequired,
+    // which artifact the bubble shows
+    show_type: PropTypes.oneOf(['text', 'translate', 'summary', 'thinking']).isRequired,
     text: PropTypes.string.isRequired,
     thinking: PropTypes.string,
+    summary: PropTypes.string,
   }).isRequired,
   // the message text size in px
   fontSize: PropTypes.number.isRequired,
@@ -203,16 +205,15 @@ ModelMessageView.propTypes = {
   translation: PropTypes.string,
   // a translation request is running for this message
   translating: PropTypes.bool,
-  // open translates anew, close clears; undefined hides the action —
-  // the translation model is not set
+  // switches to the translate view and generates an empty column;
+  // undefined hides the action — the translation model is not set
   onTranslate: PropTypes.func,
-  onTranslateClose: PropTypes.func,
+  // persists the show type of the bubble
+  onShowType: PropTypes.func,
+  // the light task model is set — the summary switch is available
+  canSummarize: PropTypes.bool,
   // opens the delete confirmation: the message and everything below
   onDelete: PropTypes.func.isRequired,
-  // collapses the bubble: flips the persisted flag, the summary
-  // arrives through the block event; undefined hides the action —
-  // the light task model is not set
-  onCollapse: PropTypes.func,
   // the visible tail renders markdown without the lazy upgrade
   immediate: PropTypes.bool,
 }

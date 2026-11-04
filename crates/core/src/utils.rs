@@ -70,6 +70,16 @@ pub(crate) fn cancel_translate_token(message_id: i32) {
     }
 }
 
+/// Cancels and drops the translation token of the message — the run
+/// loses ownership and writes nothing.
+pub(crate) fn drop_translate_token(message_id: i32) {
+    cancel_translate_token(message_id);
+    translate_tokens()
+        .lock()
+        .expect("translate tokens poisoned")
+        .remove(&message_id);
+}
+
 /// The active summary tokens by message id — a registry of its own:
 /// a summary never cancels a chat answer stream or a translation.
 pub(crate) fn summary_tokens() -> &'static Mutex<HashMap<i32, Arc<CancelToken>>> {
@@ -86,6 +96,16 @@ pub(crate) fn cancel_summary_token(message_id: i32) {
     {
         token.cancel();
     }
+}
+
+/// Cancels and drops the summary token of the message — the run
+/// loses ownership and writes nothing.
+pub(crate) fn drop_summary_token(message_id: i32) {
+    cancel_summary_token(message_id);
+    summary_tokens()
+        .lock()
+        .expect("summary tokens poisoned")
+        .remove(&message_id);
 }
 
 /// The markdown kept whole on the fly: a code fence opened but not

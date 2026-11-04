@@ -13,7 +13,15 @@ use studio_core::Store;
 #[derive(Serialize)]
 pub struct ChatStatsData {
     /// Estimated tokens of every message text together.
-    pub tokens: i64,
+    pub tokens_answer: i64,
+    /// Estimated tokens of the thinking together.
+    pub tokens_thinking: i64,
+    /// Estimated tokens of the translations together.
+    pub tokens_translate: i64,
+    /// Estimated tokens of the summaries together.
+    pub tokens_summary: i64,
+    /// The breakdown together.
+    pub tokens_total: i64,
     /// Speed of the newest answer with a measured generation time;
     /// `null` = not measured yet.
     pub tokens_per_second: Option<f64>,
@@ -22,19 +30,43 @@ pub struct ChatStatsData {
 }
 
 impl ChatStatsData {
-    /// Sums the message tokens and takes the speed of the newest
-    /// measured answer.
+    /// Sums the token breakdown over the history and takes the speed
+    /// of the newest measured answer.
     pub(crate) fn of(history: &[ChatHistoryData]) -> Self {
         let tokens_per_second = history
             .iter()
             .rev()
-            .filter_map(|message| match (message.tokens, message.gen_ms) {
+            .filter_map(|message| match (message.tokens_answer, message.tokens_gen_ms) {
                 (Some(tokens), Some(gen_ms)) if gen_ms > 0 => Some(f64::from(tokens) / (f64::from(gen_ms) / 1000.0)),
                 _ => None,
             })
             .next();
+        let tokens_answer: i64 = history
+            .iter()
+            .filter_map(|message| message.tokens_answer)
+            .map(i64::from)
+            .sum();
+        let tokens_thinking: i64 = history
+            .iter()
+            .filter_map(|message| message.tokens_thinking)
+            .map(i64::from)
+            .sum();
+        let tokens_translate: i64 = history
+            .iter()
+            .filter_map(|message| message.tokens_translate)
+            .map(i64::from)
+            .sum();
+        let tokens_summary: i64 = history
+            .iter()
+            .filter_map(|message| message.tokens_summary)
+            .map(i64::from)
+            .sum();
         Self {
-            tokens: history.iter().filter_map(|message| message.tokens).map(i64::from).sum(),
+            tokens_answer,
+            tokens_thinking,
+            tokens_translate,
+            tokens_summary,
+            tokens_total: tokens_answer + tokens_thinking + tokens_translate + tokens_summary,
             tokens_per_second,
             messages: history.len(),
         }

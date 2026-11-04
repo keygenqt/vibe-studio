@@ -9,17 +9,12 @@ import PropTypes from 'prop-types'
 import { Box, Typography } from '@mui/material'
 
 import { MarkdownView } from '../../../components/views'
-import { Perf } from '../../../utils'
 
 function DeferredMarkdownBase(props) {
   // the chat opens at the bottom: the tail renders markdown at once,
   // everything above waits for the viewport
   const [visible, setVisible] = React.useState(props.immediate === true)
   const ref = React.useRef(null)
-  // the length for the activation log — the observer must not
-  // rebuild on every stream tick
-  const lengthRef = React.useRef(props.text.length)
-  lengthRef.current = props.text.length
   // the scroller sat at the bottom before the upgrade — it stays
   // pinned after the content grows
   const pinnedRef = React.useRef(false)
@@ -36,7 +31,6 @@ function DeferredMarkdownBase(props) {
           scroller !== null &&
           scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 2
         setVisible(true)
-        Perf.log('markdown_deferred', null, `${lengthRef.current} chars`)
       },
       // the chat history scroller; the margin warms the messages just
       // outside the viewport

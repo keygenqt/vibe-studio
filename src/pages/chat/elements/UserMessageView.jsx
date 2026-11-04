@@ -18,23 +18,29 @@ import { MessageActions } from './MessageActions'
 export function UserMessageView(props) {
   const { t } = useTranslation()
   const [error, setError] = React.useState(null)
-  const isCollapsed = Boolean(props.message.collapsed)
 
-  // the toggle flips the persisted flag; the summary lands through
-  // the block event
-  const onClickCollapse = async () => {
+  // the view switch persists the show type; the summary of an empty
+  // column is spawned by the command itself
+  const onClickSummary = async () => {
     try {
-      await props.onCollapse(props.message.id, !props.message.collapsed)
+      await props.onShowType(
+        props.message.id,
+        props.message.show_type === 'summary' ? 'text' : 'summary'
+      )
     } catch (err) {
       setError(t(String(err)))
     }
   }
 
+  // the copy takes the shown view: the summary or the text itself
+  const shownText =
+    props.message.show_type === 'summary' ? props.message.summary : props.message.text
+
   // resolves `true` on success for the copy accent; a failure
   // lands in the snackbar
   const onClickCopy = async () => {
     try {
-      await Methods.clipboard_write_text(props.message.text)
+      await Methods.clipboard_write_text(shownText)
       return true
     } catch (err) {
       setError(t(String(err)))
@@ -48,7 +54,8 @@ export function UserMessageView(props) {
         <Box
           sx={{
             paddingX: 1.5,
-            paddingY: 1,
+            paddingTop: 1,
+            paddingBottom: 1.5,
             borderRadius: 2,
             backgroundColor: theme => alpha(theme.palette.primary.main, 0.15),
           }}
@@ -69,17 +76,17 @@ export function UserMessageView(props) {
               {[props.message.author, props.message.time].join(' · ')}
             </Typography>
             <MessageActions
-              onClickCopy={onClickCopy}
-              onClickCollapse={props.onCollapse ? onClickCollapse : undefined}
-              collapseActive={isCollapsed}
+              onClickCopy={shownText ? onClickCopy : undefined}
+              onClickSummary={props.canSummarize ? onClickSummary : undefined}
+              summaryActive={props.message.show_type === 'summary'}
               onClickRefresh={props.onRefresh}
               onClickDelete={props.onDelete}
             />
           </Stack>
-          {isCollapsed ? (
+          {props.message.show_type === 'summary' ? (
             <Typography
               variant={'body2'}
-              color={'text.primary'}
+              color={'text.secondary'}
               sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
             >
               {props.message.summary ?? t('chat.t_summarizing')}
@@ -104,7 +111,10 @@ UserMessageView.propTypes = {
   message: PropTypes.shape({
     author: PropTypes.string.isRequired,
     time: PropTypes.string.isRequired,
+    // which artifact the bubble shows
+    show_type: PropTypes.oneOf(['text', 'translate', 'summary', 'thinking']).isRequired,
     text: PropTypes.string.isRequired,
+    summary: PropTypes.string,
   }).isRequired,
   // the message text size in px
   fontSize: PropTypes.number.isRequired,
@@ -112,8 +122,8 @@ UserMessageView.propTypes = {
   onRefresh: PropTypes.func.isRequired,
   // opens the delete confirmation: the message and everything below
   onDelete: PropTypes.func.isRequired,
-  // collapses the bubble: flips the persisted flag, the summary
-  // arrives through the block event; undefined hides the action —
-  // the light task model is not set
-  onCollapse: PropTypes.func,
+  // persists the show type of the bubble
+  onShowType: PropTypes.func,
+  // the light task model is set — the summary switch is available
+  canSummarize: PropTypes.bool,
 }

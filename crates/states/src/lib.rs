@@ -16,6 +16,7 @@ pub(crate) mod db;
 
 pub use data::chat::ChatData;
 pub use data::chat_history::ChatHistoryData;
+pub use data::chat_history::ChatShowType;
 pub use data::chat_history::ChatStatus;
 pub use data::group_chat::GroupChatData;
 pub use data::group_chat_history::GroupChatHistoryData;
@@ -136,41 +137,50 @@ pub fn add_chat_history(
     status: ChatStatus,
     text: &str,
     thinking: Option<&str>,
-    tokens: i32,
+    tokens_answer: i32,
 ) -> Result<ChatHistoryData> {
-    store.add_chat_history(chat_id, provider, model, status, text, thinking, tokens)
+    store.add_chat_history(chat_id, provider, model, status, text, thinking, tokens_answer)
 }
 
 /// Updates a growing message in place: the stream text/thinking, the
-/// counted tokens with the generation time, and the outcome status.
-/// Returns affected rows.
+/// counted answer and thinking tokens with the generation time, and
+/// the outcome status. Returns affected rows.
 pub fn update_chat_history(
     store: &Store,
     id: i32,
     text: &str,
     thinking: Option<&str>,
     status: ChatStatus,
-    tokens: i32,
-    gen_ms: Option<i32>,
+    tokens_answer: i32,
+    tokens_thinking: Option<i32>,
+    tokens_gen_ms: Option<i32>,
 ) -> Result<usize> {
-    store.update_chat_history(id, text, thinking, status, tokens, gen_ms)
+    store.update_chat_history(
+        id,
+        text,
+        thinking,
+        status,
+        tokens_answer,
+        tokens_thinking,
+        tokens_gen_ms,
+    )
 }
 
-/// Writes the message translation; `None` clears it. The column
-/// holds only the shown translation.
-pub fn update_chat_history_translate(store: &Store, id: i32, translate: Option<&str>) -> Result<usize> {
-    store.update_chat_history_translate(id, translate)
+/// Writes the message translation with its counted tokens — the
+/// final write of a finished run.
+pub fn update_chat_history_translate(store: &Store, id: i32, translate: &str, tokens_translate: i32) -> Result<usize> {
+    store.update_chat_history_translate(id, translate, tokens_translate)
 }
 
-/// Persists the collapsed flag of the message bubble. Returns affected rows.
-pub fn update_chat_history_collapsed(store: &Store, id: i32, collapsed: bool) -> Result<usize> {
-    store.update_chat_history_collapsed(id, collapsed)
+/// Persists the show type of the message bubble. Returns affected rows.
+pub fn update_chat_history_show_type(store: &Store, id: i32, show_type: ChatShowType) -> Result<usize> {
+    store.update_chat_history_show_type(id, show_type)
 }
 
-/// Writes the message summary; `None` clears it. The column holds
-/// only the shown summary.
-pub fn update_chat_history_summary(store: &Store, id: i32, summary: Option<&str>) -> Result<usize> {
-    store.update_chat_history_summary(id, summary)
+/// Writes the message summary with its counted tokens — the final
+/// write of a finished run.
+pub fn update_chat_history_summary(store: &Store, id: i32, summary: &str, tokens_summary: i32) -> Result<usize> {
+    store.update_chat_history_summary(id, summary, tokens_summary)
 }
 
 /// Active streams of one provider+model pair, oldest first.

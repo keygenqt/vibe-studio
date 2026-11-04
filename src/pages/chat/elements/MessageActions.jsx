@@ -11,9 +11,8 @@ import ContentCopy from '@mui/icons-material/ContentCopy'
 import DeleteOutline from '@mui/icons-material/DeleteOutline'
 import Psychology from '@mui/icons-material/Psychology'
 import Refresh from '@mui/icons-material/Refresh'
+import AutoAwesome from '@mui/icons-material/AutoAwesome'
 import Translate from '@mui/icons-material/Translate'
-import UnfoldLess from '@mui/icons-material/UnfoldLess'
-import UnfoldMore from '@mui/icons-material/UnfoldMore'
 
 export function MessageActions(props) {
   const [copied, setCopied] = React.useState(false)
@@ -33,13 +32,11 @@ export function MessageActions(props) {
 
   return (
     <Stack direction={'row'} spacing={0.25}>
-      {props.onClickCollapse && (
-        <IconButton size={'small'} onClick={props.onClickCollapse}>
-          {props.collapseActive ? (
-            <UnfoldMore sx={{ fontSize: 16, color: 'primary.main' }} />
-          ) : (
-            <UnfoldLess sx={{ fontSize: 16, color: 'text.secondary' }} />
-          )}
+      {props.onClickSummary && (
+        <IconButton size={'small'} onClick={props.onClickSummary}>
+          <AutoAwesome
+            sx={{ fontSize: 16, color: props.summaryActive ? 'primary.main' : 'text.secondary' }}
+          />
         </IconButton>
       )}
       {props.onClickCopy && (
@@ -78,14 +75,13 @@ export function MessageActions(props) {
 MessageActions.propTypes = {
   // resolves `true` on success — the copy button paints accent
   onClickCopy: PropTypes.func,
+  // the show type toggles: an active one paints accent
   onClickTranslate: PropTypes.func,
+  onClickSummary: PropTypes.func,
   onClickThinking: PropTypes.func,
-  // true while the thinking block is displayed — accent paint
   translateActive: PropTypes.bool,
+  summaryActive: PropTypes.bool,
   thinkingActive: PropTypes.bool,
-  // collapses the bubble to its summary; the icon flips to the expand
-  onClickCollapse: PropTypes.func,
-  collapseActive: PropTypes.bool,
   onClickRefresh: PropTypes.func,
   onClickDelete: PropTypes.func,
 }

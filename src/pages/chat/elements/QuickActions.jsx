@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material'
 import AttachFile from '@mui/icons-material/AttachFile'
+import { StatsView } from '../../../components/views'
 import MoreVert from '@mui/icons-material/MoreVert'
 import Public from '@mui/icons-material/Public'
 import Translate from '@mui/icons-material/Translate'
@@ -75,11 +76,7 @@ export function QuickActions(props) {
       {props.loading ? (
         <CircularProgress size={14} color={'inherit'} />
       ) : (
-        props.stats && (
-          <Typography variant={'caption'} noWrap color={'text.secondary'}>
-            {props.stats}
-          </Typography>
-        )
+        <StatsView stats={props.stats} />
       )}
     </Stack>
   )
@@ -90,6 +87,6 @@ QuickActions.propTypes = {
   onQuick: PropTypes.func.isRequired,
   translateEnabled: PropTypes.bool.isRequired,
   attachCount: PropTypes.number,
-  stats: PropTypes.string,
+  stats: PropTypes.object,
   loading: PropTypes.bool,
 }

@@ -50,20 +50,19 @@ export function ChatPage() {
   const [quick, setQuick] = React.useState([])
   // the pending confirmation: {action: 'delete' | 'resend', messageId}
   const [confirm, setConfirm] = React.useState(null)
-  // the open of the translation view translates anew, the close
-  // clears — the errors surface in the view
+  // the translation view shows the stored one, an empty column
+  // generates once — the errors surface in the view
   const translate = messageId => Methods.chat_translate_message(cid, messageId)
-  const translateClear = messageId => Methods.chat_translate_clear(cid, messageId)
   const chat = chats?.find(item => item.id === cid) ?? null
   // the message text size: the store resolves the untouched value
   const fontSize = settings.appearance_chat_font_size
   // the translate actions live only with the translation model set
   const canTranslate = settings.translation_model !== null
-  // the collapse lives only with the light task model set: the
+  // the summary view lives only with the light task model set: the
   // summary is its job
-  const canCollapse = settings.tasks_model_light !== null
-  const collapse = (messageId, collapsed) =>
-    Methods.chat_set_message_collapsed(cid, messageId, collapsed)
+  const canSummarize = settings.tasks_model_light !== null
+  const setShowType = (messageId, showType) =>
+    Methods.chat_set_message_show_type(cid, messageId, showType)
   // the newest progress row owns the live stream
   const progressRow = (history ?? []).findLast(item => item.status === 'progress') ?? null
   // the chat opens at the bottom: this many last messages render
@@ -91,7 +90,8 @@ export function ChatPage() {
         fontSize={fontSize}
         onRefresh={() => setConfirm({ action: 'resend', messageId: message.id })}
         onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
-        onCollapse={canCollapse ? collapse : undefined}
+        onShowType={setShowType}
+        canSummarize={canSummarize}
       />
     ) : (
       <ModelMessageView
@@ -106,9 +106,9 @@ export function ChatPage() {
         }
         translating={translateStream?.messageId === message.id}
         onTranslate={canTranslate ? translate : undefined}
-        onTranslateClose={canTranslate ? translateClear : undefined}
         onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
-        onCollapse={canCollapse ? collapse : undefined}
+        onShowType={setShowType}
+        canSummarize={canSummarize}
       />
     )
   }
@@ -144,6 +144,7 @@ export function ChatPage() {
                     provider: progressRow?.provider ?? null,
                     model: progressRow?.model ?? null,
                     status: 'progress',
+                    show_type: progressRow?.show_type ?? 'text',
                     text: stream.text,
                     thinking: stream.thinking,
                     created_at: progressRow?.created_at ?? Date.now(),
@@ -167,6 +168,8 @@ export function ChatPage() {
               backgroundColor: 'background.paper',
               boxSizing: 'border-box',
               padding: 2,
+              // the stats line folds by the box width, not the row
+              containerType: 'inline-size',
             }}
           >
             <Stack spacing={2} sx={{ height: '100%' }}>
@@ -175,7 +178,7 @@ export function ChatPage() {
                 onQuick={setQuick}
                 translateEnabled={canTranslate}
                 attachCount={chatAttachments.length}
-                stats={AppUtils.formatStats(stats)}
+                stats={stats}
                 loading={streaming}
               />
               <InputView

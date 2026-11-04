@@ -4,14 +4,18 @@ CREATE TABLE chat_history (
     provider TEXT NULL,
     model TEXT NULL,
     status TEXT NOT NULL DEFAULT 'complete',
+    show_type TEXT NOT NULL DEFAULT 'text',
     text TEXT NOT NULL,
     thinking TEXT NULL,
     translate TEXT NULL,
-    tokens INTEGER NULL,
-    gen_ms INTEGER NULL,
+    summary TEXT NULL,
+    tokens_answer INTEGER NULL,
+    tokens_thinking INTEGER NULL,
+    tokens_translate INTEGER NULL,
+    tokens_summary INTEGER NULL,
+    tokens_gen_ms INTEGER NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    collapsed BOOLEAN NOT NULL DEFAULT 0,
-    summary TEXT NULL
+    collapsed BOOLEAN NOT NULL DEFAULT 0
 );
 
 CREATE INDEX idx_chat_history_chat ON chat_history (chat_id);
