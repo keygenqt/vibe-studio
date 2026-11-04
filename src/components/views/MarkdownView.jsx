@@ -233,6 +233,23 @@ function MarkdownViewBase(props) {
           </Box>
         )
       },
+      // the scroll shell: the real table stretches to the full width
+      // and scrolls inside the frame when wider
+      table({ node, children, ...rest }) {
+        return (
+          <Box
+            sx={{
+              my: 2,
+              overflowX: 'auto',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <table {...rest}>{children}</table>
+          </Box>
+        )
+      },
       // a registered fenced block paints through the highlighter, an
       // inline code stays plain
       code({ node, children, className, ...rest }) {
@@ -308,14 +325,10 @@ function MarkdownViewBase(props) {
         // separators — the article tables of the site
         '& table': {
           width: 1,
-          my: 2,
+          pb: 1,
           textAlign: 'center',
           borderCollapse: 'separate',
           borderSpacing: 0,
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2,
-          overflow: 'hidden',
           '& th, & td': {
             px: 1.5,
             py: 0.75,

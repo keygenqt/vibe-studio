@@ -26,22 +26,15 @@ export function StatsView(props) {
   const stats = props.stats
   if (!stats) return null
   const parts = [
+    stats.tokens_per_second > 0 && {
+      key: 'speed',
+      icon: <Speed sx={ICON_SX} />,
+      value: `${AppUtils.human(stats.tokens_per_second)} t/s`,
+    },
     stats.messages > 0 && {
       key: 'texts',
       icon: <ChatBubbleOutline sx={ICON_SX} />,
       value: `${AppUtils.human(stats.tokens_answer)} / ${stats.messages}`,
-    },
-    stats.tokens_translate > 0 && {
-      key: 'translate',
-      minor: true,
-      icon: <Translate sx={ICON_SX} />,
-      value: AppUtils.human(stats.tokens_translate),
-    },
-    stats.tokens_summary > 0 && {
-      key: 'summary',
-      minor: true,
-      icon: <AutoAwesome sx={ICON_SX} />,
-      value: AppUtils.human(stats.tokens_summary),
     },
     stats.tokens_thinking > 0 && {
       key: 'thinking',
@@ -49,17 +42,24 @@ export function StatsView(props) {
       icon: <Psychology sx={ICON_SX} />,
       value: AppUtils.human(stats.tokens_thinking),
     },
-    stats.tokens_per_second > 0 && {
-      key: 'speed',
-      icon: <Speed sx={ICON_SX} />,
-      value: `${AppUtils.human(stats.tokens_per_second)} t/s`,
+    stats.tokens_summary > 0 && {
+      key: 'summary',
+      minor: true,
+      icon: <AutoAwesome sx={ICON_SX} />,
+      value: AppUtils.human(stats.tokens_summary),
     },
-  ].filter(Boolean)
+    stats.tokens_translate > 0 && {
+      key: 'translate',
+      minor: true,
+      icon: <Translate sx={ICON_SX} />,
+      value: AppUtils.human(stats.tokens_translate),
+    },
+  ].filter(part => part !== false)
 
   return (
     <Stack
       direction={'row'}
-      spacing={1.5}
+      spacing={1}
       alignItems={'center'}
       sx={{ minWidth: 0, overflow: 'hidden', '& .stats-minor': MINOR_QUERY }}
     >

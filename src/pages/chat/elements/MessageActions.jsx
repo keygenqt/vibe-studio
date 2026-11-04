@@ -6,7 +6,7 @@
  */
 import PropTypes from 'prop-types'
 import * as React from 'react'
-import { IconButton, Stack } from '@mui/material'
+import { Divider, IconButton, Stack } from '@mui/material'
 import ContentCopy from '@mui/icons-material/ContentCopy'
 import DeleteOutline from '@mui/icons-material/DeleteOutline'
 import Psychology from '@mui/icons-material/Psychology'
@@ -31,26 +31,29 @@ export function MessageActions(props) {
   }
 
   return (
-    <Stack direction={'row'} spacing={0.25}>
-      {props.onClickSummary && (
-        <IconButton size={'small'} onClick={props.onClickSummary}>
-          <AutoAwesome
-            sx={{ fontSize: 16, color: props.summaryActive ? 'primary.main' : 'text.secondary' }}
-          />
-        </IconButton>
-      )}
+    <Stack direction={'row'} spacing={0.5}>
       {props.onClickCopy && (
         <IconButton size={'small'} onClick={onClickCopy}>
           <ContentCopy sx={{ fontSize: 14, color: copied ? 'primary.main' : 'text.secondary' }} />
         </IconButton>
       )}
-      {props.onClickTranslate && (
-        <IconButton size={'small'} onClick={props.onClickTranslate}>
-          <Translate
-            sx={{ fontSize: 16, color: props.translateActive ? 'primary.main' : 'text.secondary' }}
-          />
+      {props.onClickDelete && (
+        <IconButton size={'small'} onClick={props.onClickDelete}>
+          <DeleteOutline sx={{ fontSize: 17, color: 'text.secondary' }} />
         </IconButton>
       )}
+
+      {props.onClickRefresh && (
+        <IconButton size={'small'} onClick={props.onClickRefresh}>
+          <Refresh sx={{ fontSize: 17, color: 'text.secondary' }} />
+        </IconButton>
+      )}
+
+      {(props.onClickCopy || props.onClickDelete) &&
+        (props.onClickSummary || props.onClickThinking || props.onClickTranslate) && (
+          <Divider orientation={'vertical'} flexItem sx={{ alignSelf: 'center', height: 16 }} />
+        )}
+
       {props.onClickThinking && (
         <IconButton size={'small'} onClick={props.onClickThinking}>
           <Psychology
@@ -58,14 +61,18 @@ export function MessageActions(props) {
           />
         </IconButton>
       )}
-      {props.onClickRefresh && (
-        <IconButton size={'small'} onClick={props.onClickRefresh}>
-          <Refresh sx={{ fontSize: 17, color: 'text.secondary' }} />
+      {props.onClickSummary && (
+        <IconButton size={'small'} onClick={props.onClickSummary}>
+          <AutoAwesome
+            sx={{ fontSize: 16, color: props.summaryActive ? 'primary.main' : 'text.secondary' }}
+          />
         </IconButton>
       )}
-      {props.onClickDelete && (
-        <IconButton size={'small'} onClick={props.onClickDelete}>
-          <DeleteOutline sx={{ fontSize: 17, color: 'text.secondary' }} />
+      {props.onClickTranslate && (
+        <IconButton size={'small'} onClick={props.onClickTranslate}>
+          <Translate
+            sx={{ fontSize: 16, color: props.translateActive ? 'primary.main' : 'text.secondary' }}
+          />
         </IconButton>
       )}
     </Stack>

@@ -101,7 +101,10 @@ export function ModelMessageView(props) {
             spacing={1}
             alignItems={'center'}
             justifyContent={'space-between'}
-            sx={{ pb: 0.5 }}
+            sx={{
+              minHeight: 24,
+              pb: 1,
+            }}
           >
             <Typography
               variant={'caption'}
