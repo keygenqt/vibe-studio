@@ -33,7 +33,7 @@ export function MessageActions(props) {
   return (
     <Stack direction={'row'} spacing={0.5}>
       {props.onClickCopy && (
-        <IconButton size={'small'} onClick={onClickCopy}>
+        <IconButton size={'small'} onClick={onClickCopy} sx={{ minWidth: '26px' }}>
           <ContentCopy sx={{ fontSize: 14, color: copied ? 'primary.main' : 'text.secondary' }} />
         </IconButton>
       )}
@@ -42,7 +42,6 @@ export function MessageActions(props) {
           <DeleteOutline sx={{ fontSize: 17, color: 'text.secondary' }} />
         </IconButton>
       )}
-
       {props.onClickRefresh && (
         <IconButton size={'small'} onClick={props.onClickRefresh}>
           <Refresh sx={{ fontSize: 17, color: 'text.secondary' }} />

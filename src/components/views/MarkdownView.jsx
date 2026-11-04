@@ -173,7 +173,7 @@ function CodeBlockBase(props) {
           {props.language}
         </Typography>
         <IconButton size={'small'} onClick={onClickCopy}>
-          <ContentCopy sx={{ fontSize: 16, color: copied ? 'primary.main' : 'text.secondary' }} />
+          <ContentCopy sx={{ fontSize: 14, color: copied ? 'primary.main' : 'text.secondary' }} />
         </IconButton>
       </Stack>
       <SyntaxHighlighter
@@ -325,7 +325,6 @@ function MarkdownViewBase(props) {
         // separators — the article tables of the site
         '& table': {
           width: 1,
-          pb: 1,
           textAlign: 'center',
           borderCollapse: 'separate',
           borderSpacing: 0,

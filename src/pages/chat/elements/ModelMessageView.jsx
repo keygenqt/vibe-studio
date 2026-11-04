@@ -7,11 +7,14 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
-import { Box, Stack, Typography } from '@mui/material'
+import { Box, IconButton, Stack, Typography } from '@mui/material'
+import UnfoldLess from '@mui/icons-material/UnfoldLess'
+import UnfoldMore from '@mui/icons-material/UnfoldMore'
 
 import { ErrorSnackbar } from '../../../components/snackbars'
 import { DeferredMarkdown } from './DeferredMarkdown'
 import { Methods } from '../../../modules'
+import { CHAT_COLLAPSE_HEIGHT } from '../../../constants'
 
 import { MessageActions } from './MessageActions'
 
@@ -84,6 +87,15 @@ export function ModelMessageView(props) {
     }
   }
 
+  // the collapse persists the flag; the clamped content unfolds on click
+  const onClickCollapse = async () => {
+    try {
+      await props.onSetCollapsed(message.id, !message.collapsed)
+    } catch (err) {
+      setError(t(String(err)))
+    }
+  }
+
   return (
     <>
       <Stack spacing={1}>
@@ -101,89 +113,126 @@ export function ModelMessageView(props) {
             spacing={1}
             alignItems={'center'}
             justifyContent={'space-between'}
-            sx={{
-              minHeight: 24,
-              pb: 1,
-            }}
+            sx={{ pb: 1 }}
           >
-            <Typography
-              variant={'caption'}
-              noWrap
-              color={isError ? 'error.contrastText' : 'text.secondary'}
-              sx={{ minWidth: 0 }}
-            >
-              {[message.author, message.time].filter(Boolean).join(' · ')}
-            </Typography>
+            <Stack direction={'row'} alignItems={'center'}>
+              {isFinal && props.onSetCollapsed && (
+                <IconButton
+                  size={'small'}
+                  onClick={onClickCollapse}
+                  sx={{ position: 'relative', left: '-4px' }}
+                >
+                  {message.collapsed ? (
+                    <UnfoldMore sx={{ fontSize: 17, color: 'text.secondary' }} />
+                  ) : (
+                    <UnfoldLess sx={{ fontSize: 17, color: 'text.secondary' }} />
+                  )}
+                </IconButton>
+              )}
+              <Typography
+                variant={'caption'}
+                noWrap
+                color={isError ? 'error.contrastText' : 'text.secondary'}
+                sx={{ minWidth: 0 }}
+              >
+                {[message.author, message.time].filter(Boolean).join(' · ')}
+              </Typography>
+            </Stack>
             {(isFinal || isCancelled || (isProgress && message.thinking)) && (
               <MessageActions
                 onClickCopy={!isProgress && shownText ? onClickCopy : undefined}
                 onClickTranslate={
-                  isFinal && props.onTranslate && props.onShowType ? onClickTranslate : undefined
+                  !message.collapsed && isFinal && props.onTranslate && props.onShowType
+                    ? onClickTranslate
+                    : undefined
                 }
                 translateActive={showType === 'translate'}
-                onClickSummary={isFinal && props.canSummarize ? onClickSummary : undefined}
+                onClickSummary={
+                  !message.collapsed && isFinal && props.canSummarize ? onClickSummary : undefined
+                }
                 summaryActive={showType === 'summary'}
-                onClickThinking={message.thinking && props.onShowType ? onClickThinking : undefined}
+                onClickThinking={
+                  !message.collapsed && message.thinking && props.onShowType
+                    ? onClickThinking
+                    : undefined
+                }
                 thinkingActive={showType === 'thinking'}
                 onClickDelete={!isProgress ? props.onDelete : undefined}
               />
             )}
           </Stack>
-          {showType === 'summary' ? (
-            <Typography
-              variant={'body2'}
-              color={'text.secondary'}
-              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-            >
-              {message.summary ?? t('chat.t_summarizing')}
-            </Typography>
-          ) : showType === 'translate' ? (
-            props.translation ? (
+          <Box
+            onClick={message.collapsed ? onClickCollapse : undefined}
+            sx={
+              message.collapsed
+                ? {
+                    maxHeight: CHAT_COLLAPSE_HEIGHT,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    maskImage:
+                      'linear-gradient(to bottom, #000 calc(100% - 32px), rgba(0,0,0,0.55) calc(100% - 20px), rgba(0,0,0,0.18) calc(100% - 8px), transparent 100%)',
+                    WebkitMaskImage:
+                      'linear-gradient(to bottom, #000 calc(100% - 32px), rgba(0,0,0,0.55) calc(100% - 20px), rgba(0,0,0,0.18) calc(100% - 8px), transparent 100%)',
+                  }
+                : undefined
+            }
+          >
+            {showType === 'summary' ? (
+              <Typography
+                variant={'body2'}
+                color={'text.secondary'}
+                sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+              >
+                {message.summary ?? t('chat.t_summarizing')}
+              </Typography>
+            ) : showType === 'translate' ? (
+              props.translation ? (
+                <DeferredMarkdown
+                  text={props.translation}
+                  fontSize={props.fontSize}
+                  immediate={props.immediate}
+                />
+              ) : (
+                <Typography variant={'body2'} color={'text.secondary'}>
+                  {t('chat.t_translating')}
+                </Typography>
+              )
+            ) : showType === 'thinking' ? (
+              <Typography
+                variant={'body2'}
+                color={'text.secondary'}
+                sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+              >
+                {message.thinking}
+              </Typography>
+            ) : isCancelled ? (
+              <>
+                <Typography variant={'body2'} color={'text.secondary'}>
+                  {t('chat.t_cancelled')}
+                </Typography>
+                {message.text && (
+                  <Typography
+                    variant={'body2'}
+                    color={'text.secondary'}
+                    sx={{ fontStyle: 'italic', whiteSpace: 'pre-line' }}
+                  >
+                    {message.text}
+                  </Typography>
+                )}
+              </>
+            ) : message.text ? (
               <DeferredMarkdown
-                text={props.translation}
+                text={message.text}
                 fontSize={props.fontSize}
                 immediate={props.immediate}
               />
             ) : (
               <Typography variant={'body2'} color={'text.secondary'}>
-                {t('chat.t_translating')}
+                {/* the growing answer shows the placeholder until the first text */}
+                {message.status === 'progress' ? t('chat.t_generating') : t('chat.t_empty_answer')}
               </Typography>
-            )
-          ) : showType === 'thinking' ? (
-            <Typography
-              variant={'body2'}
-              color={'text.secondary'}
-              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-            >
-              {message.thinking}
-            </Typography>
-          ) : isCancelled ? (
-            <>
-              <Typography variant={'body2'} color={'text.secondary'}>
-                {t('chat.t_cancelled')}
-              </Typography>
-              {message.text && (
-                <Typography
-                  variant={'body2'}
-                  color={'text.secondary'}
-                  sx={{ fontStyle: 'italic', whiteSpace: 'pre-line' }}
-                >
-                  {message.text}
-                </Typography>
-              )}
-            </>
-          ) : message.text ? (
-            <DeferredMarkdown
-              text={message.text}
-              fontSize={props.fontSize}
-              immediate={props.immediate}
-            />
-          ) : (
-            <Typography variant={'body2'} color={'text.secondary'}>
-              {/* the growing answer shows the placeholder until the first text */}
-              {message.status === 'progress' ? t('chat.t_generating') : t('chat.t_empty_answer')}
-            </Typography>
-          )}
+            )}
+          </Box>
         </Box>
       </Stack>
       <ErrorSnackbar text={error} onClose={() => setError(null)} />
@@ -201,6 +250,7 @@ ModelMessageView.propTypes = {
     text: PropTypes.string.isRequired,
     thinking: PropTypes.string,
     summary: PropTypes.string,
+    collapsed: PropTypes.bool,
   }).isRequired,
   // the message text size in px
   fontSize: PropTypes.number.isRequired,
@@ -213,6 +263,8 @@ ModelMessageView.propTypes = {
   onTranslate: PropTypes.func,
   // persists the show type of the bubble
   onShowType: PropTypes.func,
+  // persists the collapsed flag of the bubble
+  onSetCollapsed: PropTypes.func,
   // the light task model is set — the summary switch is available
   canSummarize: PropTypes.bool,
   // opens the delete confirmation: the message and everything below

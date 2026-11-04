@@ -92,6 +92,7 @@ pub fn run() {
             commands::chat_send_message,
             commands::chat_cancel_send,
             commands::chat_set_message_show_type,
+            commands::chat_set_message_collapsed,
             commands::chat_delete_message,
             commands::chat_resend_message,
             commands::chat_translate_message,

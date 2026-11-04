@@ -129,7 +129,8 @@ pub struct ChatHistoryData {
     /// Store-owned: when the row was born; JS gets unix millis.
     #[serde_as(as = "TimestampMilliSeconds<i64>")]
     pub created_at: NaiveDateTime,
-    /// Reserved for the future collapse feature.
+    /// The collapsed view flag of the bubble; the height clamp is
+    /// the shell's business.
     pub collapsed: bool,
 }
 
@@ -307,6 +308,15 @@ impl Store {
     pub(crate) fn update_chat_history_show_type(&self, id: i32, show_type: ChatShowType) -> Result<usize> {
         let affected = diesel::update(chat_history::table.find(id))
             .set(chat_history::show_type.eq(show_type.as_str()))
+            .execute(&mut *self.lock())?;
+        Ok(affected)
+    }
+
+    /// Persists the collapsed view flag of the message bubble.
+    /// Returns affected rows.
+    pub(crate) fn update_chat_history_collapsed(&self, id: i32, collapsed: bool) -> Result<usize> {
+        let affected = diesel::update(chat_history::table.find(id))
+            .set(chat_history::collapsed.eq(collapsed))
             .execute(&mut *self.lock())?;
         Ok(affected)
     }

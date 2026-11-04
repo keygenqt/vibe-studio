@@ -5,6 +5,9 @@
  * INFO: UI drag bounds, defaults and animation durations.
  */
 
+// Collapsed chat bubble: the preview height of the clamped content.
+export const CHAT_COLLAPSE_HEIGHT = 144
+
 // Composer height: user-dragged between min and max.
 export const CHAT_INPUT_SIZE_MIN = 132
 export const CHAT_INPUT_SIZE_MAX = 285

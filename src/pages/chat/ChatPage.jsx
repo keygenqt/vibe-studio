@@ -63,6 +63,8 @@ export function ChatPage() {
   const canSummarize = settings.tasks_model_light !== null
   const setShowType = (messageId, showType) =>
     Methods.chat_set_message_show_type(cid, messageId, showType)
+  const setCollapsed = (messageId, collapsed) =>
+    Methods.chat_set_message_collapsed(cid, messageId, collapsed)
   // the newest progress row owns the live stream
   const progressRow = (history ?? []).findLast(item => item.status === 'progress') ?? null
   // the chat opens at the bottom: this many last messages render
@@ -92,6 +94,7 @@ export function ChatPage() {
         onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
         onShowType={setShowType}
         canSummarize={canSummarize}
+        onSetCollapsed={setCollapsed}
       />
     ) : (
       <ModelMessageView
@@ -109,6 +112,7 @@ export function ChatPage() {
         onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
         onShowType={setShowType}
         canSummarize={canSummarize}
+        onSetCollapsed={setCollapsed}
       />
     )
   }

@@ -407,6 +407,22 @@ pub fn chat_set_message_show_type(
     Ok(state)
 }
 
+/// Persists the collapsed view flag of the message bubble; emits and
+/// returns the fresh state of the chat block.
+#[tauri::command]
+pub fn chat_set_message_collapsed(
+    window: WebviewWindow,
+    store: State<Store>,
+    chat_id: i32,
+    message_id: i32,
+    collapsed: bool,
+) -> Result<ChatStateData, String> {
+    studio_core::chat_set_message_collapsed(&store, chat_id, message_id, collapsed).map_err(|e| e.to_string())?;
+    let state = ChatStateData::new(&store, chat_id);
+    emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
+    Ok(state)
+}
+
 /// Deletes the message with everything below it; emits and returns
 /// the fresh state of the chat block.
 #[tauri::command]

@@ -850,6 +850,26 @@ pub fn chat_set_message_show_type(store: &Store, chat_id: i32, message_id: i32, 
     Ok(())
 }
 
+/// Persists the collapsed view flag of the message bubble. Collapsing
+/// switches the bubble back to the text view — the artifact switches
+/// live on the expanded body, and the running artifact runs give way.
+/// The UI is not trusted: the chat must exist and the message must
+/// belong to it.
+pub fn chat_set_message_collapsed(store: &Store, chat_id: i32, message_id: i32, collapsed: bool) -> Result<()> {
+    studio_states::get_chat(store, chat_id)?;
+    let histories = studio_states::get_chat_histories(store, chat_id)?;
+    if !histories.iter().any(|message| message.id == Some(message_id)) {
+        anyhow::bail!("Unknown message.");
+    }
+    if collapsed {
+        utils::drop_translate_token(message_id);
+        utils::drop_summary_token(message_id);
+        studio_states::update_chat_history_show_type(store, message_id, ChatShowType::Text)?;
+    }
+    studio_states::update_chat_history_collapsed(store, message_id, collapsed)?;
+    Ok(())
+}
+
 /// Generates the brief summary of the model answer with the light
 /// task model. The language follows the text itself; a cached
 /// summary skips the call, the fresh one is written into the row.

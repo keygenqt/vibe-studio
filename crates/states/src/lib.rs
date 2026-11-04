@@ -177,6 +177,11 @@ pub fn update_chat_history_show_type(store: &Store, id: i32, show_type: ChatShow
     store.update_chat_history_show_type(id, show_type)
 }
 
+/// Persists the collapsed view flag of the message bubble. Returns affected rows.
+pub fn update_chat_history_collapsed(store: &Store, id: i32, collapsed: bool) -> Result<usize> {
+    store.update_chat_history_collapsed(id, collapsed)
+}
+
 /// Writes the message summary with its counted tokens — the final
 /// write of a finished run.
 pub fn update_chat_history_summary(store: &Store, id: i32, summary: &str, tokens_summary: i32) -> Result<usize> {

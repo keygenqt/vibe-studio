@@ -7,11 +7,14 @@
 import PropTypes from 'prop-types'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Box, Stack, Typography } from '@mui/material'
+import { Box, IconButton, Stack, Typography } from '@mui/material'
+import UnfoldLess from '@mui/icons-material/UnfoldLess'
+import UnfoldMore from '@mui/icons-material/UnfoldMore'
 import { alpha } from '@mui/material/styles'
 
 import { ErrorSnackbar } from '../../../components/snackbars'
 import { Methods } from '../../../modules'
+import { CHAT_COLLAPSE_HEIGHT } from '../../../constants'
 
 import { MessageActions } from './MessageActions'
 
@@ -27,6 +30,15 @@ export function UserMessageView(props) {
         props.message.id,
         props.message.show_type === 'summary' ? 'text' : 'summary'
       )
+    } catch (err) {
+      setError(t(String(err)))
+    }
+  }
+
+  // the collapse persists the flag; the clamped content unfolds on click
+  const onClickCollapse = async () => {
+    try {
+      await props.onSetCollapsed(props.message.id, !props.message.collapsed)
     } catch (err) {
       setError(t(String(err)))
     }
@@ -65,44 +77,75 @@ export function UserMessageView(props) {
             spacing={1}
             alignItems={'center'}
             justifyContent={'space-between'}
-            sx={{
-              minHeight: 24,
-              pb: 1,
-            }}
+            sx={{ pb: 1 }}
           >
-            <Typography
-              variant={'caption'}
-              noWrap
-              color={'text.primary'}
-              sx={{ opacity: 0.8, minWidth: 0 }}
-            >
-              {[props.message.author, props.message.time].join(' · ')}
-            </Typography>
+            <Stack direction={'row'} alignItems={'center'}>
+              {props.onSetCollapsed && (
+                <IconButton
+                  size={'small'}
+                  onClick={onClickCollapse}
+                  sx={{ position: 'relative', left: '-4px' }}
+                >
+                  {props.message.collapsed ? (
+                    <UnfoldMore sx={{ fontSize: 17, color: 'text.secondary' }} />
+                  ) : (
+                    <UnfoldLess sx={{ fontSize: 17, color: 'text.secondary' }} />
+                  )}
+                </IconButton>
+              )}
+              <Typography
+                variant={'caption'}
+                noWrap
+                color={'text.primary'}
+                sx={{ opacity: 0.8, minWidth: 0 }}
+              >
+                {[props.message.author, props.message.time].join(' · ')}
+              </Typography>
+            </Stack>
             <MessageActions
               onClickCopy={shownText ? onClickCopy : undefined}
-              onClickSummary={props.canSummarize ? onClickSummary : undefined}
+              onClickSummary={
+                !props.message.collapsed && props.canSummarize ? onClickSummary : undefined
+              }
               summaryActive={props.message.show_type === 'summary'}
               onClickRefresh={props.onRefresh}
               onClickDelete={props.onDelete}
             />
           </Stack>
-          {props.message.show_type === 'summary' ? (
-            <Typography
-              variant={'body2'}
-              color={'text.secondary'}
-              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-            >
-              {props.message.summary ?? t('chat.t_summarizing')}
-            </Typography>
-          ) : (
-            <Typography
-              variant={'body2'}
-              color={'text.primary'}
-              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-            >
-              {props.message.text}
-            </Typography>
-          )}
+          <Box
+            onClick={props.message.collapsed ? onClickCollapse : undefined}
+            sx={
+              props.message.collapsed
+                ? {
+                    maxHeight: CHAT_COLLAPSE_HEIGHT,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    maskImage:
+                      'linear-gradient(to bottom, #000 calc(100% - 32px), rgba(0,0,0,0.55) calc(100% - 20px), rgba(0,0,0,0.18) calc(100% - 8px), transparent 100%)',
+                    WebkitMaskImage:
+                      'linear-gradient(to bottom, #000 calc(100% - 32px), rgba(0,0,0,0.55) calc(100% - 20px), rgba(0,0,0,0.18) calc(100% - 8px), transparent 100%)',
+                  }
+                : undefined
+            }
+          >
+            {props.message.show_type === 'summary' ? (
+              <Typography
+                variant={'body2'}
+                color={'text.secondary'}
+                sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+              >
+                {props.message.summary ?? t('chat.t_summarizing')}
+              </Typography>
+            ) : (
+              <Typography
+                variant={'body2'}
+                color={'text.primary'}
+                sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+              >
+                {props.message.text}
+              </Typography>
+            )}
+          </Box>
         </Box>
       </Stack>
       <ErrorSnackbar text={error} onClose={() => setError(null)} />
@@ -118,6 +161,7 @@ UserMessageView.propTypes = {
     show_type: PropTypes.oneOf(['text', 'translate', 'summary', 'thinking']).isRequired,
     text: PropTypes.string.isRequired,
     summary: PropTypes.string,
+    collapsed: PropTypes.bool,
   }).isRequired,
   // the message text size in px
   fontSize: PropTypes.number.isRequired,
@@ -127,6 +171,8 @@ UserMessageView.propTypes = {
   onDelete: PropTypes.func.isRequired,
   // persists the show type of the bubble
   onShowType: PropTypes.func,
+  // persists the collapsed flag of the bubble
+  onSetCollapsed: PropTypes.func,
   // the light task model is set — the summary switch is available
   canSummarize: PropTypes.bool,
 }

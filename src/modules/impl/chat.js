@@ -74,6 +74,10 @@ export const chat = {
   chat_delete_message: async function (chatId, messageId) {
     return invoke('chat_delete_message', { chatId, messageId })
   },
+  // the fresh state lands through the block event — nothing to dispatch
+  chat_set_message_collapsed: async function (chatId, messageId, collapsed) {
+    return invoke('chat_set_message_collapsed', { chatId, messageId, collapsed })
+  },
   chat_resend_message: async function (chatId, messageId) {
     const seq = ++streamSeq
     store.dispatch(chatStreamStart({ seq, chatId }))
