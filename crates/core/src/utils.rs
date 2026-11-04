@@ -70,13 +70,52 @@ pub(crate) fn cancel_translate_token(message_id: i32) {
     }
 }
 
-/// The markdown kept whole on the fly: a code fence opened but not
-/// yet closed by the stream is closed in the copy for the shell.
-pub(crate) fn balanced_markdown(text: &str) -> String {
-    let open = text.lines().filter(|line| line.trim_start().starts_with("```")).count();
-    if open % 2 == 0 {
-        text.to_string()
-    } else {
-        format!("{text}\n```")
+/// The active summary tokens by message id — a registry of its own:
+/// a summary never cancels a chat answer stream or a translation.
+pub(crate) fn summary_tokens() -> &'static Mutex<HashMap<i32, Arc<CancelToken>>> {
+    static TOKENS: OnceLock<Mutex<HashMap<i32, Arc<CancelToken>>>> = OnceLock::new();
+    TOKENS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// Cancels the summary token of the message, if it runs.
+pub(crate) fn cancel_summary_token(message_id: i32) {
+    if let Some(token) = summary_tokens()
+        .lock()
+        .expect("summary tokens poisoned")
+        .get(&message_id)
+    {
+        token.cancel();
     }
+}
+
+/// The markdown kept whole on the fly: a code fence opened but not
+/// yet closed by the stream is closed in the copy for the shell —
+/// the closer matches the opener's marker and run length. `None`:
+/// the text is already balanced, the raw accumulator serves as is.
+pub(crate) fn close_open_fence(text: &str) -> Option<String> {
+    // the open fence: its marker char and the marker run length
+    let mut open: Option<(char, usize)> = None;
+    for line in text.lines() {
+        let line = line.trim_start();
+        let marker = match line.chars().next() {
+            Some(c @ ('`' | '~')) => c,
+            _ => continue,
+        };
+        let run = line.chars().take_while(|&c| c == marker).count();
+        if run < 3 {
+            continue;
+        }
+        match open {
+            // the closer: the same marker, at least the opener's run,
+            // nothing else on the line
+            Some((open_marker, open_run))
+                if marker == open_marker && run >= open_run && line.chars().all(|c| c == marker) =>
+            {
+                open = None;
+            }
+            None => open = Some((marker, run)),
+            _ => {}
+        }
+    }
+    open.map(|(marker, run)| format!("{text}\n{}", marker.to_string().repeat(run)))
 }

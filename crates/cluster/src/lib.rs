@@ -6,6 +6,7 @@
 //! Vibe Studio cluster — provider catalog and LLM requests.
 
 mod data;
+mod summary;
 mod title;
 mod translate;
 
@@ -218,6 +219,20 @@ pub async fn call_translate_stream(
         provider, host, api_key, project, model, language, text, cancel, on_delta,
     )
     .await
+}
+
+/// Summarizes one text with the light task config: a brief plain-text
+/// digest in the language of the text itself. The answer is trimmed
+/// to its first line and capped to 200 chars (unicode), closed with `…`.
+pub async fn call_summary(
+    provider: ProviderTypeData,
+    host: &str,
+    api_key: Option<&str>,
+    project: Option<&str>,
+    model: &str,
+    text: &str,
+) -> Result<String> {
+    summary::call(provider, host, api_key, project, model, text).await
 }
 
 /// Names a chat by its conversation: the messages go as the prompt

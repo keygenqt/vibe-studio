@@ -18,6 +18,7 @@ pub use studio_cluster::StreamEvent;
 mod browser;
 mod clipboard;
 mod data;
+mod stream;
 pub(crate) mod theme;
 mod utils;
 
@@ -509,6 +510,8 @@ pub fn chat_delete_message(store: &Store, chat_id: i32, message_id: i32) -> Resu
     let model = studio_states::get_provider_model(store, group.model_id)?;
     let provider = studio_states::get_provider(store, model.provider_id)?;
     utils::cancel_stream_token(&(provider.provider, model.name));
+    // the in-flight summary of the dying message gives way
+    utils::cancel_summary_token(message_id);
     studio_states::delete_chat_histories_from(store, chat_id, message_id)?;
     Ok(())
 }
@@ -586,7 +589,7 @@ async fn chat_send_stream(
     // the deltas ride a channel: the callback runs inside the cluster
     // call and cannot touch the store — the pump below persists them
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<StreamEvent>();
-    let mut call = std::pin::pin!(studio_cluster::call_prompt_stream(
+    let call = std::pin::pin!(studio_cluster::call_prompt_stream(
         kind,
         &provider.host,
         provider.api_key.as_deref(),
@@ -616,35 +619,33 @@ async fn chat_send_stream(
     // streams must not turn into hundreds of UPDATEs per second
     const PERSIST_INTERVAL_MS: u64 = 300;
     let mut persisted_at = std::time::Instant::now();
-    // the shell copy refreshes at most once per 100 ms — the whole
-    // text per delta would flood the channel on fast models
-    const STREAM_INTERVAL_MS: u64 = 100;
-    let mut streamed_at = std::time::Instant::now();
+    // one gate for the whole answer: the phases never mix, and a
+    // shared gate can only delay a snapshot, never drop one
+    let mut gate = stream::StreamGate::default();
     // the text generation window: from the first text delta to the
     // finalization — the thinking time stays out of the speed
     let mut gen_start: Option<std::time::Instant> = None;
-    // one delta: grow the accumulators, persist the row, forward to the shell
-    let mut handle = |event: StreamEvent| -> Result<()> {
+    // one delta: grow the accumulators, persist the row, snapshot to the shell
+    let handle = |event: StreamEvent| -> Result<()> {
         match &event {
             StreamEvent::Text(chunk) => {
                 if gen_start.is_none() {
                     gen_start = Some(std::time::Instant::now());
                 }
                 text_acc.push_str(chunk);
-                // the shell paints the balanced whole, at most once
-                // per the interval — the final write is the authority
-                if streamed_at.elapsed() >= std::time::Duration::from_millis(STREAM_INTERVAL_MS) {
-                    streamed_at = std::time::Instant::now();
-                    on_event(ChatStreamEvent::TextSnapshot(utils::balanced_markdown(&text_acc)));
+                // the shell paints the balanced whole — the final
+                // write is the authority
+                if gate.pass(text_acc.len()) {
+                    let snapshot = utils::close_open_fence(&text_acc).unwrap_or_else(|| text_acc.clone());
+                    on_event(ChatStreamEvent::TextSnapshot(snapshot));
                 }
             }
             StreamEvent::Thinking(chunk) => {
                 thinking_acc.push_str(chunk);
-                // thinking rides the same interval — fast reasoners
-                // flood the channel exactly like the text does
-                if streamed_at.elapsed() >= std::time::Duration::from_millis(STREAM_INTERVAL_MS) {
-                    streamed_at = std::time::Instant::now();
-                    on_event(ChatStreamEvent::Thinking(chunk.clone()));
+                // thinking rides the same snapshot rule: the shell
+                // replaces its copy, never accumulates
+                if gate.pass(thinking_acc.len()) {
+                    on_event(ChatStreamEvent::Thinking(thinking_acc.clone()));
                 }
             }
         }
@@ -660,23 +661,7 @@ async fn chat_send_stream(
         }
         Ok(())
     };
-    // a closed channel disables the rx arm: the senders are gone and
-    // the call resolves on its own — the arm must not spin on None
-    let mut rx_closed = false;
-    let outcome = loop {
-        tokio::select! {
-            biased;
-            delta = rx.recv(), if !rx_closed => match delta {
-                Some(event) => handle(event)?,
-                None => rx_closed = true,
-            },
-            done = &mut call => break done,
-        }
-    };
-    // the deltas that arrived before the call future resolved
-    while let Ok(event) = rx.try_recv() {
-        handle(event)?;
-    }
+    let outcome = stream::pump(call, &mut rx, handle).await?;
 
     // the final write is the only authority: full text, thinking, status
     let (final_text, final_thinking, status) = match outcome {
@@ -767,7 +752,7 @@ pub async fn chat_translate_message(
     // the deltas ride a channel: the callback runs inside the cluster
     // call and cannot touch the store — the pump below persists them
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<StreamEvent>();
-    let mut call = std::pin::pin!(studio_cluster::call_translate_stream(
+    let call = std::pin::pin!(studio_cluster::call_translate_stream(
         target.kind,
         &target.host,
         target.api_key.as_deref(),
@@ -785,46 +770,28 @@ pub async fn chat_translate_message(
     ));
 
     let mut text_acc = String::new();
+    // the growing row persists at most once per 300 ms — token
+    // streams must not turn into hundreds of UPDATEs per second
     const PERSIST_INTERVAL_MS: u64 = 300;
     let mut persisted_at = std::time::Instant::now();
-    // the shell copy refreshes at most once per 100 ms — the same
-    // guard the chat answer stream lives under
-    const STREAM_INTERVAL_MS: u64 = 100;
-    let mut streamed_at = std::time::Instant::now();
-    // one delta: grow the accumulator, persist the row, forward to the shell
-    let mut handle = |event: StreamEvent| -> Result<()> {
+    let mut gate = stream::StreamGate::default();
+    // one delta: grow the accumulator, persist the row, snapshot to the shell
+    let handle = |event: StreamEvent| -> Result<()> {
         if let StreamEvent::Text(chunk) = &event {
             text_acc.push_str(chunk);
             if persisted_at.elapsed() >= std::time::Duration::from_millis(PERSIST_INTERVAL_MS) {
                 persisted_at = std::time::Instant::now();
                 studio_states::update_chat_history_translate(store, message_id, Some(text_acc.as_str()))?;
             }
-            // the shell paints the balanced whole, at most once per
-            // the interval — the final write is the authority
-            if streamed_at.elapsed() >= std::time::Duration::from_millis(STREAM_INTERVAL_MS) {
-                streamed_at = std::time::Instant::now();
-                on_delta(&utils::balanced_markdown(&text_acc));
+            // the shell paints the balanced whole — the final write is the authority
+            if gate.pass(text_acc.len()) {
+                let snapshot = utils::close_open_fence(&text_acc).unwrap_or_else(|| text_acc.clone());
+                on_delta(&snapshot);
             }
         }
         Ok(())
     };
-    // a closed channel disables the rx arm: the senders are gone and
-    // the call resolves on its own — the arm must not spin on None
-    let mut rx_closed = false;
-    let outcome = loop {
-        tokio::select! {
-            biased;
-            delta = rx.recv(), if !rx_closed => match delta {
-                Some(event) => handle(event)?,
-                None => rx_closed = true,
-            },
-            done = &mut call => break done,
-        }
-    };
-    // the deltas that arrived before the call future resolved
-    while let Ok(event) = rx.try_recv() {
-        handle(event)?;
-    }
+    let outcome = stream::pump(call, &mut rx, handle).await?;
 
     match outcome {
         Ok(result) => finish_translation(store, message_id, &cancel, Some(&result)),
@@ -869,6 +836,71 @@ fn finish_translation(store: &Store, message_id: i32, token: &Arc<CancelToken>, 
     if owned {
         studio_states::update_chat_history_translate(store, message_id, text)?;
     }
+    Ok(())
+}
+
+/// Persists the collapsed flag of the message bubble. The UI is not
+/// trusted: the chat must exist and the message must belong to it.
+pub fn chat_set_message_collapsed(store: &Store, chat_id: i32, message_id: i32, collapsed: bool) -> Result<()> {
+    studio_states::get_chat(store, chat_id)?;
+    let histories = studio_states::get_chat_histories(store, chat_id)?;
+    if !histories.iter().any(|message| message.id == Some(message_id)) {
+        anyhow::bail!("Unknown message.");
+    }
+    studio_states::update_chat_history_collapsed(store, message_id, collapsed)?;
+    Ok(())
+}
+
+/// Generates the brief summary of the model answer with the light
+/// task model. The language follows the text itself; a cached
+/// summary skips the call, the fresh one is written into the row.
+/// The run carries its own cancel token — a deleted message gives
+/// way; the registry entry leaves with the run, whatever the outcome.
+pub async fn chat_summarize_message(store: &Store, chat_id: i32, message_id: i32) -> Result<()> {
+    studio_states::get_chat(store, chat_id)?;
+    let histories = studio_states::get_chat_histories(store, chat_id)?;
+    let message = histories
+        .iter()
+        .find(|message| message.id == Some(message_id))
+        .ok_or_else(|| anyhow::anyhow!("Unknown message."))?;
+    // the cache: an existing summary never calls the model again
+    if message.summary.is_some() {
+        return Ok(());
+    }
+    let settings = studio_states::get_settings(store).unwrap_or_default();
+    let Some(model_id) = settings.tasks_model_light else {
+        anyhow::bail!("Task model is not set.");
+    };
+    let model = studio_states::get_provider_model(store, model_id)?;
+    let provider = studio_states::get_provider(store, model.provider_id)?;
+    utils::cancel_summary_token(message_id);
+    let cancel = utils::stream_token();
+    utils::summary_tokens()
+        .lock()
+        .expect("summary tokens poisoned")
+        .insert(message_id, cancel.clone());
+
+    let result = studio_cluster::call_summary(
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?,
+        &provider.host,
+        provider.api_key.as_deref(),
+        provider.project.as_deref(),
+        &model.name,
+        &message.text,
+    )
+    .await;
+
+    // the registry entry leaves with the run, whatever the outcome
+    utils::summary_tokens()
+        .lock()
+        .expect("summary tokens poisoned")
+        .remove(&message_id);
+
+    let summary = result?;
+    if summary.is_empty() {
+        anyhow::bail!("Summary must not be blank.");
+    }
+    studio_states::update_chat_history_summary(store, message_id, Some(&summary))?;
     Ok(())
 }
 

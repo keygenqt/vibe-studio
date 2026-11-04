@@ -6,3 +6,4 @@
  */
 export * from './AppNav'
 export * from './AppUtils'
+export * from './PerfUtils'

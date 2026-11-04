@@ -4,6 +4,7 @@
 // INFO: The JS surface: one command per core function, named after it.
 
 use tauri::AppHandle;
+use tauri::Manager;
 use tauri::State;
 use tauri::WebviewWindow;
 use tauri::ipc::Channel;
@@ -305,9 +306,39 @@ pub fn chat_get_history(store: State<Store>, chat_id: i32) -> Result<ChatStateDa
     Ok(state)
 }
 
+/// Forwards the core stream events to the shell: the stored state
+/// rides the block event, the live snapshots — the command channel.
+fn chat_stream_forwarder(
+    window: WebviewWindow,
+    on_delta: Channel<StreamChunk>,
+) -> impl Fn(ChatStreamEvent) + Send + Sync + 'static {
+    move |event| match event {
+        ChatStreamEvent::UserStored { chat, history } => {
+            let state = ChatStateData {
+                chat,
+                stats: ChatStatsData::of(&history),
+                history,
+            };
+            emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
+        }
+        ChatStreamEvent::TextSnapshot(text) => {
+            let _ = on_delta.send(StreamChunk {
+                kind: StreamChunkKind::Text,
+                text,
+            });
+        }
+        ChatStreamEvent::Thinking(text) => {
+            let _ = on_delta.send(StreamChunk {
+                kind: StreamChunkKind::Thinking,
+                text,
+            });
+        }
+    }
+}
+
 /// Sends the user's message to the chat's model and records the
-/// exchange; the stream deltas go to `on_delta`, every stored state
-/// ends with the event. `translate` swaps the text for its
+/// exchange; the stream snapshots go to `on_delta`, every stored
+/// state ends with the event. `translate` swaps the text for its
 /// translation before anything is stored. Returns the fresh state of
 /// the chat block.
 #[tauri::command]
@@ -319,29 +350,13 @@ pub async fn chat_send_message(
     translate: bool,
     on_delta: Channel<StreamChunk>,
 ) -> Result<ChatStateData, String> {
-    let event_window = window.clone();
-    studio_core::chat_send_message(&store, chat_id, &text, translate, move |event| match event {
-        ChatStreamEvent::UserStored { chat, history } => {
-            let state = ChatStateData {
-                chat,
-                stats: ChatStatsData::of(&history),
-                history,
-            };
-            emit_event_chat(&event_window, EventData::new(EventKey::Chat, &state));
-        }
-        ChatStreamEvent::TextSnapshot(text) => {
-            let _ = on_delta.send(StreamChunk {
-                kind: StreamChunkKind::Snapshot,
-                text,
-            });
-        }
-        ChatStreamEvent::Thinking(text) => {
-            let _ = on_delta.send(StreamChunk {
-                kind: StreamChunkKind::Thinking,
-                text,
-            });
-        }
-    })
+    studio_core::chat_send_message(
+        &store,
+        chat_id,
+        &text,
+        translate,
+        chat_stream_forwarder(window.clone(), on_delta),
+    )
     .await
     .map_err(|e| e.to_string())?;
     let state = ChatStateData::new(&store, chat_id);
@@ -354,6 +369,40 @@ pub async fn chat_send_message(
 #[tauri::command]
 pub fn chat_cancel_send(store: State<Store>, chat_id: i32) -> Result<(), String> {
     studio_core::chat_cancel_send(&store, chat_id).map_err(|e| e.to_string())
+}
+
+/// Persists the collapsed flag of the message bubble; emits and
+/// returns the fresh state of the chat block. A fresh collapse of an
+/// answer without a summary spawns the background summarization:
+/// when it lands, the block event carries the fresh state.
+#[tauri::command]
+pub fn chat_set_message_collapsed(
+    app: AppHandle,
+    window: WebviewWindow,
+    store: State<Store>,
+    chat_id: i32,
+    message_id: i32,
+    collapsed: bool,
+) -> Result<ChatStateData, String> {
+    studio_core::chat_set_message_collapsed(&store, chat_id, message_id, collapsed).map_err(|e| e.to_string())?;
+    // the summarization runs detached: the collapse answers at once,
+    // the summary arrives later through the block event
+    if collapsed && studio_core::get_settings(&store).tasks_model_light.is_some() {
+        let handle = app.clone();
+        let window = window.clone();
+        tauri::async_runtime::spawn(async move {
+            let store = handle.state::<Store>();
+            if let Err(error) = studio_core::chat_summarize_message(&store, chat_id, message_id).await {
+                log::warn!("chat_summarize_message: {error}");
+                return;
+            }
+            let state = ChatStateData::new(&store, chat_id);
+            emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
+        });
+    }
+    let state = ChatStateData::new(&store, chat_id);
+    emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
+    Ok(state)
 }
 
 /// Deletes the message with everything below it; emits and returns
@@ -383,29 +432,12 @@ pub async fn chat_resend_message(
     message_id: i32,
     on_delta: Channel<StreamChunk>,
 ) -> Result<ChatStateData, String> {
-    let event_window = window.clone();
-    studio_core::chat_resend_message(&store, chat_id, message_id, move |event| match event {
-        ChatStreamEvent::UserStored { chat, history } => {
-            let state = ChatStateData {
-                chat,
-                stats: ChatStatsData::of(&history),
-                history,
-            };
-            emit_event_chat(&event_window, EventData::new(EventKey::Chat, &state));
-        }
-        ChatStreamEvent::TextSnapshot(text) => {
-            let _ = on_delta.send(StreamChunk {
-                kind: StreamChunkKind::Snapshot,
-                text,
-            });
-        }
-        ChatStreamEvent::Thinking(text) => {
-            let _ = on_delta.send(StreamChunk {
-                kind: StreamChunkKind::Thinking,
-                text,
-            });
-        }
-    })
+    studio_core::chat_resend_message(
+        &store,
+        chat_id,
+        message_id,
+        chat_stream_forwarder(window.clone(), on_delta),
+    )
     .await
     .map_err(|e| e.to_string())?;
     let state = ChatStateData::new(&store, chat_id);
@@ -426,7 +458,7 @@ pub async fn chat_translate_message(
 ) -> Result<ChatStateData, String> {
     studio_core::chat_translate_message(&store, chat_id, message_id, move |text| {
         let _ = on_delta.send(StreamChunk {
-            kind: StreamChunkKind::Snapshot,
+            kind: StreamChunkKind::Text,
             text: text.to_string(),
         });
     })

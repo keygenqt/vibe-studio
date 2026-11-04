@@ -43,6 +43,7 @@ import { useTheme, alpha } from '@mui/material/styles'
 import ContentCopy from '@mui/icons-material/ContentCopy'
 
 import { Methods } from '../../modules'
+import { Perf } from '../../utils'
 
 // the highlight registry: a language outside it falls back to the
 // plain code — the fallback works for the stream with a partial
@@ -200,6 +201,18 @@ function MarkdownViewBase(props) {
   const theme = useTheme()
   const syntaxStyle = theme.palette.mode === 'dark' ? oneDark : oneLight
 
+  // the render cost of the markdown pipeline: the mark resets on
+  // every render, the read lands after the commit; only the slow
+  // ones pass the threshold — the stream would spam the log
+  const renderStart = React.useRef(performance.now())
+  renderStart.current = performance.now()
+  React.useLayoutEffect(() => {
+    const ms = performance.now() - renderStart.current
+    if (ms >= 8) {
+      Perf.log('markdown_render', ms, `${props.text.length} chars`)
+    }
+  })
+
   // the components map is stable per theme and font size — it must
   // not be rebuilt on every stream chunk
   const components = React.useMemo(
@@ -232,7 +245,7 @@ function MarkdownViewBase(props) {
           return (
             <CodeBlock
               language={match[1]}
-              code={String(children).replace(/\n$/, '')}
+              code={React.Children.toArray(children).join('').replace(/\n$/, '')}
               style={syntaxStyle}
               fontSize={props.fontSize}
             />
@@ -270,8 +283,8 @@ function MarkdownViewBase(props) {
         // keeps the regular weight
         fontWeight: theme => (theme.palette.mode === 'dark' ? 300 : 400),
         lineHeight: 1.5,
-        '& > *:first-child': { marginTop: 0 },
-        '& > *:last-child': { marginBottom: 0 },
+        '& > *:first-of-type': { marginTop: 0 },
+        '& > *:last-of-type': { marginBottom: 0 },
         '& p': { my: 1.5 },
         '& h1, & h2, & h3, & h4, & h5, & h6': {
           my: 1.5,

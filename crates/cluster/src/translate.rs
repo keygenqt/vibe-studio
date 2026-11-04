@@ -18,7 +18,7 @@ use crate::call_prompt_stream;
 const TRANSLATE_TEMPERATURE: f64 = 0.7;
 const TRANSLATE_SEED: i64 = 42;
 const TRANSLATE_NUM_CTX: i32 = 8192;
-const TRANSLATE_NUM_PREDICT: i32 = 16384;
+const TRANSLATE_NUM_PREDICT: i32 = 8192;
 
 // the shared prompt of both variants: `{language}` is replaced at
 // the call site

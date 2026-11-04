@@ -50,19 +50,14 @@ const chatSlice = createSlice({
         text: '',
       }
     },
-    // thinking grows in deltas, the answer text arrives as the whole
-    // balanced snapshot — the copy replaces, never accumulates
+    // both kinds are whole snapshots — the copy replaces, never accumulates
     chatStreamAppend: (state, action) => {
       const { seq, chatId, kind, text } = action.payload
       if (state.stream && state.stream.seq > seq) return
       if (state.stream === null || state.stream.seq !== seq) {
         state.stream = { seq, chatId, thinking: '', text: '' }
       }
-      if (kind === 'thinking') {
-        state.stream.thinking += text
-      } else {
-        state.stream.text = text
-      }
+      state.stream[kind] = text
     },
     chatStreamFinal: (state, action) => {
       if (state.stream && state.stream.seq <= action.payload) {

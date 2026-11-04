@@ -22,6 +22,7 @@ pub enum ChatStreamEvent {
     /// The whole answer text as it stands, with an open code fence
     /// closed — the shell paints the copy, the store keeps the raw.
     TextSnapshot(String),
-    /// A reasoning (thinking) delta.
+    /// The whole reasoning as it stands — the same snapshot rule as
+    /// the text: the shell replaces its copy.
     Thinking(String),
 }

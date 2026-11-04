@@ -5,9 +5,14 @@
  * INFO: A paper panel wrapping its content in a scroll area.
  */
 import PropTypes from 'prop-types'
-import { Box } from '@mui/material'
+import { Box, Stack } from '@mui/material'
+
+import { LoaderView } from '../views'
+import { LOADER_FADE_MS } from '../../constants'
 
 export function ScrollPanel(props) {
+  const ready = props.ready ?? true
+
   return (
     <Box
       className={'ScrollFrame'}
@@ -27,7 +32,13 @@ export function ScrollPanel(props) {
           data-scroll-key={props.scrollKey}
           sx={{ height: 1, p: 1, boxSizing: 'border-box' }}
         >
-          {props.children}
+          {ready ? (
+            props.children
+          ) : (
+            <Stack height={1} sx={{ justifyContent: 'center', alignItems: 'center' }}>
+              <LoaderView delay={LOADER_FADE_MS} />
+            </Stack>
+          )}
         </Box>
       </Box>
     </Box>
@@ -37,5 +48,6 @@ export function ScrollPanel(props) {
 ScrollPanel.propTypes = {
   scrollKey: PropTypes.string,
   sx: PropTypes.object,
+  ready: PropTypes.bool,
   children: PropTypes.node,
 }

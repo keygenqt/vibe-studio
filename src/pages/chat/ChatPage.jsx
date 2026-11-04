@@ -59,8 +59,16 @@ export function ChatPage() {
   const fontSize = settings.appearance_chat_font_size
   // the translate actions live only with the translation model set
   const canTranslate = settings.translation_model !== null
+  // the collapse lives only with the light task model set: the
+  // summary is its job
+  const canCollapse = settings.tasks_model_light !== null
+  const collapse = (messageId, collapsed) =>
+    Methods.chat_set_message_collapsed(cid, messageId, collapsed)
   // the newest progress row owns the live stream
   const progressRow = (history ?? []).findLast(item => item.status === 'progress') ?? null
+  // the chat opens at the bottom: this many last messages render
+  // markdown at once — the rest upgrade lazily on the scroll up
+  const VISIBLE_TAIL = 4
 
   // the newest message stays in view after history updates and chat switches
   React.useEffect(() => {
@@ -74,7 +82,7 @@ export function ChatPage() {
     time: AppUtils.formatTime(i18n.language, message.created_at),
   })
 
-  const renderMessage = (message, key) => {
+  const renderMessage = (message, key, immediate = false) => {
     const view = viewMessage(message)
     return message.model === null && message.status === 'complete' ? (
       <UserMessageView
@@ -83,12 +91,14 @@ export function ChatPage() {
         fontSize={fontSize}
         onRefresh={() => setConfirm({ action: 'resend', messageId: message.id })}
         onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
+        onCollapse={canCollapse ? collapse : undefined}
       />
     ) : (
       <ModelMessageView
         key={key}
         message={view}
         fontSize={fontSize}
+        immediate={immediate}
         translation={
           translateStream && translateStream.messageId === message.id
             ? translateStream.text
@@ -98,12 +108,13 @@ export function ChatPage() {
         onTranslate={canTranslate ? translate : undefined}
         onTranslateClose={canTranslate ? translateClear : undefined}
         onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
+        onCollapse={canCollapse ? collapse : undefined}
       />
     )
   }
 
   return (
-    <WaitState ready={groupsReady && chatReady}>
+    <WaitState ready={groupsReady}>
       {chat ? (
         <>
           <ChatTitleView
@@ -111,11 +122,21 @@ export function ChatPage() {
             canRename={(history ?? []).length > 0 && settings.tasks_model_light !== null}
             onRename={() => Methods.chat_regenerate_name(cid).catch(console.error)}
           />
-          <ScrollPanel scrollKey={'chat.history'} sx={{ flexGrow: 1, minHeight: 0 }}>
+          <ScrollPanel
+            scrollKey={'chat.history'}
+            ready={chatReady}
+            sx={{ flexGrow: 1, minHeight: 0 }}
+          >
             <Stack spacing={1.5}>
               {(history ?? [])
                 .filter(message => message.status !== 'progress')
-                .map(message => renderMessage(message, `message-${message.id}`))}
+                .map((message, index, list) =>
+                  renderMessage(
+                    message,
+                    `message-${message.id}`,
+                    index >= list.length - VISIBLE_TAIL
+                  )
+                )}
               {stream &&
                 renderMessage(
                   {
@@ -127,7 +148,8 @@ export function ChatPage() {
                     thinking: stream.thinking,
                     created_at: progressRow?.created_at ?? Date.now(),
                   },
-                  'message-stream'
+                  'message-stream',
+                  true
                 )}
             </Stack>
           </ScrollPanel>

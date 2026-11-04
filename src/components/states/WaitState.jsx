@@ -5,27 +5,18 @@
  * INFO: Content gate: loader until the page data is ready.
  */
 import PropTypes from 'prop-types'
-import * as React from 'react'
-import { CircularProgress, Stack } from '@mui/material'
+import { Stack } from '@mui/material'
 
-// test knob: hold the loader on cold loads (cache miss) in ms, 0 = off
-const DEBUG_LOADER_DELAY = 0
+import { LoaderView } from '../views'
+import { LOADER_FADE_MS } from '../../constants'
 
 export function WaitState(props) {
-  const [minDone, setMinDone] = React.useState(props.ready)
-
-  React.useEffect(() => {
-    if (minDone) return undefined
-    const timer = setTimeout(() => setMinDone(true), DEBUG_LOADER_DELAY)
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (props.ready && minDone) {
+  if (props.ready) {
     return props.children
   }
   return (
     <Stack height={1} sx={{ justifyContent: 'center', alignItems: 'center' }}>
-      <CircularProgress />
+      <LoaderView delay={LOADER_FADE_MS} />
     </Stack>
   )
 }

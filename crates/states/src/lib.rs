@@ -162,6 +162,17 @@ pub fn update_chat_history_translate(store: &Store, id: i32, translate: Option<&
     store.update_chat_history_translate(id, translate)
 }
 
+/// Persists the collapsed flag of the message bubble. Returns affected rows.
+pub fn update_chat_history_collapsed(store: &Store, id: i32, collapsed: bool) -> Result<usize> {
+    store.update_chat_history_collapsed(id, collapsed)
+}
+
+/// Writes the message summary; `None` clears it. The column holds
+/// only the shown summary.
+pub fn update_chat_history_summary(store: &Store, id: i32, summary: Option<&str>) -> Result<usize> {
+    store.update_chat_history_summary(id, summary)
+}
+
 /// Active streams of one provider+model pair, oldest first.
 pub fn get_progress_chat_histories(store: &Store, provider: &str, model: &str) -> Result<Vec<ChatHistoryData>> {
     store.get_progress_chat_histories(provider, model)

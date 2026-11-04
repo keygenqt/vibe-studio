@@ -18,6 +18,17 @@ import { MessageActions } from './MessageActions'
 export function UserMessageView(props) {
   const { t } = useTranslation()
   const [error, setError] = React.useState(null)
+  const isCollapsed = Boolean(props.message.collapsed)
+
+  // the toggle flips the persisted flag; the summary lands through
+  // the block event
+  const onClickCollapse = async () => {
+    try {
+      await props.onCollapse(props.message.id, !props.message.collapsed)
+    } catch (err) {
+      setError(t(String(err)))
+    }
+  }
 
   // resolves `true` on success for the copy accent; a failure
   // lands in the snackbar
@@ -59,17 +70,29 @@ export function UserMessageView(props) {
             </Typography>
             <MessageActions
               onClickCopy={onClickCopy}
+              onClickCollapse={props.onCollapse ? onClickCollapse : undefined}
+              collapseActive={isCollapsed}
               onClickRefresh={props.onRefresh}
               onClickDelete={props.onDelete}
             />
           </Stack>
-          <Typography
-            variant={'body2'}
-            color={'text.primary'}
-            sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-          >
-            {props.message.text}
-          </Typography>
+          {isCollapsed ? (
+            <Typography
+              variant={'body2'}
+              color={'text.primary'}
+              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+            >
+              {props.message.summary ?? t('chat.t_summarizing')}
+            </Typography>
+          ) : (
+            <Typography
+              variant={'body2'}
+              color={'text.primary'}
+              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+            >
+              {props.message.text}
+            </Typography>
+          )}
         </Box>
       </Stack>
       <ErrorSnackbar text={error} onClose={() => setError(null)} />
@@ -89,4 +112,8 @@ UserMessageView.propTypes = {
   onRefresh: PropTypes.func.isRequired,
   // opens the delete confirmation: the message and everything below
   onDelete: PropTypes.func.isRequired,
+  // collapses the bubble: flips the persisted flag, the summary
+  // arrives through the block event; undefined hides the action —
+  // the light task model is not set
+  onCollapse: PropTypes.func,
 }

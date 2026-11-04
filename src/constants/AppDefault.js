@@ -19,6 +19,9 @@ export const SIDE_BAR_SIZE_DEFAULT = 340
 export const DURATION_DEFAULT = 150
 export const DURATION_AUTO_HIDE = 4000
 
+// Loader fade-in: the transparent head before the loader becomes visible
+export const LOADER_FADE_MS = 150
+
 // Compact page mode: content width below which rows drop controls under the text.
 export const COMPACT_PAGE_WIDTH = 480
 

@@ -12,6 +12,8 @@ import DeleteOutline from '@mui/icons-material/DeleteOutline'
 import Psychology from '@mui/icons-material/Psychology'
 import Refresh from '@mui/icons-material/Refresh'
 import Translate from '@mui/icons-material/Translate'
+import UnfoldLess from '@mui/icons-material/UnfoldLess'
+import UnfoldMore from '@mui/icons-material/UnfoldMore'
 
 export function MessageActions(props) {
   const [copied, setCopied] = React.useState(false)
@@ -31,6 +33,15 @@ export function MessageActions(props) {
 
   return (
     <Stack direction={'row'} spacing={0.25}>
+      {props.onClickCollapse && (
+        <IconButton size={'small'} onClick={props.onClickCollapse}>
+          {props.collapseActive ? (
+            <UnfoldMore sx={{ fontSize: 16, color: 'primary.main' }} />
+          ) : (
+            <UnfoldLess sx={{ fontSize: 16, color: 'text.secondary' }} />
+          )}
+        </IconButton>
+      )}
       {props.onClickCopy && (
         <IconButton size={'small'} onClick={onClickCopy}>
           <ContentCopy sx={{ fontSize: 14, color: copied ? 'primary.main' : 'text.secondary' }} />
@@ -72,6 +83,9 @@ MessageActions.propTypes = {
   // true while the thinking block is displayed — accent paint
   translateActive: PropTypes.bool,
   thinkingActive: PropTypes.bool,
+  // collapses the bubble to its summary; the icon flips to the expand
+  onClickCollapse: PropTypes.func,
+  collapseActive: PropTypes.bool,
   onClickRefresh: PropTypes.func,
   onClickDelete: PropTypes.func,
 }

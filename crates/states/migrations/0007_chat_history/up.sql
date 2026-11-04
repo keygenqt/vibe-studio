@@ -9,7 +9,9 @@ CREATE TABLE chat_history (
     translate TEXT NULL,
     tokens INTEGER NULL,
     gen_ms INTEGER NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    collapsed BOOLEAN NOT NULL DEFAULT 0,
+    summary TEXT NULL
 );
 
 CREATE INDEX idx_chat_history_chat ON chat_history (chat_id);
