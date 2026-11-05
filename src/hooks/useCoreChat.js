@@ -8,6 +8,7 @@ import * as React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import { Methods } from '../modules'
+import { scrollToBottom } from '../init'
 import {
   chatAttachmentsAdd,
   chatAttachmentsClear,
@@ -62,6 +63,9 @@ export function useCoreChat({ chatId } = {}) {
     const attachments = chatAttachments
     dispatch(chatDraftSet(''))
     dispatch(chatAttachmentsClear())
+    // the send is the user's will to watch: land at the bottom at
+    // once and re-arm the follow for the streaming answer
+    scrollToBottom('chat.history', false)
     setSending(true)
     Methods.chat_send_message(chatId, text, translate)
       // an early failure stored nothing — the draft and the

@@ -15,7 +15,7 @@ import { ScrollPanel } from '../../components/layouts'
 import { useCoreChat, useCoreGroupsChat, useCoreSettings, useCoreWorkspace } from '../../hooks'
 import { Methods } from '../../modules'
 import { CHAT_INPUT_SIZE_MAX } from '../../constants'
-import { scrollToBottom, watchBottom } from '../../init'
+import { pauseFollow, scrollToBottom, watchBottom } from '../../init'
 import { AppUtils } from '../../utils'
 
 import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
@@ -64,8 +64,10 @@ export function ChatPage() {
   // the summary view lives only with the light task model set: the
   // summary is its job
   const canSummarize = settings.tasks_model_light !== null
-  const setShowType = (messageId, showType) =>
-    Methods.chat_set_message_show_type(cid, messageId, showType)
+  const setShowType = (messageId, showType) => {
+    pauseFollow('chat.history')
+    return Methods.chat_set_message_show_type(cid, messageId, showType)
+  }
   const setCollapsed = (messageId, collapsed) =>
     Methods.chat_set_message_collapsed(cid, messageId, collapsed)
   // the newest progress row owns the live stream
@@ -177,8 +179,10 @@ export function ChatPage() {
                 renderMessage(compressAttempt, 'message-compress', true)
               ) : (
                 <>
+                  {/* the progress row renders only uncovered by the live
+                      bubble — the gap and the duplicate are both gone */}
                   {(history ?? [])
-                    .filter(message => message.status !== 'progress')
+                    .filter(message => message.status !== 'progress' || !stream)
                     .map((message, index, list) =>
                       renderMessage(
                         message,
@@ -187,6 +191,7 @@ export function ChatPage() {
                       )
                     )}
                   {stream &&
+                    progressRow &&
                     renderMessage(
                       {
                         id: progressRow?.id ?? -1,

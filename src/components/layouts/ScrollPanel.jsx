@@ -31,7 +31,14 @@ export function ScrollPanel(props) {
           className={'ScrollArea'}
           data-scroll-key={props.scrollKey}
           data-scroll-follow={props.follow || undefined}
-          sx={{ height: 1, p: 1, boxSizing: 'border-box' }}
+          sx={{
+            height: 1,
+            p: 1,
+            boxSizing: 'border-box',
+            // the follow areas own their scroll — the browser anchoring
+            // adjusts against the follow pin and leaves the view above
+            overflowAnchor: props.follow ? 'none' : undefined,
+          }}
         >
           {ready ? (
             props.children

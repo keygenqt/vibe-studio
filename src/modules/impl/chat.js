@@ -120,6 +120,17 @@ export function chat_events() {
   return [
     listen('event-chat', event => {
       const state = event.payload.value
+      // the fresh state carries the finished answer: the live copy
+      // dies with it — the swap lands in one render, the promise's
+      // own final stays the fallback of the failed command
+      const stream = store.getState().chat.stream
+      if (
+        stream &&
+        stream.chatId === (state.chat?.id ?? null) &&
+        !state.history?.some(message => message.status === 'progress')
+      ) {
+        store.dispatch(chatStreamFinal(stream.seq))
+      }
       store.dispatch(chatSet(state.chat))
       store.dispatch(chatHistorySet({ chatId: state.chat?.id ?? null, history: state.history }))
       store.dispatch(chatStatsSet(state.stats))

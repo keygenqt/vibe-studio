@@ -4,4 +4,4 @@
  * TAGS: ['components']
  * INFO: The init zone barrel.
  */
-export { initScrollArea, scrollToBottom, watchBottom } from './initScrollArea'
+export { initScrollArea, pauseFollow, scrollToBottom, watchBottom } from './initScrollArea'

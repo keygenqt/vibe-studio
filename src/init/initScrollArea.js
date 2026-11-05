@@ -8,10 +8,6 @@
 // scroll positions are a pure UI detail — module map, no re-renders
 const positions = new Map()
 
-// the follow mode (`data-scroll-follow`): the area pins to its bottom
-// while the user sits at it and stays silent when they scroll away
-const FOLLOW_THRESHOLD = 40
-
 // the smooth flight cap: the flight state lives no longer than this,
 // whatever the scroll events did on the way
 const FLIGHT_MS = 1000
@@ -31,15 +27,30 @@ const setAtBottom = (state, value) => {
 }
 
 // forces the follow area with the key to its bottom and re-arms the
-// follow — the chat switch behind it
-export function scrollToBottom(key) {
+// follow — the smooth flag picks the flight or the instant jump
+export function scrollToBottom(key, smooth = true) {
   watched.forEach(state => {
     if (state.key !== key) return
+    state.followPaused = false
     setAtBottom(state, true)
-    // the smooth flight: the flight state keeps the at-bottom flips
-    // quiet on the way; the user input cancels the flight
-    state.flightUntil = performance.now() + FLIGHT_MS
-    state.el.scrollTo({ top: state.el.scrollHeight, behavior: 'smooth' })
+    if (smooth) {
+      // the smooth flight: the flight state keeps the at-bottom flips
+      // quiet on the way; the user input cancels the flight
+      state.flightUntil = performance.now() + FLIGHT_MS
+      state.el.scrollTo({ top: state.el.scrollHeight, behavior: 'smooth' })
+    } else {
+      state.el.scrollTop = state.el.scrollHeight
+    }
+  })
+}
+
+// pauses the follow pin without moving the area; scrollToBottom re-arms it
+export function pauseFollow(key) {
+  watched.forEach(state => {
+    if (state.key !== key) return
+    state.followPaused = true
+    state.flightUntil = 0
+    setAtBottom(state, false)
   })
 }
 
@@ -67,6 +78,10 @@ export function initScrollArea() {
     if (state.follow) {
       // the follow mode: at-bottom areas pin before the paint — the
       // smooth flight owns the position until it lands
+      if (state.followPaused) {
+        setAtBottom(state, el.scrollHeight - el.scrollTop - el.clientHeight <= 1)
+        return
+      }
       const flying = state.flightUntil > performance.now()
       if (!flying && state.atBottom) el.scrollTop = el.scrollHeight
       return
@@ -100,7 +115,9 @@ export function initScrollArea() {
       key: el.dataset.scrollKey,
       touched: false,
       follow: el.dataset.scrollFollow !== undefined,
+      followPaused: false,
       atBottom: true,
+      lastScrollTop: el.scrollTop,
       flightUntil: 0,
     }
     // the user input cancels the smooth flight: the position is theirs
@@ -110,14 +127,22 @@ export function initScrollArea() {
     state.onScroll = () => {
       state.touched = true
       if (state.follow) {
-        const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_THRESHOLD
+        const previousTop = state.lastScrollTop
+        state.lastScrollTop = el.scrollTop
+        const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 1
         // the flight: the intermediate positions change nothing, the
         // arrival clears it
         if (state.flightUntil > performance.now()) {
           if (atBottom) state.flightUntil = 0
           return
         }
-        setAtBottom(state, atBottom)
+        // only a real upward move releases the follow: a delayed event
+        // can read the next content height after the programmatic pin
+        if (atBottom) {
+          setAtBottom(state, true)
+        } else if (el.scrollTop < previousTop) {
+          setAtBottom(state, false)
+        }
       } else if (state.key !== undefined) {
         positions.set(state.key, el.scrollTop)
       }
