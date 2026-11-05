@@ -11,6 +11,7 @@ use std::sync::OnceLock;
 use studio_cluster::CancelToken;
 
 use crate::ChatHistoryData;
+use crate::ChatMessageType;
 
 /// The active stream tokens by the provider+model pair. Abort
 /// handles only: the truth about the running streams lives in the
@@ -32,13 +33,13 @@ pub(crate) fn stream_token() -> Arc<CancelToken> {
     Arc::new(CancelToken::new())
 }
 
-/// The wire role of a stored message: the sender without a model is
-/// the user.
+/// The wire role of a stored message by its sender kind: only the
+/// model answers as the assistant.
 pub(crate) fn history_role(message: &ChatHistoryData) -> String {
-    if message.model.is_none() {
-        "user".to_string()
-    } else {
+    if message.message_type == ChatMessageType::Assistant {
         "assistant".to_string()
+    } else {
+        "user".to_string()
     }
 }
 

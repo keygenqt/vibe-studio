@@ -16,6 +16,7 @@ pub(crate) mod db;
 
 pub use data::chat::ChatData;
 pub use data::chat_history::ChatHistoryData;
+pub use data::chat_history::ChatMessageType;
 pub use data::chat_history::ChatShowType;
 pub use data::chat_history::ChatStatus;
 pub use data::group_chat::GroupChatData;
@@ -132,6 +133,7 @@ pub fn get_chat_histories(store: &Store, chat_id: i32) -> Result<Vec<ChatHistory
 pub fn add_chat_history(
     store: &Store,
     chat_id: i32,
+    message_type: ChatMessageType,
     provider: Option<&str>,
     model: Option<&str>,
     status: ChatStatus,
@@ -139,7 +141,28 @@ pub fn add_chat_history(
     thinking: Option<&str>,
     tokens_answer: i32,
 ) -> Result<ChatHistoryData> {
-    store.add_chat_history(chat_id, provider, model, status, text, thinking, tokens_answer)
+    store.add_chat_history(
+        chat_id,
+        message_type,
+        provider,
+        model,
+        status,
+        text,
+        thinking,
+        tokens_answer,
+    )
+}
+
+/// Inserts the compressed base the session continues from; the
+/// message is born final with its reasoning and counted tokens.
+pub fn add_chat_history_compress(
+    store: &Store,
+    chat_id: i32,
+    text: &str,
+    thinking: Option<&str>,
+    tokens_compress: i32,
+) -> Result<ChatHistoryData> {
+    store.add_chat_history_compress(chat_id, text, thinking, tokens_compress)
 }
 
 /// Updates a growing message in place: the stream text/thinking, the
@@ -182,6 +205,12 @@ pub fn update_chat_history_collapsed(store: &Store, id: i32, collapsed: bool) ->
     store.update_chat_history_collapsed(id, collapsed)
 }
 
+/// Collapses the given message of the chat and unfolds the rest —
+/// the automatic view behind a finished answer. Returns affected rows.
+pub fn collapse_chat_history(store: &Store, chat_id: i32, id: i32) -> Result<usize> {
+    store.collapse_chat_history(chat_id, id)
+}
+
 /// Writes the message summary with its counted tokens — the final
 /// write of a finished run.
 pub fn update_chat_history_summary(store: &Store, id: i32, summary: &str, tokens_summary: i32) -> Result<usize> {
@@ -197,6 +226,13 @@ pub fn get_progress_chat_histories(store: &Store, provider: &str, model: &str) -
 /// behind a killed process. Returns affected rows.
 pub fn cancel_progress_chat_histories(store: &Store) -> Result<usize> {
     store.cancel_progress_chat_histories()
+}
+
+/// Deletes the progress compress attempts of the whole table — the
+/// startup sweep behind a killed process: a dead attempt must not
+/// stay in the history. Returns affected rows.
+pub fn delete_progress_chat_histories_compress(store: &Store) -> Result<usize> {
+    store.delete_progress_chat_histories_compress()
 }
 
 /// Deletes the message with the given id, returns affected rows.
@@ -218,6 +254,13 @@ pub fn delete_chat_histories_from(store: &Store, chat_id: i32, id: i32) -> Resul
 /// Deletes everything below the message, the message stays; returns affected rows.
 pub fn delete_chat_histories_after(store: &Store, chat_id: i32, id: i32) -> Result<usize> {
     store.delete_chat_histories_after(chat_id, id)
+}
+
+/// Deletes every message of the chat except the given one; the swap
+/// behind the compression: the fresh base stays, the old history and
+/// the attempt go. Returns affected rows.
+pub fn delete_chat_histories_except(store: &Store, chat_id: i32, id: i32) -> Result<usize> {
+    store.delete_chat_histories_except(chat_id, id)
 }
 
 /// All group chat history rows.

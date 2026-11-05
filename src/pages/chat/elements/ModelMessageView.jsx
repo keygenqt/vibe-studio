@@ -133,7 +133,7 @@ export function ModelMessageView(props) {
                 variant={'caption'}
                 noWrap
                 color={isError ? 'error.contrastText' : 'text.secondary'}
-                sx={{ minWidth: 0 }}
+                sx={{ minWidth: 0, paddingY: '4px' }}
               >
                 {[message.author, message.time].filter(Boolean).join(' · ')}
               </Typography>

@@ -49,6 +49,40 @@ impl ChatStatus {
     }
 }
 
+/// The sender kind of a message. Serialized lowercase; an unknown
+/// stored value reads as `User` — broken data must not pass for a
+/// normal message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ChatMessageType {
+    /// A message of the user.
+    User,
+    /// An answer of the model.
+    Assistant,
+    /// The compressed context base the session continues from.
+    Compress,
+}
+
+impl ChatMessageType {
+    /// The string form stored in the `message_type` column.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::User => "user",
+            Self::Assistant => "assistant",
+            Self::Compress => "compress",
+        }
+    }
+
+    /// Parses the stored string; an unknown value falls back to `User`.
+    pub fn from_value(value: &str) -> Self {
+        match value {
+            "assistant" => Self::Assistant,
+            "compress" => Self::Compress,
+            _ => Self::User,
+        }
+    }
+}
+
 /// The message bubble view: which artifact the bubble shows.
 /// Serialized lowercase; an unknown stored value reads as `Text` —
 /// broken data must not pass for a normal bubble.
@@ -97,6 +131,8 @@ pub struct ChatHistoryData {
     pub id: Option<i32>,
     /// Id of the chat the message belongs to.
     pub chat_id: i32,
+    /// The sender kind of the message.
+    pub message_type: ChatMessageType,
     /// Kind id of the answering provider ("ollama", ...); `None` = a user message.
     pub provider: Option<String>,
     /// Name of the answering model; `None` = a user message.
@@ -123,6 +159,8 @@ pub struct ChatHistoryData {
     pub tokens_translate: Option<i32>,
     /// Estimated tokens of the summary; `None` = not generated yet.
     pub tokens_summary: Option<i32>,
+    /// Estimated tokens of the compressed base; `None` = not compressed.
+    pub tokens_compress: Option<i32>,
     /// Duration of the answer text generation in milliseconds; `None`
     /// for user messages and failed answers.
     pub tokens_gen_ms: Option<i32>,
@@ -138,6 +176,7 @@ diesel::table! {
     chat_history (id) {
         id -> Integer,
         chat_id -> Integer,
+        message_type -> Text,
         provider -> Nullable<Text>,
         model -> Nullable<Text>,
         status -> Text,
@@ -150,6 +189,7 @@ diesel::table! {
         tokens_thinking -> Nullable<Integer>,
         tokens_translate -> Nullable<Integer>,
         tokens_summary -> Nullable<Integer>,
+        tokens_compress -> Nullable<Integer>,
         tokens_gen_ms -> Nullable<Integer>,
         created_at -> Timestamp,
         collapsed -> Bool,
@@ -163,6 +203,7 @@ diesel::table! {
 struct ChatHistoryRow {
     id: i32,
     chat_id: i32,
+    message_type: String,
     provider: Option<String>,
     model: Option<String>,
     status: String,
@@ -175,6 +216,7 @@ struct ChatHistoryRow {
     tokens_thinking: Option<i32>,
     tokens_translate: Option<i32>,
     tokens_summary: Option<i32>,
+    tokens_compress: Option<i32>,
     tokens_gen_ms: Option<i32>,
     created_at: NaiveDateTime,
     collapsed: bool,
@@ -185,6 +227,7 @@ impl From<ChatHistoryRow> for ChatHistoryData {
         ChatHistoryData {
             id: Some(row.id),
             chat_id: row.chat_id,
+            message_type: ChatMessageType::from_value(&row.message_type),
             provider: row.provider,
             model: row.model,
             status: ChatStatus::from_value(&row.status),
@@ -197,6 +240,7 @@ impl From<ChatHistoryRow> for ChatHistoryData {
             tokens_thinking: row.tokens_thinking,
             tokens_translate: row.tokens_translate,
             tokens_summary: row.tokens_summary,
+            tokens_compress: row.tokens_compress,
             tokens_gen_ms: row.tokens_gen_ms,
             created_at: row.created_at,
             collapsed: row.collapsed,
@@ -210,12 +254,16 @@ impl From<ChatHistoryRow> for ChatHistoryData {
 #[diesel(table_name = chat_history)]
 struct ChatHistoryNewData {
     chat_id: i32,
+    message_type: String,
     provider: Option<String>,
     model: Option<String>,
     status: String,
     text: String,
     thinking: Option<String>,
     tokens_answer: i32,
+    // the compress token lands with the insert; `None` is skipped by
+    // the changeset on the update path
+    tokens_compress: Option<i32>,
 }
 
 impl Store {
@@ -236,6 +284,7 @@ impl Store {
     pub(crate) fn add_chat_history(
         &self,
         chat_id: i32,
+        message_type: ChatMessageType,
         provider: Option<&str>,
         model: Option<&str>,
         status: ChatStatus,
@@ -248,12 +297,41 @@ impl Store {
             None,
             ChatHistoryNewData {
                 chat_id,
+                message_type: message_type.as_str().to_string(),
                 provider: provider.map(String::from),
                 model: model.map(String::from),
                 status: status.as_str().to_string(),
                 text: text.to_string(),
                 thinking: thinking.map(String::from),
                 tokens_answer,
+                tokens_compress: None,
+            },
+        )?;
+        Ok(ChatHistoryData::from(row))
+    }
+
+    /// Inserts the compressed base the session continues from; the
+    /// message is born final with its reasoning and counted tokens.
+    pub(crate) fn add_chat_history_compress(
+        &self,
+        chat_id: i32,
+        text: &str,
+        thinking: Option<&str>,
+        tokens_compress: i32,
+    ) -> Result<ChatHistoryData> {
+        let row: ChatHistoryRow = self.save(
+            chat_history::table,
+            None,
+            ChatHistoryNewData {
+                chat_id,
+                message_type: ChatMessageType::Compress.as_str().to_string(),
+                provider: None,
+                model: None,
+                status: ChatStatus::Complete.as_str().to_string(),
+                text: text.to_string(),
+                thinking: thinking.map(String::from),
+                tokens_answer: 0,
+                tokens_compress: Some(tokens_compress),
             },
         )?;
         Ok(ChatHistoryData::from(row))
@@ -321,6 +399,20 @@ impl Store {
         Ok(affected)
     }
 
+    /// Collapses the given message of the chat and unfolds the rest —
+    /// the automatic view behind a finished answer. The compress base
+    /// keeps its own collapsed flag: the context is not a turn of the
+    /// exchange. One statement.
+    pub(crate) fn collapse_chat_history(&self, chat_id: i32, id: i32) -> Result<usize> {
+        let affected = diesel::sql_query(
+            "UPDATE chat_history SET collapsed = CASE WHEN message_type = 'compress' THEN collapsed ELSE (id = ?) END WHERE chat_id = ?",
+        )
+        .bind::<diesel::sql_types::Integer, _>(id)
+        .bind::<diesel::sql_types::Integer, _>(chat_id)
+        .execute(&mut *self.lock())?;
+        Ok(affected)
+    }
+
     /// Writes the message summary with its counted tokens — the final
     /// write of a finished run. The column is a cache of the
     /// completed artifact.
@@ -357,6 +449,18 @@ impl Store {
         Ok(affected)
     }
 
+    /// Deletes the progress compress attempts of the whole table —
+    /// the startup sweep behind a killed process: a dead attempt
+    /// must not stay in the history. Returns affected rows.
+    pub(crate) fn delete_progress_chat_histories_compress(&self) -> Result<usize> {
+        self.delete_where(
+            chat_history::table,
+            chat_history::message_type
+                .eq(ChatMessageType::Compress.as_str())
+                .and(chat_history::status.eq(ChatStatus::Progress.as_str())),
+        )
+    }
+
     /// Deletes the message with the given id, returns affected rows.
     pub(crate) fn delete_chat_history(&self, id: i32) -> Result<usize> {
         self.delete(chat_history::table, id)
@@ -383,6 +487,16 @@ impl Store {
         self.delete_where(
             chat_history::table,
             chat_history::chat_id.eq(chat_id).and(chat_history::id.gt(id)),
+        )
+    }
+
+    /// Deletes every message of the chat except the given one; the
+    /// swap behind the compression: the fresh base stays, the old
+    /// history and the attempt go. Returns affected rows.
+    pub(crate) fn delete_chat_histories_except(&self, chat_id: i32, id: i32) -> Result<usize> {
+        self.delete_where(
+            chat_history::table,
+            chat_history::chat_id.eq(chat_id).and(chat_history::id.ne(id)),
         )
     }
 }

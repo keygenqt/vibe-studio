@@ -51,6 +51,13 @@ export const ruLocalization = {
       t_message_resend_title: 'Переотправить сообщение?',
       t_message_resend_text:
         'Ответы ниже будут удалены, и запрос будет отправлен заново. Вероятно, кеш провайдера будет сброшен.',
+      t_compress: 'Сжать',
+      t_compress_title: 'Сжать историю?',
+      t_compress_text:
+        'Вся история будет сжата в одно сообщение — базу контекста. Чат начнёт новую сессию с этой базы. Действие необратимо.',
+      t_compress_task_model: 'Модель задач',
+      t_compressing: 'Сжимаем...',
+      t_compress_author: 'Контекст',
     },
     chat_empty: {
       t_no_chat: 'Выберите чат',
@@ -188,6 +195,9 @@ export const ruLocalization = {
     'Message must not be blank.': 'Сообщение не должно быть пустым.',
     'Translation must not be blank.': 'Перевод не должен быть пустым.',
     'Summary must not be blank.': 'Саммари не должно быть пустым.',
+    'Compress must not be blank.': 'Сжатие не должно быть пустым.',
+    'Compression failed.': 'Сжатие не удалось.',
+    'Chat compression is in progress.': 'Идёт сжатие чата.',
     'Task model is not set.': 'Модель задач не выбрана.',
     'Chat has no messages.': 'В чате нет сообщений.',
     'Clipboard is not available.': 'Буфер обмена недоступен.',

@@ -51,6 +51,13 @@ export const cnLocalization = {
       t_message_resend_title: '重新发送消息？',
       t_message_resend_text:
         '下方的回答将被删除，请求将重新发送。提供商的提示词缓存很可能会被重置。',
+      t_compress: '压缩',
+      t_compress_title: '压缩历史记录？',
+      t_compress_text:
+        '全部历史将被压缩为一条消息——上下文基础。聊天将从该基础开始新会话。此操作无法撤销。',
+      t_compress_task_model: '任务模型',
+      t_compressing: '压缩中...',
+      t_compress_author: '上下文',
     },
     chat_empty: {
       t_no_chat: '选择聊天',
@@ -187,6 +194,9 @@ export const cnLocalization = {
     'Message must not be blank.': '消息不能为空。',
     'Translation must not be blank.': '翻译不能为空。',
     'Summary must not be blank.': '摘要不能为空。',
+    'Compress must not be blank.': '压缩内容不能为空。',
+    'Compression failed.': '压缩失败。',
+    'Chat compression is in progress.': '正在压缩聊天。',
     'Task model is not set.': '未选择任务模型。',
     'Chat has no messages.': '聊天中还没有消息。',
     'Clipboard is not available.': '剪贴板不可用。',

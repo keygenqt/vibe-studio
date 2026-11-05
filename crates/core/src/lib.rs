@@ -29,6 +29,7 @@ pub use studio_cluster::ModelInfoData;
 pub use studio_cluster::ProviderInfoData;
 pub use studio_states::ChatData;
 pub use studio_states::ChatHistoryData;
+pub use studio_states::ChatMessageType;
 pub use studio_states::ChatShowType;
 pub use studio_states::ChatStatus;
 pub use studio_states::GroupChatData;
@@ -464,6 +465,7 @@ pub async fn chat_send_message(
     let user = studio_states::add_chat_history(
         store,
         chat_id,
+        ChatMessageType::User,
         None,
         None,
         ChatStatus::Complete,
@@ -490,7 +492,7 @@ pub async fn chat_resend_message(
         .iter()
         .find(|message| message.id == Some(message_id))
         .ok_or_else(|| anyhow::anyhow!("Unknown message."))?;
-    if message.model.is_some() {
+    if message.message_type != ChatMessageType::User {
         anyhow::bail!("Only a user message can be resent.");
     }
     studio_states::delete_chat_histories_after(store, chat_id, message_id)?;
@@ -531,6 +533,13 @@ async fn chat_send_stream(
     on_event: impl Fn(ChatStreamEvent) + Send + Sync + 'static,
 ) -> Result<()> {
     let chat = studio_states::get_chat(store, chat_id)?;
+    // a running compress owns the chat: the send waits until it lands
+    if studio_states::get_chat_histories(store, chat_id)?
+        .iter()
+        .any(|message| message.message_type == ChatMessageType::Compress && message.status == ChatStatus::Progress)
+    {
+        anyhow::bail!("Chat compression is in progress.");
+    }
     let group = studio_states::get_group_chat(store, chat.group_chat_id)?;
     let model = studio_states::get_provider_model(store, group.model_id)?;
     let provider = studio_states::get_provider(store, model.provider_id)?;
@@ -568,6 +577,7 @@ async fn chat_send_stream(
     let answer = studio_states::add_chat_history(
         store,
         chat_id,
+        ChatMessageType::Assistant,
         Some(provider.provider.as_str()),
         Some(model.name.as_str()),
         ChatStatus::Progress,
@@ -700,6 +710,9 @@ async fn chat_send_stream(
             .map(|text| studio_cluster::count_tokens(text) as i32),
         tokens_gen_ms,
     )?;
+    // the answered user message collapses, the rest unfolds — the
+    // fresh view rides the block event
+    studio_states::collapse_chat_history(store, chat_id, skip_id)?;
     Ok(())
 }
 
@@ -734,7 +747,7 @@ pub async fn chat_translate_message(
         .iter()
         .find(|message| message.id == Some(message_id))
         .ok_or_else(|| anyhow::anyhow!("Unknown message."))?;
-    if message.model.is_none() {
+    if message.message_type != ChatMessageType::Assistant {
         anyhow::bail!("Only a model answer can be translated.");
     }
     // the cache: an existing translation never calls the model again
@@ -928,6 +941,193 @@ pub async fn chat_summarize_message(store: &Store, chat_id: i32, message_id: i32
     Ok(())
 }
 
+/// Compresses the chat history into one context-base message: the
+/// chat's model by default, the heavy task model by the flag — the
+/// task config is the compression's own either way. The attempt is
+/// born with the stream and grows in the store as the deltas arrive
+/// — the UI hides the history and shows the progress. On success the
+/// history is deleted and the base stays; on a cancel or a failure
+/// the attempt is deleted and the history returns untouched. The UI
+/// is not trusted: the chat must exist, the flag without the heavy
+/// model is an error.
+pub async fn chat_compress_message(
+    store: &Store,
+    chat_id: i32,
+    use_task_model: bool,
+    on_event: impl Fn(ChatStreamEvent) + Send + Sync + 'static,
+) -> Result<()> {
+    let chat = studio_states::get_chat(store, chat_id)?;
+    let settings = studio_states::get_settings(store).unwrap_or_default();
+    // the chat's model pair: the default target and the cancel key —
+    // the composer Stop cuts the compression whatever model runs it
+    let group = studio_states::get_group_chat(store, chat.group_chat_id)?;
+    let chat_model = studio_states::get_provider_model(store, group.model_id)?;
+    let chat_provider = studio_states::get_provider(store, chat_model.provider_id)?;
+    let (provider, model_name) = if use_task_model {
+        let Some(model_id) = settings.tasks_model_heavy else {
+            anyhow::bail!("Task model is not set.");
+        };
+        let model = studio_states::get_provider_model(store, model_id)?;
+        (studio_states::get_provider(store, model.provider_id)?, model.name)
+    } else {
+        (chat_provider.clone(), chat_model.name.clone())
+    };
+    let kind =
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?;
+
+    // a running stream of the chat's model gives way: on success its
+    // answer row goes with the history — whatever model compresses
+    utils::cancel_stream_token(&(chat_provider.provider.clone(), chat_model.name.clone()));
+
+    // the model context: everything said so far, in order — only
+    // complete messages count; the compress base goes as the user
+    // turn it is, the assistant answers keep their role
+    let history: Vec<(String, String)> = studio_states::get_chat_histories(store, chat_id)?
+        .iter()
+        .filter(|message| message.status == ChatStatus::Complete)
+        .map(|message| (utils::history_role(message), message.text.clone()))
+        .collect();
+    if history.is_empty() {
+        anyhow::bail!("Chat has no messages.");
+    }
+
+    // the attempt is born with the stream and grows in the store
+    let attempt = studio_states::add_chat_history(
+        store,
+        chat_id,
+        ChatMessageType::Compress,
+        None,
+        None,
+        ChatStatus::Progress,
+        "",
+        None,
+        0,
+    )?;
+    let attempt_id = attempt.id.expect("stored attempt id");
+
+    // the token registers under the chat's model pair: the composer
+    // Stop (chat_cancel_send) cuts the compression
+    let cancel = utils::stream_token();
+    utils::stream_tokens().lock().expect("stream tokens poisoned").insert(
+        (chat_provider.provider.clone(), chat_model.name.clone()),
+        cancel.clone(),
+    );
+
+    on_event(ChatStreamEvent::UserStored {
+        chat: Some(chat.clone()),
+        history: studio_states::get_chat_histories(store, chat_id).unwrap_or_default(),
+    });
+
+    // the deltas ride a channel: the callback runs inside the cluster
+    // call and cannot touch the store — the pump below persists them
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<StreamEvent>();
+    let call = std::pin::pin!(studio_cluster::call_compress(
+        kind,
+        &provider.host,
+        provider.api_key.as_deref(),
+        provider.project.as_deref(),
+        &model_name,
+        history,
+        cancel.as_ref(),
+        {
+            let tx = tx.clone();
+            move |event| {
+                let _ = tx.send(event.clone());
+            }
+        },
+    ));
+
+    let mut text_acc = String::new();
+    let mut thinking_acc = String::new();
+    // the growing row persists at most once per 300 ms — token
+    // streams must not turn into hundreds of UPDATEs per second
+    const PERSIST_INTERVAL_MS: u64 = 300;
+    let mut persisted_at = std::time::Instant::now();
+    // one gate for the whole answer: the phases never mix, and a
+    // shared gate can only delay a snapshot, never drop one
+    let mut gate = stream::StreamGate::default();
+    // one delta: grow the accumulators, persist the row, snapshot to the shell
+    let handle = |event: StreamEvent| -> Result<()> {
+        match &event {
+            StreamEvent::Text(chunk) => {
+                text_acc.push_str(chunk);
+                // the shell paints the balanced whole — the final
+                // write is the authority
+                if gate.pass(text_acc.len()) {
+                    let snapshot = utils::close_open_fence(&text_acc).unwrap_or_else(|| text_acc.clone());
+                    on_event(ChatStreamEvent::TextSnapshot(snapshot));
+                }
+            }
+            StreamEvent::Thinking(chunk) => {
+                thinking_acc.push_str(chunk);
+                // thinking rides the same snapshot rule: the shell
+                // replaces its copy, never accumulates
+                if gate.pass(thinking_acc.len()) {
+                    on_event(ChatStreamEvent::Thinking(thinking_acc.clone()));
+                }
+            }
+        }
+        let thinking = if thinking_acc.is_empty() {
+            None
+        } else {
+            Some(thinking_acc.as_str())
+        };
+        if persisted_at.elapsed() >= std::time::Duration::from_millis(PERSIST_INTERVAL_MS) {
+            persisted_at = std::time::Instant::now();
+            studio_states::update_chat_history(
+                store,
+                attempt_id,
+                &text_acc,
+                thinking,
+                ChatStatus::Progress,
+                0,
+                None,
+                None,
+            )?;
+        }
+        Ok(())
+    };
+    let outcome = stream::pump(call, &mut rx, handle).await?;
+
+    // the outcome: the history stays untouched until a verified final
+    // — a cancel, a failure or a cut stream deletes the attempt and
+    // returns the history
+    match outcome {
+        // the success gate: the cluster reports a cut request by the
+        // missing completion tokens — a partial text never passes
+        Ok(result) if !result.cancelled && result.completion_tokens.is_some() => {
+            let base = result.text.trim().to_string();
+            if base.is_empty() {
+                studio_states::delete_chat_history(store, attempt_id)?;
+                anyhow::bail!("Compress must not be blank.");
+            }
+            // the swap: the base lands first — the history is deleted
+            // only after the successful final is on disk
+            let base = studio_states::add_chat_history_compress(
+                store,
+                chat_id,
+                &base,
+                result.thinking.as_deref(),
+                studio_cluster::count_tokens(&base) as i32,
+            )?;
+            studio_states::delete_chat_histories_except(store, chat_id, base.id.expect("stored base id"))?;
+        }
+        Ok(result) => {
+            studio_states::delete_chat_history(store, attempt_id)?;
+            // a cut stream arrives as a formally Ok answer without tokens
+            if !result.cancelled {
+                anyhow::bail!("Compression failed.");
+            }
+        }
+        // the failed run keeps no base: the error rides the command
+        Err(error) => {
+            studio_states::delete_chat_history(store, attempt_id)?;
+            return Err(error);
+        }
+    }
+    Ok(())
+}
+
 // ─────────────────────────────────────────────
 // Group Chat History
 // ─────────────────────────────────────────────
@@ -985,6 +1185,8 @@ pub fn store_open(dir: &Path) -> Result<Store> {
 /// all read as cancelled, the partial texts stay.
 pub fn init(store: &Store) -> Result<()> {
     studio_states::cancel_progress_chat_histories(store)?;
+    // a dead compress attempt must not stay in the history
+    studio_states::delete_progress_chat_histories_compress(store)?;
     Ok(())
 }
 

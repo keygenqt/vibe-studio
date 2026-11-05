@@ -96,8 +96,8 @@ export function UserMessageView(props) {
               <Typography
                 variant={'caption'}
                 noWrap
-                color={'text.primary'}
-                sx={{ opacity: 0.8, minWidth: 0 }}
+                color={'text.secondary'}
+                sx={{ minWidth: 0, paddingY: '4px' }}
               >
                 {[props.message.author, props.message.time].join(' · ')}
               </Typography>

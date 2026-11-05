@@ -51,6 +51,13 @@ export const enLocalization = {
       t_message_resend_title: 'Resend the message?',
       t_message_resend_text:
         "The responses below will be deleted and the request will be sent again. The provider's prompt cache will probably be reset.",
+      t_compress: 'Compress',
+      t_compress_title: 'Compress the history?',
+      t_compress_text:
+        'The whole history will be compressed into one message — the context base. The chat starts a new session from this base. This action cannot be undone.',
+      t_compress_task_model: 'Task model',
+      t_compressing: 'Compressing...',
+      t_compress_author: 'Context',
     },
     chat_empty: {
       t_no_chat: 'Select a chat',

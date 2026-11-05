@@ -104,6 +104,16 @@ export const chat = {
       }
     }
   },
+  // the compress streams like a model answer: the attempt rides the
+  // `UserStored` event, the snapshots paint the live bubble, the
+  // Stop button cuts the run
+  chat_compress_message: async function (chatId, useTaskModel) {
+    const seq = ++streamSeq
+    store.dispatch(chatStreamStart({ seq, chatId }))
+    await runStream(seq, chatId, channel =>
+      invoke('chat_compress_message', { chatId, useTaskModel, onDelta: channel })
+    )
+  },
 }
 
 export function chat_events() {

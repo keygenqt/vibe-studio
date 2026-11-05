@@ -181,7 +181,6 @@ impl Store {
     }
 
     /// Removes rows of `table` matching `filter`, returns affected rows.
-    #[allow(dead_code)]
     pub(crate) fn delete_where<T, F>(&self, table: T, filter: F) -> Result<usize>
     where
         T: diesel::Table + diesel::query_dsl::methods::FilterDsl<F>,

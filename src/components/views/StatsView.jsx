@@ -4,11 +4,11 @@
  * TAGS: ['components']
  * INFO: The chat usage stats: token breakdown by artifact and the speed.
  */
-import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Stack, Typography } from '@mui/material'
 import AutoAwesome from '@mui/icons-material/AutoAwesome'
 import ChatBubbleOutline from '@mui/icons-material/ChatBubbleOutline'
+import Compress from '@mui/icons-material/Compress'
 import Psychology from '@mui/icons-material/Psychology'
 import Speed from '@mui/icons-material/Speed'
 import Translate from '@mui/icons-material/Translate'
@@ -47,6 +47,12 @@ export function StatsView(props) {
       minor: true,
       icon: <AutoAwesome sx={ICON_SX} />,
       value: AppUtils.human(stats.tokens_summary),
+    },
+    stats.tokens_compress > 0 && {
+      key: 'compress',
+      minor: true,
+      icon: <Compress sx={ICON_SX} />,
+      value: AppUtils.human(stats.tokens_compress),
     },
     stats.tokens_translate > 0 && {
       key: 'translate',
@@ -88,6 +94,7 @@ StatsView.propTypes = {
     tokens_thinking: PropTypes.number,
     tokens_translate: PropTypes.number,
     tokens_summary: PropTypes.number,
+    tokens_compress: PropTypes.number,
     tokens_per_second: PropTypes.number,
     messages: PropTypes.number,
   }),

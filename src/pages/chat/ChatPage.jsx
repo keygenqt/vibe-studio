@@ -18,6 +18,7 @@ import { AppUtils } from '../../utils'
 
 import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
 import { ChatTitleView } from './elements/ChatTitleView'
+import { CompressMessageView } from './elements/CompressMessageView'
 import { UserMessageView } from './elements/UserMessageView'
 import { ModelMessageView } from './elements/ModelMessageView'
 import { QuickActions } from './elements/QuickActions'
@@ -67,6 +68,10 @@ export function ChatPage() {
     Methods.chat_set_message_collapsed(cid, messageId, collapsed)
   // the newest progress row owns the live stream
   const progressRow = (history ?? []).findLast(item => item.status === 'progress') ?? null
+  // the running compress: the history hides, the attempt paints alone
+  const compressAttempt =
+    (history ?? []).find(item => item.message_type === 'compress' && item.status === 'progress') ??
+    null
   // the chat opens at the bottom: this many last messages render
   // markdown at once — the rest upgrade lazily on the scroll up
   const VISIBLE_TAIL = 4
@@ -85,7 +90,27 @@ export function ChatPage() {
 
   const renderMessage = (message, key, immediate = false) => {
     const view = viewMessage(message)
-    return message.model === null && message.status === 'complete' ? (
+    return message.message_type === 'compress' ? (
+      <CompressMessageView
+        key={key}
+        message={{
+          ...view,
+          // the live snapshots paint the growing attempt only: the
+          // finished base never merges — a send's stream belongs to
+          // the answer bubble, not to the context
+          text: message.status === 'progress' ? (stream?.text ?? message.text) : message.text,
+          thinking:
+            message.status === 'progress'
+              ? (stream?.thinking ?? message.thinking)
+              : message.thinking,
+        }}
+        fontSize={fontSize}
+        immediate={immediate}
+        onDelete={() => setConfirm({ action: 'delete', messageId: message.id })}
+        onShowType={setShowType}
+        onSetCollapsed={setCollapsed}
+      />
+    ) : message.message_type === 'user' ? (
       <UserMessageView
         key={key}
         message={view}
@@ -125,6 +150,9 @@ export function ChatPage() {
             name={t(chat.name)}
             canRename={(history ?? []).length > 0 && settings.tasks_model_light !== null}
             onRename={() => Methods.chat_regenerate_name(cid).catch(console.error)}
+            canCompress={(history ?? []).length > 0}
+            hasTaskModel={settings.tasks_model_heavy !== null}
+            onCompress={useTaskModel => Methods.chat_compress_message(cid, useTaskModel)}
           />
           <ScrollPanel
             scrollKey={'chat.history'}
@@ -132,30 +160,38 @@ export function ChatPage() {
             sx={{ flexGrow: 1, minHeight: 0 }}
           >
             <Stack spacing={1.5}>
-              {(history ?? [])
-                .filter(message => message.status !== 'progress')
-                .map((message, index, list) =>
-                  renderMessage(
-                    message,
-                    `message-${message.id}`,
-                    index >= list.length - VISIBLE_TAIL
-                  )
-                )}
-              {stream &&
-                renderMessage(
-                  {
-                    id: progressRow?.id ?? -1,
-                    provider: progressRow?.provider ?? null,
-                    model: progressRow?.model ?? null,
-                    status: 'progress',
-                    show_type: progressRow?.show_type ?? 'text',
-                    text: stream.text,
-                    thinking: stream.thinking,
-                    created_at: progressRow?.created_at ?? Date.now(),
-                  },
-                  'message-stream',
-                  true
-                )}
+              {compressAttempt ? (
+                // the running compress: the history hides, the attempt shows
+                renderMessage(compressAttempt, 'message-compress', true)
+              ) : (
+                <>
+                  {(history ?? [])
+                    .filter(message => message.status !== 'progress')
+                    .map((message, index, list) =>
+                      renderMessage(
+                        message,
+                        `message-${message.id}`,
+                        index >= list.length - VISIBLE_TAIL
+                      )
+                    )}
+                  {stream &&
+                    renderMessage(
+                      {
+                        id: progressRow?.id ?? -1,
+                        message_type: 'assistant',
+                        provider: progressRow?.provider ?? null,
+                        model: progressRow?.model ?? null,
+                        status: 'progress',
+                        show_type: progressRow?.show_type ?? 'text',
+                        text: stream.text,
+                        thinking: stream.thinking,
+                        created_at: progressRow?.created_at ?? Date.now(),
+                      },
+                      'message-stream',
+                      true
+                    )}
+                </>
+              )}
             </Stack>
           </ScrollPanel>
           {/* horizontal mirror of the sidebar handle: dragging up grows the composer */}
@@ -189,7 +225,10 @@ export function ChatPage() {
                 draft={draft}
                 setDraft={setDraft}
                 onAttachments={addAttachments}
-                send={() => send(quick.includes('translate'))}
+                send={() => {
+                  // the running compress owns the chat: the send waits
+                  if (!compressAttempt) send(quick.includes('translate'))
+                }}
                 sending={sending}
                 streaming={streaming}
                 stop={stop}

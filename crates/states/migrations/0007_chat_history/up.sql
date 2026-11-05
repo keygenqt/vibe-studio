@@ -1,6 +1,7 @@
 CREATE TABLE chat_history (
     id INTEGER PRIMARY KEY NOT NULL,
     chat_id INTEGER NOT NULL,
+    message_type TEXT NOT NULL DEFAULT 'user',
     provider TEXT NULL,
     model TEXT NULL,
     status TEXT NOT NULL DEFAULT 'complete',
@@ -13,6 +14,7 @@ CREATE TABLE chat_history (
     tokens_thinking INTEGER NULL,
     tokens_translate INTEGER NULL,
     tokens_summary INTEGER NULL,
+    tokens_compress INTEGER NULL,
     tokens_gen_ms INTEGER NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     collapsed BOOLEAN NOT NULL DEFAULT 0

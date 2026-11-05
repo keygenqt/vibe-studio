@@ -487,6 +487,34 @@ pub async fn chat_translate_message(
     Ok(state)
 }
 
+/// Compresses the chat history into one context-base message; the
+/// stream snapshots go to `on_delta` like a model answer, the
+/// attempt rides the `UserStored` event. A cancelled run answers
+/// without an error — the cleanup event returns the history.
+/// Returns the fresh state of the chat block.
+#[tauri::command]
+pub async fn chat_compress_message(
+    window: WebviewWindow,
+    store: State<'_, Store>,
+    chat_id: i32,
+    use_task_model: bool,
+    on_delta: Channel<StreamChunk>,
+) -> Result<ChatStateData, String> {
+    // the fresh state in any outcome: an error or a cancel deletes
+    // the attempt — the shell must see the history return
+    let result = studio_core::chat_compress_message(
+        &store,
+        chat_id,
+        use_task_model,
+        chat_stream_forwarder(window.clone(), on_delta),
+    )
+    .await;
+    let state = ChatStateData::new(&store, chat_id);
+    emit_event_chat(&window, EventData::new(EventKey::Chat, &state));
+    result.map_err(|e| e.to_string())?;
+    Ok(state)
+}
+
 /// Renames the chat with a model-generated name; the chat row lives
 /// in the groups chat block — emits and returns its fresh state.
 #[tauri::command]

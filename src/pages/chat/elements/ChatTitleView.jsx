@@ -15,9 +15,13 @@ import Tune from '@mui/icons-material/Tune'
 import { TooltipIconButton } from '../../../components/buttons'
 import { ErrorSnackbar } from '../../../components/snackbars'
 
+import { CompressDialog } from './CompressDialog'
+
 export function ChatTitleView(props) {
   const { t } = useTranslation()
   const [renaming, setRenaming] = React.useState(false)
+  const [compressOpen, setCompressOpen] = React.useState(false)
+  const [compressing, setCompressing] = React.useState(false)
   const [error, setError] = React.useState(null)
 
   const onRename = () => {
@@ -26,6 +30,17 @@ export function ChatTitleView(props) {
     Promise.resolve(props.onRename())
       .catch(error => setError(t(String(error))))
       .finally(() => setRenaming(false))
+  }
+
+  // the dialog confirms first: the switch picks the model, the
+  // failure lands in the snackbar
+  const onCompress = useTaskModel => {
+    if (compressing) return
+    setCompressOpen(false)
+    setCompressing(true)
+    Promise.resolve(props.onCompress(useTaskModel))
+      .catch(error => setError(t(String(error))))
+      .finally(() => setCompressing(false))
   }
 
   return (
@@ -56,19 +71,28 @@ export function ChatTitleView(props) {
           </Typography>
           {props.canRename && (
             <TooltipIconButton size={'mini'} title={t('chat.t_chat_rename')} onClick={onRename}>
-              {renaming ? <CircularProgress size={20} color={'inherit'} /> : <Refresh />}
+              {renaming ? <CircularProgress size={18} color={'inherit'} /> : <Refresh />}
             </TooltipIconButton>
           )}
         </Stack>
         <Stack direction={'row'} spacing={1} alignItems={'center'}>
-          <Button
-            size={'small'}
-            startIcon={<Compress sx={{ fontSize: 20 }} />}
-            onClick={() => console.log('Compress chat')}
-            sx={{ color: 'text.secondary' }}
-          >
-            {t('chat.t_chat_compress')}
-          </Button>
+          {props.canCompress && (
+            <Button
+              size={'small'}
+              disabled={compressing}
+              startIcon={
+                compressing ? (
+                  <CircularProgress size={14} color={'inherit'} />
+                ) : (
+                  <Compress sx={{ fontSize: 20 }} />
+                )
+              }
+              onClick={() => setCompressOpen(true)}
+              sx={{ color: 'text.secondary' }}
+            >
+              {t('chat.t_chat_compress')}
+            </Button>
+          )}
           <TooltipIconButton
             size={'mini'}
             title={t('chat.t_chat_settings')}
@@ -78,6 +102,13 @@ export function ChatTitleView(props) {
           </TooltipIconButton>
         </Stack>
       </Box>
+      <CompressDialog
+        open={compressOpen}
+        hasTaskModel={props.hasTaskModel}
+        busy={compressing}
+        onCancel={() => setCompressOpen(false)}
+        onConfirm={onCompress}
+      />
       <ErrorSnackbar text={error} onClose={() => setError(null)} />
     </>
   )
@@ -87,4 +118,10 @@ ChatTitleView.propTypes = {
   name: PropTypes.string.isRequired,
   canRename: PropTypes.bool,
   onRename: PropTypes.func.isRequired,
+  // the history has messages to compress
+  canCompress: PropTypes.bool,
+  // the heavy task model is set — the dialog shows the switch
+  hasTaskModel: PropTypes.bool,
+  // receives the switch state: the heavy model or the chat's one
+  onCompress: PropTypes.func.isRequired,
 }

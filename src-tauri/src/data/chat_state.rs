@@ -20,6 +20,8 @@ pub struct ChatStatsData {
     pub tokens_translate: i64,
     /// Estimated tokens of the summaries together.
     pub tokens_summary: i64,
+    /// Estimated tokens of the compressed bases together.
+    pub tokens_compress: i64,
     /// The breakdown together.
     pub tokens_total: i64,
     /// Speed of the newest answer with a measured generation time;
@@ -61,12 +63,18 @@ impl ChatStatsData {
             .filter_map(|message| message.tokens_summary)
             .map(i64::from)
             .sum();
+        let tokens_compress: i64 = history
+            .iter()
+            .filter_map(|message| message.tokens_compress)
+            .map(i64::from)
+            .sum();
         Self {
             tokens_answer,
             tokens_thinking,
             tokens_translate,
             tokens_summary,
-            tokens_total: tokens_answer + tokens_thinking + tokens_translate + tokens_summary,
+            tokens_compress,
+            tokens_total: tokens_answer + tokens_thinking + tokens_translate + tokens_summary + tokens_compress,
             tokens_per_second,
             messages: history.len(),
         }

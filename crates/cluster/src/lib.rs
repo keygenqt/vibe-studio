@@ -5,6 +5,7 @@
 
 //! Vibe Studio cluster — provider catalog and LLM requests.
 
+mod compress;
 mod data;
 mod summary;
 mod title;
@@ -233,6 +234,25 @@ pub async fn call_summary(
     text: &str,
 ) -> Result<String> {
     summary::call(provider, host, api_key, project, model, text).await
+}
+
+/// Streams the compression of one conversation into a context base
+/// for continuing the session: the deltas go to `on_event` as they
+/// arrive, the aggregated answer with the reasoning comes back. The
+/// config is the task's own — the task never uses the model's
+/// generation settings. The conversation goes as the prompt history
+/// — `(role, content)` pairs, "user" | "assistant", oldest first.
+pub async fn call_compress(
+    provider: ProviderTypeData,
+    host: &str,
+    api_key: Option<&str>,
+    project: Option<&str>,
+    model: &str,
+    history: Vec<(String, String)>,
+    cancel: &CancelToken,
+    on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
+) -> Result<StreamAnswerData> {
+    compress::call_stream(provider, host, api_key, project, model, history, cancel, on_event).await
 }
 
 /// Names a chat by its conversation: the messages go as the prompt
