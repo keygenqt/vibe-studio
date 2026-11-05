@@ -205,12 +205,6 @@ pub fn update_chat_history_collapsed(store: &Store, id: i32, collapsed: bool) ->
     store.update_chat_history_collapsed(id, collapsed)
 }
 
-/// Collapses the given message of the chat and unfolds the rest —
-/// the automatic view behind a finished answer. Returns affected rows.
-pub fn collapse_chat_history(store: &Store, chat_id: i32, id: i32) -> Result<usize> {
-    store.collapse_chat_history(chat_id, id)
-}
-
 /// Writes the message summary with its counted tokens — the final
 /// write of a finished run.
 pub fn update_chat_history_summary(store: &Store, id: i32, summary: &str, tokens_summary: i32) -> Result<usize> {

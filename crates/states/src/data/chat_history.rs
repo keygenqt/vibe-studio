@@ -264,6 +264,8 @@ struct ChatHistoryNewData {
     // the compress token lands with the insert; `None` is skipped by
     // the changeset on the update path
     tokens_compress: Option<i32>,
+    // the default view of the fresh bubble; the user changes it after
+    collapsed: bool,
 }
 
 impl Store {
@@ -305,6 +307,8 @@ impl Store {
                 thinking: thinking.map(String::from),
                 tokens_answer,
                 tokens_compress: None,
+                // the user prompt is born Complete — collapsed by default
+                collapsed: message_type == ChatMessageType::User,
             },
         )?;
         Ok(ChatHistoryData::from(row))
@@ -332,6 +336,7 @@ impl Store {
                 thinking: thinking.map(String::from),
                 tokens_answer: 0,
                 tokens_compress: Some(tokens_compress),
+                collapsed: false,
             },
         )?;
         Ok(ChatHistoryData::from(row))
@@ -396,20 +401,6 @@ impl Store {
         let affected = diesel::update(chat_history::table.find(id))
             .set(chat_history::collapsed.eq(collapsed))
             .execute(&mut *self.lock())?;
-        Ok(affected)
-    }
-
-    /// Collapses the given message of the chat and unfolds the rest —
-    /// the automatic view behind a finished answer. The compress base
-    /// keeps its own collapsed flag: the context is not a turn of the
-    /// exchange. One statement.
-    pub(crate) fn collapse_chat_history(&self, chat_id: i32, id: i32) -> Result<usize> {
-        let affected = diesel::sql_query(
-            "UPDATE chat_history SET collapsed = CASE WHEN message_type = 'compress' THEN collapsed ELSE (id = ?) END WHERE chat_id = ?",
-        )
-        .bind::<diesel::sql_types::Integer, _>(id)
-        .bind::<diesel::sql_types::Integer, _>(chat_id)
-        .execute(&mut *self.lock())?;
         Ok(affected)
     }
 

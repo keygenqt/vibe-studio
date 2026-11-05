@@ -21,8 +21,8 @@ const TITLE_NUM_PREDICT: i32 = 8192;
 // and closed with `…`
 const TITLE_MAX_CHARS: usize = 50;
 
-// the template with `{language}` replaced at the call
-const TITLE_PROMPT: &str = "Name this chat based on the messages. The title must be at most three words, written in {language}. Answer with the title only: no quotes, no punctuation, no markdown, plain text.";
+// the templates with `{language}` and `{previous}` replaced at the call
+const TITLE_PROMPT: &str = "Name this chat based on the messages. The title must be at most three words, written in {language}. The previous title was \"{previous}\" — the new title must differ from it. Answer with the title only: no quotes, no punctuation, no markdown, plain text.";
 
 /// Names a chat by its conversation; returns the trimmed title — the
 /// first line capped to 50 chars (unicode), closed with `…`.
@@ -34,8 +34,11 @@ pub(crate) async fn call(
     model: &str,
     history: Vec<(String, String)>,
     language: &str,
+    previous: &str,
 ) -> Result<String> {
-    let prompt = TITLE_PROMPT.replace("{language}", language);
+    let prompt = TITLE_PROMPT
+        .replace("{language}", language)
+        .replace("{previous}", previous);
     let name = call_prompt(
         provider,
         host,

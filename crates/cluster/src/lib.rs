@@ -256,10 +256,10 @@ pub async fn call_compress(
 }
 
 /// Names a chat by its conversation: the messages go as the prompt
-/// history, the model answers with the name only. The config is the
-/// function's own — the task never uses the model's generation
-/// settings. The answer is trimmed to its first line and capped to
-/// 50 chars (unicode), closed with `…`.
+/// history, the model answers with the name only — `previous` is the
+/// name to differ from. The config is the function's own — the task
+/// never uses the model's generation settings. The answer is trimmed
+/// to its first line and capped to 50 chars (unicode), closed with `…`.
 pub async fn call_chat_name(
     provider: ProviderTypeData,
     host: &str,
@@ -268,6 +268,7 @@ pub async fn call_chat_name(
     model: &str,
     history: Vec<(String, String)>,
     language: &str,
+    previous: &str,
 ) -> Result<String> {
-    title::call(provider, host, api_key, project, model, history, language).await
+    title::call(provider, host, api_key, project, model, history, language, previous).await
 }

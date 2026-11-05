@@ -320,9 +320,11 @@ pub fn save_chat(store: &Store, chat: &ChatData) -> Result<ChatData> {
 }
 
 /// Renames the chat with a model-generated name: the light task
-/// model names the chat by its last two messages. The UI is not
-/// trusted: the chat must exist, the light model must be set, the
-/// chat must have messages; a blank answer is an error.
+/// model names the chat by the compress base, or by the last four
+/// messages — the previous name goes into the prompt so the fresh
+/// one differs. The UI is not trusted: the chat must exist, the
+/// light model must be set, the chat must have messages; a blank
+/// answer is an error.
 pub async fn chat_regenerate_name(store: &Store, chat_id: i32) -> Result<ChatData> {
     let chat = studio_states::get_chat(store, chat_id)?;
     let settings = studio_states::get_settings(store).unwrap_or_default();
@@ -338,11 +340,21 @@ pub async fn chat_regenerate_name(store: &Store, chat_id: i32) -> Result<ChatDat
     if messages.is_empty() {
         anyhow::bail!("Chat has no messages.");
     }
-    let start = messages.len().saturating_sub(2);
-    let history = messages[start..]
+    // the name source: the compress base is the conversation's
+    // summary — it wins; otherwise the last four messages speak
+    let history: Vec<(String, String)> = match messages
         .iter()
-        .map(|message| (utils::history_role(message), message.text.clone()))
-        .collect();
+        .find(|message| message.message_type == ChatMessageType::Compress)
+    {
+        Some(base) => vec![(utils::history_role(base), base.text.clone())],
+        None => {
+            let start = messages.len().saturating_sub(4);
+            messages[start..]
+                .iter()
+                .map(|message| (utils::history_role(message), message.text.clone()))
+                .collect()
+        }
+    };
     let language = utils::locale_language(&settings.appearance_locale);
     let name = studio_cluster::call_chat_name(
         studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?,
@@ -352,6 +364,7 @@ pub async fn chat_regenerate_name(store: &Store, chat_id: i32) -> Result<ChatDat
         &model.name,
         history,
         language,
+        &chat.name,
     )
     .await?;
     if name.is_empty() {
@@ -710,9 +723,6 @@ async fn chat_send_stream(
             .map(|text| studio_cluster::count_tokens(text) as i32),
         tokens_gen_ms,
     )?;
-    // the answered user message collapses, the rest unfolds — the
-    // fresh view rides the block event
-    studio_states::collapse_chat_history(store, chat_id, skip_id)?;
     Ok(())
 }
 
