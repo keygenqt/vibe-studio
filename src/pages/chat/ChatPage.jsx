@@ -14,6 +14,8 @@ import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
 import { useCoreChat, useCoreGroupsChat, useCoreSettings, useCoreWorkspace } from '../../hooks'
 import { Methods } from '../../modules'
+import { CHAT_INPUT_SIZE_MAX } from '../../constants'
+import { scrollToBottom, watchBottom } from '../../init'
 import { AppUtils } from '../../utils'
 
 import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
@@ -76,11 +78,18 @@ export function ChatPage() {
   // markdown at once — the rest upgrade lazily on the scroll up
   const VISIBLE_TAIL = 4
 
-  // the newest message stays in view after history updates and chat switches
+  // the follow state of the history: the down button reads it
+  const [atBottom, setAtBottom] = React.useState(true)
+  // the composer growth over the base: the draft content, ephemeral —
+  // the measured delta accumulates against the base, capped
+  const [composerGrow, setComposerGrow] = React.useState(0)
+  React.useEffect(() => watchBottom('chat.history', setAtBottom), [])
+
+  // the chat switch lands at the bottom and re-arms the follow; the
+  // content updates are the scroll area's own business
   React.useEffect(() => {
-    const el = document.querySelector('[data-scroll-key="chat.history"]')
-    if (el) el.scrollTop = el.scrollHeight
-  }, [history, stream, chatId])
+    scrollToBottom('chat.history')
+  }, [chatId])
 
   const viewMessage = message => ({
     ...message,
@@ -148,6 +157,8 @@ export function ChatPage() {
         <>
           <ChatTitleView
             name={t(chat.name)}
+            canScrollDown={!atBottom}
+            onScrollDown={() => scrollToBottom('chat.history')}
             canRename={(history ?? []).length > 0 && settings.tasks_model_light !== null}
             onRename={() => Methods.chat_regenerate_name(cid).catch(console.error)}
             canCompress={(history ?? []).length > 0}
@@ -156,6 +167,7 @@ export function ChatPage() {
           />
           <ScrollPanel
             scrollKey={'chat.history'}
+            follow
             ready={chatReady}
             sx={{ flexGrow: 1, minHeight: 0 }}
           >
@@ -197,12 +209,23 @@ export function ChatPage() {
           {/* horizontal mirror of the sidebar handle: dragging up grows the composer */}
           <HandleView
             orientation="horizontal"
-            onPointerDown={workspace.onComposerHandlePointerDown}
+            onPointerDown={event => {
+              // the drag starts from the live height and folds the
+              // growth into the saved base; the draft scrolls inside
+              // until the next content change
+              setComposerGrow(0)
+              workspace.onComposerHandlePointerDown(
+                event,
+                Math.min(workspace.chatInputSize + composerGrow, CHAT_INPUT_SIZE_MAX)
+              )
+            }}
           />
           <Box
             sx={{
               flexShrink: 0,
-              height: workspace.chatInputSize,
+              // the base from the drag plus the draft growth, capped —
+              // the history yields its height to the growing composer
+              height: Math.min(workspace.chatInputSize + composerGrow, CHAT_INPUT_SIZE_MAX),
               overflow: 'hidden',
               borderRadius: 2,
               backgroundColor: 'background.paper',
@@ -224,6 +247,11 @@ export function ChatPage() {
               <InputView
                 draft={draft}
                 setDraft={setDraft}
+                onGrow={delta =>
+                  setComposerGrow(g =>
+                    Math.max(0, Math.min(g + delta, CHAT_INPUT_SIZE_MAX - workspace.chatInputSize))
+                  )
+                }
                 onAttachments={addAttachments}
                 send={() => {
                   // the running compress owns the chat: the send waits

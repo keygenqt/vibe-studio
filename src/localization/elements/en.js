@@ -39,6 +39,7 @@ export const enLocalization = {
       t_search: 'Search',
       t_translate: 'Translate',
       t_menu: 'Menu',
+      t_scroll_down: 'Scroll to bottom',
       t_generating: 'Thinking...',
       t_cancelled: 'Generation cancelled',
       t_empty_answer: 'The model returned no answer',

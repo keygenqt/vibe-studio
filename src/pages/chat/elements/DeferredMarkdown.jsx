@@ -15,21 +15,15 @@ function DeferredMarkdownBase(props) {
   // everything above waits for the viewport
   const [visible, setVisible] = React.useState(props.immediate === true)
   const ref = React.useRef(null)
-  // the scroller sat at the bottom before the upgrade — it stays
-  // pinned after the content grows
-  const pinnedRef = React.useRef(false)
 
   React.useEffect(() => {
     if (visible || ref.current === null) return
     // one shot: once seen, the markdown stays — scrolling away does
-    // not downgrade the message back to the flat text
+    // not downgrade the message back to the flat text; the scroll
+    // itself is the follow mode's business
     const observer = new IntersectionObserver(
       entries => {
         if (!entries.some(entry => entry.isIntersecting)) return
-        const scroller = document.querySelector('[data-scroll-key="chat.history"]')
-        pinnedRef.current =
-          scroller !== null &&
-          scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 2
         setVisible(true)
       },
       // the chat history scroller; the margin warms the messages just
@@ -39,16 +33,6 @@ function DeferredMarkdownBase(props) {
     observer.observe(ref.current)
     return () => observer.disconnect()
   }, [visible])
-
-  // the flat text keeps the height close to the markdown — the swap
-  // moves the scroll little, the pin closes the rest
-  React.useLayoutEffect(() => {
-    if (!visible || !pinnedRef.current) return
-    const scroller = document.querySelector('[data-scroll-key="chat.history"]')
-    if (scroller !== null) {
-      scroller.scrollTop = scroller.scrollHeight
-    }
-  }, [visible, props.text])
 
   return (
     <Box ref={ref} sx={{ minWidth: 0 }}>

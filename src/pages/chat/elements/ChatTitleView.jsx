@@ -8,6 +8,7 @@ import * as React from 'react'
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material'
+import ArrowDownward from '@mui/icons-material/ArrowDownward'
 import Compress from '@mui/icons-material/Compress'
 import Refresh from '@mui/icons-material/Refresh'
 import Tune from '@mui/icons-material/Tune'
@@ -76,6 +77,15 @@ export function ChatTitleView(props) {
           )}
         </Stack>
         <Stack direction={'row'} spacing={1} alignItems={'center'}>
+          {props.canScrollDown && (
+            <TooltipIconButton
+              size={'mini'}
+              title={t('chat.t_scroll_down')}
+              onClick={props.onScrollDown}
+            >
+              <ArrowDownward />
+            </TooltipIconButton>
+          )}
           {props.canCompress && (
             <Button
               size={'small'}
@@ -124,4 +134,8 @@ ChatTitleView.propTypes = {
   hasTaskModel: PropTypes.bool,
   // receives the switch state: the heavy model or the chat's one
   onCompress: PropTypes.func.isRequired,
+  // the history sits above the bottom — the down button shows
+  canScrollDown: PropTypes.bool,
+  // jumps the history to its bottom
+  onScrollDown: PropTypes.func,
 }

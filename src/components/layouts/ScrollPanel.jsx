@@ -30,6 +30,7 @@ export function ScrollPanel(props) {
         <Box
           className={'ScrollArea'}
           data-scroll-key={props.scrollKey}
+          data-scroll-follow={props.follow || undefined}
           sx={{ height: 1, p: 1, boxSizing: 'border-box' }}
         >
           {ready ? (
@@ -47,6 +48,8 @@ export function ScrollPanel(props) {
 
 ScrollPanel.propTypes = {
   scrollKey: PropTypes.string,
+  // the follow mode: pins to the bottom while the user sits at it
+  follow: PropTypes.bool,
   sx: PropTypes.object,
   ready: PropTypes.bool,
   children: PropTypes.node,

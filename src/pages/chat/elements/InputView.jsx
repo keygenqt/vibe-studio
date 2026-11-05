@@ -15,8 +15,24 @@ import { Methods } from '../../../modules'
 
 export function InputView(props) {
   const { t } = useTranslation()
-  const { draft, setDraft, send, sending, streaming, stop, onAttachments } = props
+  const { draft, setDraft, send, sending, streaming, stop, onAttachments, onGrow } = props
   const inputRef = React.useRef(null)
+
+  // the height delta the content needs over the field: the parent
+  // accumulates it against the base; the callback rides the ref —
+  // the parent re-renders must not re-measure behind the draft
+  const onGrowRef = React.useRef(onGrow)
+  onGrowRef.current = onGrow
+  React.useLayoutEffect(() => {
+    const measure = () => {
+      const input = inputRef.current
+      if (!input) return
+      onGrowRef.current(Math.max(0, input.scrollHeight - input.clientHeight))
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [draft])
 
   // the disabled input cannot take focus, so refocus after sending ends
   React.useEffect(() => {
@@ -75,8 +91,15 @@ export function InputView(props) {
         slotProps={{
           input: { disableUnderline: true, sx: { height: '100%', alignItems: 'flex-start' } },
           htmlInput: {
-            className: 'ScrollArea',
-            sx: { height: '100% !important', overflowY: 'auto !important' },
+            // no ScrollArea class: the padded toggle flips the width at
+            // the overflow boundary — the rewrap is the jitter
+            sx: {
+              height: '100% !important',
+              overflowY: 'auto !important',
+              // the reserved gutter keeps the width stable when the
+              // scrollbar appears at the cap
+              scrollbarGutter: 'stable',
+            },
             autoComplete: 'off',
             autoCorrect: 'off',
             autoCapitalize: 'off',
@@ -125,4 +148,6 @@ InputView.propTypes = {
   streaming: PropTypes.bool.isRequired,
   stop: PropTypes.func.isRequired,
   onAttachments: PropTypes.func.isRequired,
+  // reports the extra height the content needs over the field
+  onGrow: PropTypes.func.isRequired,
 }

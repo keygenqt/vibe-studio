@@ -39,6 +39,7 @@ export const ruLocalization = {
       t_search: 'Поиск',
       t_translate: 'Перевод',
       t_menu: 'Меню',
+      t_scroll_down: 'Прокрутить вниз',
       t_generating: 'Думаю...',
       t_cancelled: 'Генерация отменена',
       t_empty_answer: 'Пустой ответ модели',

@@ -71,19 +71,26 @@ export function useCoreWorkspace() {
     handle.addEventListener('pointerup', onPointerUp)
   }
 
-  const onComposerHandlePointerDown = event => {
+  // `currentSize` starts the drag from the live height — the growth
+  // the composer carries folds into the dragged base
+  const onComposerHandlePointerDown = (event, currentSize) => {
     if (!raw.ready) return
     event.preventDefault()
     const handle = event.currentTarget
     handle.setPointerCapture(event.pointerId)
     const startY = event.clientY
     const base = wire()
-    let size = base.chat_input_size
+    // the movement anchors at the live start size, not the saved base
+    const startSize = currentSize ?? base.chat_input_size
+    // the fold: the start size lands in the store in the same batch
+    // as the growth clearing — the box does not jump on the grab
+    if (currentSize !== undefined) dispatch(chatInputSizeSet(currentSize))
+    let size = startSize
     setDragging(true)
 
     const onPointerMove = move => {
       size = AppUtils.clamp(
-        base.chat_input_size + startY - move.clientY,
+        startSize + startY - move.clientY,
         CHAT_INPUT_SIZE_MIN,
         CHAT_INPUT_SIZE_MAX
       )
