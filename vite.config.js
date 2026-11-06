@@ -10,5 +10,5 @@ export default defineConfig({
   plugins: [react()],
   clearScreen: false,
   server: { port: 3030, strictPort: true },
-  build: { target: 'es2022' },
+  build: { target: 'es2022', chunkSizeWarningLimit: 1500 },
 })

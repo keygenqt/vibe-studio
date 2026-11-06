@@ -1,9 +1,9 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "vibe-studio",
+  "productName": "Vibe Studio",
   "mainBinaryName": "vibe-studio",
   "version": "0.0.1",
-  "identifier": "com.keygenqt.vibe-studio",
+  "identifier": "com.keygenqt.vibe-studio-dev",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:3030",
@@ -40,6 +40,7 @@
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
+      "icons/icon.icns",
       "icons/icon.ico",
       "icons/icon.png"
     ]
