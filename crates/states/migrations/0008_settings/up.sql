@@ -10,7 +10,7 @@ CREATE TABLE settings (
     translation_mine TEXT,
     translation_answers TEXT,
     chat_streaming INTEGER,
-    chat_keep_messages INTEGER,
+    chat_context_limit INTEGER,
     notifications_ready INTEGER,
     notifications_updates INTEGER
 );

@@ -24,6 +24,7 @@ import { AppUtils } from '../../utils'
 
 import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
 import { ChatTitleView } from './elements/ChatTitleView'
+import { ContextLimitView } from './elements/ContextLimitView'
 import { CompressMessageView } from './elements/CompressMessageView'
 import { UserMessageView } from './elements/UserMessageView'
 import { ModelMessageView } from './elements/ModelMessageView'
@@ -88,6 +89,22 @@ export function ChatPage() {
   const compressAttempt =
     (history ?? []).find(item => item.message_type === 'compress' && item.status === 'progress') ??
     null
+
+  // the context limit plate: the estimated prompt tokens of the
+  // complete messages against the limit — the plate paints before
+  // the first message that crosses it
+  const contextLimitId = React.useMemo(() => {
+    if (!history || !settings.chat_context_limit) return null
+    const limit = settings.chat_context_limit * 1000
+    let sum = 0
+    for (const message of history) {
+      if (message.status !== 'complete') continue
+      sum += (message.tokens_answer ?? 0) + (message.tokens_compress ?? 0)
+      if (sum > limit) return message.id
+    }
+    return null
+  }, [history, settings.chat_context_limit])
+
   // the chat opens at the bottom: this many last messages render
   // markdown at once — the rest upgrade lazily on the scroll up
   const VISIBLE_TAIL = 4
@@ -244,13 +261,18 @@ export function ChatPage() {
                       bubble — the gap and the duplicate are both gone */}
                   {(history ?? [])
                     .filter(message => message.status !== 'progress' || !stream)
-                    .map((message, index, list) =>
-                      renderMessage(
-                        message,
-                        `message-${message.id}`,
-                        index >= list.length - VISIBLE_TAIL
-                      )
-                    )}
+                    .map((message, index, list) => (
+                      <React.Fragment key={`message-${message.id}`}>
+                        {renderMessage(
+                          message,
+                          `message-${message.id}`,
+                          index >= list.length - VISIBLE_TAIL
+                        )}
+                        {message.id === contextLimitId && (
+                          <ContextLimitView limit={settings.chat_context_limit} />
+                        )}
+                      </React.Fragment>
+                    ))}
                   {stream &&
                     progressRow &&
                     renderMessage(

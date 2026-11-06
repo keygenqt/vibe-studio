@@ -153,7 +153,12 @@ export function UserMessageView(props) {
               </Typography>
             )}
             {props.message.attachments?.length > 0 && (
-              <Stack direction={'row'} spacing={1} useFlexGap sx={{ flexWrap: 'wrap', pt: 2 }}>
+              <Stack
+                direction={'row'}
+                spacing={1}
+                useFlexGap
+                sx={{ flexWrap: 'wrap', pt: props.message.text ? 2 : 0 }}
+              >
                 {props.message.attachments.map(attachment => (
                   <AttachmentChip key={attachment.id} attachment={attachment} />
                 ))}

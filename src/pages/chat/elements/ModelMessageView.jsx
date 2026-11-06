@@ -182,7 +182,11 @@ export function ModelMessageView(props) {
                 : undefined
             }
           >
-            {showType === 'summary' ? (
+            {isError ? (
+              <Typography variant={'body2'} color={'error.contrastText'}>
+                {message.text}
+              </Typography>
+            ) : showType === 'summary' ? (
               <Typography
                 variant={'body2'}
                 color={'text.secondary'}

@@ -73,8 +73,8 @@ pub fn get_settings(store: &Store) -> SettingsData {
 }
 
 /// Persists the user preferences as the single row. The UI is not
-/// trusted: a set model id must exist; theme, locale and accent are
-/// stored as sent.
+/// trusted: a set model id must exist, the context limit stays in
+/// bounds; theme, locale and accent are stored as sent.
 pub fn save_settings(store: &Store, settings: &SettingsData) -> Result<SettingsData> {
     for id in [
         settings.tasks_model_light,
@@ -86,6 +86,12 @@ pub fn save_settings(store: &Store, settings: &SettingsData) -> Result<SettingsD
                 anyhow::bail!("Unknown model.");
             }
         }
+    }
+    if settings
+        .chat_context_limit
+        .is_some_and(|value| !(1..=2000).contains(&value))
+    {
+        anyhow::bail!("Context limit must be between 1 and 2000.");
     }
     studio_states::save_settings(store, settings)
 }

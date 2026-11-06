@@ -34,5 +34,4 @@ export const ACCENT_DEFAULT = ACCENTS[0]
 
 // Settings UI defaults: applied to the untouched (null) stored values.
 export const CHAT_FONT_SIZE_DEFAULT = 15
-export const CHAT_KEEP_MESSAGES_DEFAULT = 50
 export const TRANSLATE_LOCALE_DEFAULT = 'ru'

@@ -6,12 +6,7 @@
  */
 import { createSlice } from '@reduxjs/toolkit'
 
-import {
-  ACCENT_DEFAULT,
-  CHAT_FONT_SIZE_DEFAULT,
-  CHAT_KEEP_MESSAGES_DEFAULT,
-  TRANSLATE_LOCALE_DEFAULT,
-} from '../../constants'
+import { ACCENT_DEFAULT, CHAT_FONT_SIZE_DEFAULT, TRANSLATE_LOCALE_DEFAULT } from '../../constants'
 
 const settingsSlice = createSlice({
   name: 'settings',
@@ -24,7 +19,7 @@ const settingsSlice = createSlice({
     tasks_model_light: null,
     tasks_model_heavy: null,
     chat_streaming: true,
-    chat_keep_messages: CHAT_KEEP_MESSAGES_DEFAULT,
+    chat_context_limit: null,
     translation_model: null,
     translation_mine: TRANSLATE_LOCALE_DEFAULT,
     translation_answers: TRANSLATE_LOCALE_DEFAULT,
@@ -38,7 +33,6 @@ const settingsSlice = createSlice({
       state.appearance_accent = state.appearance_accent ?? ACCENT_DEFAULT
       state.appearance_chat_font_size = state.appearance_chat_font_size ?? CHAT_FONT_SIZE_DEFAULT
       state.chat_streaming = state.chat_streaming ?? true
-      state.chat_keep_messages = state.chat_keep_messages ?? CHAT_KEEP_MESSAGES_DEFAULT
       state.translation_mine = state.translation_mine ?? TRANSLATE_LOCALE_DEFAULT
       state.translation_answers = state.translation_answers ?? TRANSLATE_LOCALE_DEFAULT
       state.notifications_ready = state.notifications_ready ?? true

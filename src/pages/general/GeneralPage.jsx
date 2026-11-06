@@ -44,7 +44,7 @@ function Autosave(props) {
         tasks_model_light: props.values.taskModelLight,
         tasks_model_heavy: props.values.taskModelHeavy,
         chat_streaming: props.values.streaming,
-        chat_keep_messages: props.values.keepMessages,
+        chat_context_limit: props.values.contextLimit,
         translation_model: props.values.translateModel,
         translation_mine: props.values.translateMine,
         translation_answers: props.values.translateAnswers,
@@ -79,7 +79,7 @@ export function GeneralPage() {
         translateMine: settings.translation_mine,
         translateAnswers: settings.translation_answers,
         streaming: settings.chat_streaming,
-        keepMessages: settings.chat_keep_messages,
+        contextLimit: settings.chat_context_limit,
         notifyReady: settings.notifications_ready,
         notifyUpdates: settings.notifications_updates,
       }}

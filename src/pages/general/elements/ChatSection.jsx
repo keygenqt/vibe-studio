@@ -26,16 +26,16 @@ export function ChatSection(props) {
         />
       </GroupRow>
       <GroupRow
-        title={t('general.t_keep_messages')}
-        description={t('general.t_keep_messages_description')}
+        title={t('general.t_context_limit')}
+        description={t('general.t_context_limit_description')}
       >
         <TextField
           type={'number'}
           size="small"
           hiddenLabel
           variant={'filled'}
-          value={values.keepMessages}
-          onChange={e => onChange('keepMessages', Number(e.target.value))}
+          value={values.contextLimit}
+          onChange={e => onChange('contextLimit', Number(e.target.value))}
           sx={{ width: 250 }}
           slotProps={{ htmlInput: { min: 1, step: 1 } }}
         />

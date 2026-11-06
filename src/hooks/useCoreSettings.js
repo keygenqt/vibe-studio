@@ -33,7 +33,7 @@ export function useCoreSettings() {
     tasks_model_light: raw.tasks_model_light,
     tasks_model_heavy: raw.tasks_model_heavy,
     chat_streaming: raw.chat_streaming,
-    chat_keep_messages: raw.chat_keep_messages,
+    chat_context_limit: raw.chat_context_limit,
     translation_model: raw.translation_model,
     translation_mine: raw.translation_mine,
     translation_answers: raw.translation_answers,

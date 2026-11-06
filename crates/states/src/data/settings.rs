@@ -13,12 +13,14 @@ const SETTINGS_ID: i32 = 1;
 /// Defaults for a missing row.
 const DEFAULT_APPEARANCE_THEME: &str = "system";
 const DEFAULT_APPEARANCE_LOCALE: &str = "ru";
+/// Context limit default, thousands of tokens.
+const DEFAULT_CHAT_CONTEXT_LIMIT: i32 = 100;
 
 /// User preferences: appearance, interface task models, chat and
 /// translation behavior, notifications. A single row (id = 1); a
 /// missing row falls back to `Default`. Preference fields are
-/// `Option` — `None` = the user has not touched it, the UI applies
-/// its own default.
+/// `Option` — `None` = the user has not touched it; a kernel-owned
+/// default resolves on read, the rest the UI applies.
 #[derive(Debug, Clone, PartialEq, Queryable, Identifiable, Selectable, serde::Serialize, serde::Deserialize)]
 #[diesel(table_name = settings)]
 #[serde(default)]
@@ -40,8 +42,9 @@ pub struct SettingsData {
     pub tasks_model_heavy: Option<i32>,
     /// Streaming output of the chat answers.
     pub chat_streaming: Option<bool>,
-    /// How many recent messages are kept in each chat.
-    pub chat_keep_messages: Option<i32>,
+    /// Context limit of a chat, thousands of tokens; `None` = not
+    /// set yet, resolves to 100 on read.
+    pub chat_context_limit: Option<i32>,
     /// Model for chat translation, id from `models`.
     pub translation_model: Option<i32>,
     /// Locale the composer text is translated into.
@@ -69,7 +72,7 @@ impl Default for SettingsData {
             translation_mine: None,
             translation_answers: None,
             chat_streaming: None,
-            chat_keep_messages: None,
+            chat_context_limit: None,
             notifications_ready: None,
             notifications_updates: None,
         }
@@ -90,7 +93,7 @@ struct SettingsNewData {
     translation_mine: Option<String>,
     translation_answers: Option<String>,
     chat_streaming: Option<bool>,
-    chat_keep_messages: Option<i32>,
+    chat_context_limit: Option<i32>,
     notifications_ready: Option<bool>,
     notifications_updates: Option<bool>,
 }
@@ -109,7 +112,7 @@ impl From<&SettingsData> for SettingsNewData {
             translation_mine: data.translation_mine.clone(),
             translation_answers: data.translation_answers.clone(),
             chat_streaming: data.chat_streaming,
-            chat_keep_messages: data.chat_keep_messages,
+            chat_context_limit: data.chat_context_limit,
             notifications_ready: data.notifications_ready,
             notifications_updates: data.notifications_updates,
         }
@@ -126,7 +129,7 @@ diesel::table! {
         tasks_model_light -> Nullable<Integer>,
         tasks_model_heavy -> Nullable<Integer>,
         chat_streaming -> Nullable<Bool>,
-        chat_keep_messages -> Nullable<Integer>,
+        chat_context_limit -> Nullable<Integer>,
         translation_model -> Nullable<Integer>,
         translation_mine -> Nullable<Text>,
         translation_answers -> Nullable<Text>,
@@ -138,9 +141,11 @@ diesel::table! {
 impl Store {
     /// Loads the user preferences; a missing row falls back to
     /// `Default`. A model id whose model is gone reads as `NULL` —
-    /// the feature turns off.
+    /// the feature turns off. The context limit resolves to its
+    /// default — every row leaving the file is full.
     pub(crate) fn get_settings(&self) -> Result<SettingsData> {
         let mut settings: SettingsData = self.find_by_id(settings::table, SETTINGS_ID)?.unwrap_or_default();
+        settings.chat_context_limit = settings.chat_context_limit.or(Some(DEFAULT_CHAT_CONTEXT_LIMIT));
         for id in [
             &mut settings.tasks_model_light,
             &mut settings.tasks_model_heavy,

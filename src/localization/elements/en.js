@@ -56,6 +56,7 @@ export const enLocalization = {
       t_compress_task_model: 'Task model',
       t_compressing: 'Compressing...',
       t_compress_author: 'Context',
+      t_context_limit_reached: 'Context limit reached ({{limit}}k)',
     },
     chat_empty: {
       t_no_chat: 'Select a chat',
@@ -101,8 +102,8 @@ export const enLocalization = {
       t_streaming: 'Streaming output',
       t_streaming_description:
         'On: the answer types as it is generated. Off: the answer arrives at once in full',
-      t_keep_messages: 'Keep in chat',
-      t_keep_messages_description: 'How many recent messages are kept in each chat',
+      t_context_limit: 'Context limit',
+      t_context_limit_description: 'In thousands of tokens, 100 = 100k',
       t_notifications: 'Notifications',
       t_notify_ready: 'Answer ready',
       t_notify_ready_description:

@@ -56,6 +56,7 @@ export const ruLocalization = {
       t_compress_task_model: 'Модель задач',
       t_compressing: 'Сжимаем...',
       t_compress_author: 'Контекст',
+      t_context_limit_reached: 'Достигнут лимит {{limit}}k',
     },
     chat_empty: {
       t_no_chat: 'Выберите чат',
@@ -100,8 +101,8 @@ export const ruLocalization = {
       t_streaming: 'Потоковый вывод',
       t_streaming_description:
         'Включено: ответ печатается по мере генерации. Выключено: ответ приходит сразу целиком',
-      t_keep_messages: 'Хранить в чате',
-      t_keep_messages_description: 'Сколько последних сообщений хранится в каждом чате',
+      t_context_limit: 'Лимит контекста',
+      t_context_limit_description: 'В тысячах токенов, 100 = 100k',
       t_notifications: 'Уведомления',
       t_notify_ready: 'Ответ готов',
       t_notify_ready_description: 'Уведомлять, когда ответ получен, а окно приложения в фоне',
@@ -183,6 +184,7 @@ export const ruLocalization = {
     'Seed must not be negative.': 'Seed не должен быть отрицательным.',
     'Context must not be empty.': 'Размер контекста не должен быть пустым.',
     'Predict limit must not be empty.': 'Максимум токенов не должен быть пустым.',
+    'Context limit must be between 1 and 2000.': 'Лимит контекста должен быть от 1 до 2000.',
     'Unknown group.': 'Неизвестная группа.',
     'Unknown chat.': 'Неизвестный чат.',
     'Unknown message.': 'Неизвестное сообщение.',
