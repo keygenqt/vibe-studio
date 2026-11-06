@@ -19,4 +19,4 @@ logic.
 - `stats.sh` — code statistics with filters.
 - `tree.sh` — project tree by tags, dir flags `crates`/`react`/`tauri`; INFO by default, `misc`/`context` excluded unless requested.
 - `diff.sh` — dumps the working diff with untracked files into changes.log.
-- `install.sh` — builds and installs the release app (macOS, Linux) with its own data dir.
+- `install.sh` — builds and installs the release app (macOS, Linux) with its own data dir; `--reset` drops its database and the build cache first.
