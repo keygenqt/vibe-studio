@@ -9,6 +9,7 @@ use tauri::State;
 use tauri::WebviewWindow;
 use tauri::ipc::Channel;
 
+use studio_core::ChatAttachmentInput;
 use studio_core::ChatData;
 use studio_core::ChatShowType;
 use studio_core::ChatStreamEvent;
@@ -349,6 +350,7 @@ pub async fn chat_send_message(
     chat_id: i32,
     text: String,
     translate: bool,
+    attachments: Vec<ChatAttachmentInput>,
     on_delta: Channel<StreamChunk>,
 ) -> Result<ChatStateData, String> {
     studio_core::chat_send_message(
@@ -356,6 +358,7 @@ pub async fn chat_send_message(
         chat_id,
         &text,
         translate,
+        attachments,
         chat_stream_forwarder(window.clone(), on_delta),
     )
     .await
@@ -593,4 +596,11 @@ pub fn clipboard_read() -> Option<studio_core::ClipboardRead> {
 #[tauri::command]
 pub fn open_in_browser(url: String) -> Result<(), String> {
     studio_core::open_in_browser(&url).map_err(|e| e.to_string())
+}
+
+/// The draft facts of a dropped path: the directory flag, the image
+/// MIME sniffed from the header, the byte size.
+#[tauri::command]
+pub fn attachment_stat(path: String) -> Result<studio_core::AttachmentStatData, String> {
+    Ok(studio_core::attachment_stat(&path))
 }

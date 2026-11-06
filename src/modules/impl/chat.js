@@ -54,13 +54,13 @@ export const chat = {
     store.dispatch(chatStatsSet(state.stats))
     return state
   },
-  chat_send_message: async function (chatId, text, translate) {
+  chat_send_message: async function (chatId, text, translate, attachments) {
     const seq = ++streamSeq
     store.dispatch(chatStreamStart({ seq, chatId }))
     // the fresh state lands through the block event; the answer
     // stays undispatched — one channel per the contract
     await runStream(seq, chatId, channel =>
-      invoke('chat_send_message', { chatId, text, translate, onDelta: channel })
+      invoke('chat_send_message', { chatId, text, translate, attachments, onDelta: channel })
     )
   },
   chat_cancel_send: async function (chatId) {

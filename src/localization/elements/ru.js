@@ -34,11 +34,8 @@ export const ruLocalization = {
       t_placeholder: 'Введите сообщение...',
       t_chat_rename: 'Обновить название чата',
       t_chat_compress: 'Сжать',
-      t_chat_settings: 'Настройки чата',
       t_attach_file: 'Прикрепить файл',
-      t_search: 'Поиск',
       t_translate: 'Перевод',
-      t_menu: 'Меню',
       t_scroll_down: 'Прокрутить вниз',
       t_generating: 'Думаю...',
       t_cancelled: 'Генерация отменена',
@@ -203,6 +200,8 @@ export const ruLocalization = {
     'Chat has no messages.': 'В чате нет сообщений.',
     'Clipboard is not available.': 'Буфер обмена недоступен.',
     'Invalid image data.': 'Некорректные данные изображения.',
+    'Model does not support images.': 'Модель не поддерживает изображения.',
+    'Attachments are too large.': 'Слишком большой объём вложений.',
 
     // -- chats
     // fabrics

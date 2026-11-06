@@ -4,6 +4,7 @@
  * TAGS: ['facts']
  * INFO: App commands and the OS theme event channel.
  */
+import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
@@ -40,6 +41,12 @@ export const app = {
   },
   clipboard_read: async function () {
     return invoke('clipboard_read', {})
+  },
+  dialog_open_files: async function () {
+    return open({ multiple: true })
+  },
+  attachment_stat: async function (path) {
+    return invoke('attachment_stat', { path })
   },
   open_in_browser: async function (url) {
     return invoke('open_in_browser', { url })

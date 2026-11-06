@@ -70,8 +70,9 @@ pub async fn get_provider_models_by_type(
 
 /// Runs one prompt on one host+model with the given generation config
 /// and the conversation history; returns the response text. The
-/// history is (role, content) pairs — "user" | "assistant", oldest
-/// first. Errors keep the cluster's message.
+/// history is (role, content, images) triples — "user" |
+/// "assistant", oldest first; the images are the turn's base64
+/// parts. Errors keep the cluster's message.
 pub async fn call_prompt(
     provider: ProviderTypeData,
     host: &str,
@@ -83,7 +84,8 @@ pub async fn call_prompt(
     num_ctx: i32,
     num_predict: i32,
     system: Option<String>,
-    history: Vec<(String, String)>,
+    images: Option<Vec<String>>,
+    history: Vec<(String, String, Vec<String>)>,
     user: &str,
 ) -> Result<String> {
     // config bounds are validated in core; the casts keep u64 happy
@@ -101,15 +103,16 @@ pub async fn call_prompt(
         ..Default::default()
     }])?;
 
-    let mut prompt = Prompt::new(user, system, None);
+    let mut prompt = Prompt::new(user, system, images);
     prompt.history = history
         .into_iter()
-        .map(|(role, content)| HistoryMessage {
+        .map(|(role, content, images)| HistoryMessage {
             role: match role.as_str() {
                 "assistant" => Role::Assistant,
                 _ => Role::User,
             },
             content,
+            images,
         })
         .collect();
 
@@ -132,7 +135,8 @@ pub async fn call_prompt_stream(
     num_ctx: i32,
     num_predict: i32,
     system: Option<String>,
-    history: Vec<(String, String)>,
+    images: Option<Vec<String>>,
+    history: Vec<(String, String, Vec<String>)>,
     user: &str,
     cancel: &CancelToken,
     on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
@@ -152,15 +156,16 @@ pub async fn call_prompt_stream(
         ..Default::default()
     }])?;
 
-    let mut prompt = Prompt::new(user, system, None);
+    let mut prompt = Prompt::new(user, system, images);
     prompt.history = history
         .into_iter()
-        .map(|(role, content)| HistoryMessage {
+        .map(|(role, content, images)| HistoryMessage {
             role: match role.as_str() {
                 "assistant" => Role::Assistant,
                 _ => Role::User,
             },
             content,
+            images,
         })
         .collect();
 
@@ -241,14 +246,15 @@ pub async fn call_summary(
 /// arrive, the aggregated answer with the reasoning comes back. The
 /// config is the task's own — the task never uses the model's
 /// generation settings. The conversation goes as the prompt history
-/// — `(role, content)` pairs, "user" | "assistant", oldest first.
+/// — `(role, content, images)` triples, "user" | "assistant",
+/// oldest first; the compress images stay placeholders.
 pub async fn call_compress(
     provider: ProviderTypeData,
     host: &str,
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
-    history: Vec<(String, String)>,
+    history: Vec<(String, String, Vec<String>)>,
     cancel: &CancelToken,
     on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
 ) -> Result<StreamAnswerData> {

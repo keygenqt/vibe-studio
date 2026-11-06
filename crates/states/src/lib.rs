@@ -14,6 +14,9 @@ use anyhow::Result;
 pub(crate) mod data;
 pub(crate) mod db;
 
+pub use data::attachment::ChatAttachmentBlob;
+pub use data::attachment::ChatAttachmentData;
+pub use data::attachment::ChatAttachmentNewData;
 pub use data::chat::ChatData;
 pub use data::chat_history::ChatHistoryData;
 pub use data::chat_history::ChatMessageType;
@@ -163,6 +166,24 @@ pub fn add_chat_history_compress(
     tokens_compress: i32,
 ) -> Result<ChatHistoryData> {
     store.add_chat_history_compress(chat_id, text, thinking, tokens_compress)
+}
+
+/// Appends a user message with its attachments; both inserts run in
+/// one transaction — a failure leaves no half-sent message.
+pub fn add_chat_message_attachments(
+    store: &Store,
+    chat_id: i32,
+    text: &str,
+    tokens_answer: i32,
+    attachments: &[ChatAttachmentNewData],
+) -> Result<ChatHistoryData> {
+    store.add_chat_message_attachments(chat_id, text, tokens_answer, attachments)
+}
+
+/// The stored bytes of one message's attachments — the source for
+/// rebuilding the prompt of a resend or a compression.
+pub fn get_chat_attachment_blobs(store: &Store, message_id: i32) -> Result<Vec<ChatAttachmentBlob>> {
+    store.get_chat_attachment_blobs(message_id)
 }
 
 /// Updates a growing message in place: the stream text/thinking, the

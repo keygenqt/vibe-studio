@@ -29,6 +29,10 @@ pub struct ChatStatsData {
     pub tokens_per_second: Option<f64>,
     /// Number of the messages.
     pub messages: usize,
+    /// The attachments of the user messages together.
+    pub attachments: usize,
+    /// The size of the attachments together, bytes.
+    pub attachments_bytes: i64,
 }
 
 impl ChatStatsData {
@@ -68,7 +72,15 @@ impl ChatStatsData {
             .filter_map(|message| message.tokens_compress)
             .map(i64::from)
             .sum();
+        let attachments: usize = history.iter().map(|message| message.attachments.len()).sum();
+        let attachments_bytes: i64 = history
+            .iter()
+            .flat_map(|message| &message.attachments)
+            .map(|attachment| i64::from(attachment.size))
+            .sum();
         Self {
+            attachments,
+            attachments_bytes,
             tokens_answer,
             tokens_thinking,
             tokens_translate,

@@ -26,6 +26,8 @@
 //! - `chat_history` — the `chat_history` table: `ChatHistoryData`,
 //!   the chat messages with sender and status, the growing rows and
 //!   the API on `Store`.
+//! - `attachment` — the `chat_attachments` table: `ChatAttachmentData`,
+//!   the file attachments of user messages with the stored bytes.
 //! - `settings` — `SettingsData`: the user preferences as a single row.
 //! - `workspace` — the `workspace` table: `WorkspaceData`, the shell
 //!   environment as a single row (id = 1).
@@ -33,6 +35,7 @@
 //! Everything here is `pub(crate)`; the public surface is the flat
 //! API in `lib.rs`.
 
+pub(crate) mod attachment;
 pub(crate) mod chat;
 pub(crate) mod chat_history;
 pub(crate) mod group_chat;

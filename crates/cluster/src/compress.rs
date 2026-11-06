@@ -102,7 +102,7 @@ pub(crate) async fn call_stream(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
-    history: Vec<(String, String)>,
+    history: Vec<(String, String, Vec<String>)>,
     cancel: &CancelToken,
     on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
 ) -> Result<StreamAnswerData> {
@@ -116,6 +116,7 @@ pub(crate) async fn call_stream(
         COMPRESS_SEED,
         COMPRESS_NUM_CTX,
         COMPRESS_NUM_PREDICT,
+        None,
         None,
         history,
         COMPRESS_PROMPT,

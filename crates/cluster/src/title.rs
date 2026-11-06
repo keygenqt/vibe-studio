@@ -50,7 +50,11 @@ pub(crate) async fn call(
         TITLE_NUM_CTX,
         TITLE_NUM_PREDICT,
         None,
-        history,
+        None,
+        history
+            .into_iter()
+            .map(|(role, content)| (role, content, Vec::new()))
+            .collect(),
         &prompt,
     )
     .await?;

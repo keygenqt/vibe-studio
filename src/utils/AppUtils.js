@@ -66,4 +66,26 @@ export const AppUtils = {
     if (value >= 1000) return `${(value / 1000).toFixed(1).replace(/\.0$/, '')}K`
     return Number.isInteger(value) ? String(value) : value.toFixed(1)
   },
+
+  // the byte size: 817 → "817 B", 49152 → "48 KB", 2_400_000 → "2.3 MB"
+  // — binary units, the attachment cap keeps it under 10 MB
+  humanBytes: function (value) {
+    if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`
+    if (value >= 1024) return `${Math.round(value / 1024)} KB`
+    return `${value} B`
+  },
+
+  // the solid mix of a translucent top over a base: the tinted
+  // bubble background as one opaque hex
+  mix: function (top, base, ratio) {
+    const channels = value =>
+      [0, 2, 4].map(shift => parseInt(value.replace('#', '').slice(shift, shift + 2), 16))
+    const blend = (t, b) =>
+      Math.round(t * ratio + b * (1 - ratio))
+        .toString(16)
+        .padStart(2, '0')
+    const [tr, tg, tb] = channels(top)
+    const [br, bg, bb] = channels(base)
+    return `#${blend(tr, br)}${blend(tg, bg)}${blend(tb, bb)}`
+  },
 }

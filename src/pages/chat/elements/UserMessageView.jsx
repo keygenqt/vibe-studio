@@ -12,8 +12,10 @@ import UnfoldLess from '@mui/icons-material/UnfoldLess'
 import UnfoldMore from '@mui/icons-material/UnfoldMore'
 import { alpha } from '@mui/material/styles'
 
+import { AttachmentChip } from '../../../components/views'
 import { ErrorSnackbar } from '../../../components/snackbars'
 import { Methods } from '../../../modules'
+import { AppUtils } from '../../../utils'
 import { CHAT_COLLAPSE_HEIGHT } from '../../../constants'
 
 import { MessageActions } from './MessageActions'
@@ -69,7 +71,8 @@ export function UserMessageView(props) {
             paddingTop: 1,
             paddingBottom: 1.5,
             borderRadius: 2,
-            backgroundColor: theme => alpha(theme.palette.primary.main, 0.15),
+            backgroundColor: theme =>
+              AppUtils.mix(theme.palette.primary.main, theme.palette.background.paper, 0.15),
           }}
         >
           <Stack
@@ -114,16 +117,20 @@ export function UserMessageView(props) {
           </Stack>
           <Box
             onClick={props.message.collapsed ? onClickCollapse : undefined}
-            sx={
+            sx={theme =>
               props.message.collapsed
                 ? {
                     maxHeight: CHAT_COLLAPSE_HEIGHT,
                     overflow: 'hidden',
                     cursor: 'pointer',
-                    maskImage:
-                      'linear-gradient(to bottom, #000 calc(100% - 32px), rgba(0,0,0,0.55) calc(100% - 20px), rgba(0,0,0,0.18) calc(100% - 8px), transparent 100%)',
-                    WebkitMaskImage:
-                      'linear-gradient(to bottom, #000 calc(100% - 32px), rgba(0,0,0,0.55) calc(100% - 20px), rgba(0,0,0,0.18) calc(100% - 8px), transparent 100%)',
+                    position: 'relative',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: 0,
+                      pointerEvents: 'none',
+                      background: `linear-gradient(0deg, ${AppUtils.mix(theme.palette.primary.main, theme.palette.background.paper, 0.15)} 0%, rgba(0, 0, 0, 0) 100%)`,
+                    },
                   }
                 : undefined
             }
@@ -145,6 +152,13 @@ export function UserMessageView(props) {
                 {props.message.text}
               </Typography>
             )}
+            {props.message.attachments?.length > 0 && (
+              <Stack direction={'row'} spacing={1} useFlexGap sx={{ flexWrap: 'wrap', pt: 2 }}>
+                {props.message.attachments.map(attachment => (
+                  <AttachmentChip key={attachment.id} attachment={attachment} />
+                ))}
+              </Stack>
+            )}
           </Box>
         </Box>
       </Stack>
@@ -162,6 +176,15 @@ UserMessageView.propTypes = {
     text: PropTypes.string.isRequired,
     summary: PropTypes.string,
     collapsed: PropTypes.bool,
+    // the file attachments: the metadata from the store
+    attachments: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string.isRequired,
+        mime: PropTypes.string,
+        size: PropTypes.number,
+      })
+    ),
   }).isRequired,
   // the message text size in px
   fontSize: PropTypes.number.isRequired,

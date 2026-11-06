@@ -12,6 +12,7 @@ import { scrollToBottom } from '../init'
 import {
   chatAttachmentsAdd,
   chatAttachmentsClear,
+  chatAttachmentsRemove,
   chatDraftSet,
   chatHistorySet,
 } from '../store/impl/chat'
@@ -51,28 +52,34 @@ export function useCoreChat({ chatId } = {}) {
 
   const setDraft = value => dispatch(chatDraftSet(value))
   const addAttachments = items => dispatch(chatAttachmentsAdd(items))
+  const removeAttachment = index => dispatch(chatAttachmentsRemove(index))
 
   const [sending, setSending] = React.useState(false)
+  // the failures before anything is stored: rejected attachments,
+  // a vision-less model — the snackbar's own content
+  const [sendError, setSendError] = React.useState(null)
 
   const send = (translate = false) => {
-    if (!chatId || !draft.trim() || sending) return
+    if (!chatId || sending) return
     // the draft clears at once — the user message paints with the
     // `UserStored` event while the answer streams; a failed request
     // lands in the history as an `Error` message
     const text = draft
     const attachments = chatAttachments
+    if (!text.trim() && !attachments.length) return
     dispatch(chatDraftSet(''))
     dispatch(chatAttachmentsClear())
     // the send is the user's will to watch: land at the bottom at
     // once and re-arm the follow for the streaming answer
     scrollToBottom('chat.history', false)
     setSending(true)
-    Methods.chat_send_message(chatId, text, translate)
+    Methods.chat_send_message(chatId, text, translate, attachments)
       // an early failure stored nothing — the draft and the
-      // attachments come back
-      .catch(() => {
+      // attachments come back, the reason lands in the snackbar
+      .catch(error => {
         dispatch(chatDraftSet(text))
         dispatch(chatAttachmentsAdd(attachments))
+        setSendError(String(error))
       })
       .finally(() => setSending(false))
   }
@@ -98,6 +105,9 @@ export function useCoreChat({ chatId } = {}) {
     draft,
     chatAttachments,
     addAttachments,
+    removeAttachment,
+    sendError,
+    setSendError,
     setDraft,
     send,
     sending,

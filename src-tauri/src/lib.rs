@@ -107,6 +107,7 @@ pub fn run() {
             commands::clipboard_clear,
             commands::clipboard_read,
             commands::open_in_browser,
+            commands::attachment_stat,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

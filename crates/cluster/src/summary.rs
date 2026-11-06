@@ -42,6 +42,7 @@ pub(crate) async fn call(
         SUMMARY_NUM_CTX,
         SUMMARY_NUM_PREDICT,
         None,
+        None,
         Vec::new(),
         &SUMMARY_PROMPT.replace("{text}", text),
     )

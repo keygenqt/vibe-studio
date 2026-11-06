@@ -11,7 +11,6 @@ import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material'
 import ArrowDownward from '@mui/icons-material/ArrowDownward'
 import Compress from '@mui/icons-material/Compress'
 import Refresh from '@mui/icons-material/Refresh'
-import Tune from '@mui/icons-material/Tune'
 
 import { TooltipIconButton } from '../../../components/buttons'
 import { ErrorSnackbar } from '../../../components/snackbars'
@@ -103,13 +102,6 @@ export function ChatTitleView(props) {
               {t('chat.t_chat_compress')}
             </Button>
           )}
-          <TooltipIconButton
-            size={'mini'}
-            title={t('chat.t_chat_settings')}
-            onClick={() => console.log('Open chat settings')}
-          >
-            <Tune />
-          </TooltipIconButton>
         </Stack>
       </Box>
       <CompressDialog

@@ -16,6 +16,7 @@ use data::TranslateTargetData;
 
 pub use studio_cluster::StreamEvent;
 
+mod attachment;
 mod browser;
 mod clipboard;
 mod data;
@@ -23,6 +24,8 @@ mod stream;
 pub(crate) mod theme;
 mod utils;
 
+pub use attachment::AttachmentStatData;
+pub use attachment::ChatAttachmentInput;
 pub use data::ChatStreamEvent;
 pub use data::ClipboardRead;
 pub use studio_cluster::ModelInfoData;
@@ -435,7 +438,10 @@ fn translate_target(store: &Store, locale: Option<&str>) -> Result<TranslateTarg
 /// sides of the exchange. The UI is not trusted: the chat must exist,
 /// a blank message is an error. `translate` swaps the text for its
 /// translation to the `translation_mine` language before anything is
-/// stored — the row and the prompt carry the translation. The model
+/// stored — the row and the prompt carry the translation. The
+/// attachments are validated and stored with the user message; the
+/// prompt carries their content under the full paths — the stored
+/// text stays clean, the stats reflect the files. The model
 /// prompt comes first, the
 /// group prompt completes it; empty prompts drop out. The answer is
 /// born as a `Progress` row and grows in the store as the deltas
@@ -446,9 +452,10 @@ pub async fn chat_send_message(
     chat_id: i32,
     text: &str,
     translate: bool,
+    attachments: Vec<ChatAttachmentInput>,
     on_event: impl Fn(ChatStreamEvent) + Send + Sync + 'static,
 ) -> Result<()> {
-    if text.trim().is_empty() {
+    if text.trim().is_empty() && attachments.is_empty() {
         anyhow::bail!("Message must not be blank.");
     }
     studio_states::get_chat(store, chat_id)?;
@@ -475,18 +482,43 @@ pub async fn chat_send_message(
         None
     };
     let text = translated.as_deref().unwrap_or(text);
-    let user = studio_states::add_chat_history(
+    // everything is validated before anything is stored: a rejected
+    // attachment never leaves a half-sent message behind
+    let prepared = attachment::prepare(&attachments)?;
+    // the images ride the vision models only — resolved before the
+    // insert so the rejection stores nothing
+    let images = if prepared.images.is_empty() {
+        None
+    } else {
+        let chat = studio_states::get_chat(store, chat_id)?;
+        let group = studio_states::get_group_chat(store, chat.group_chat_id)?;
+        let model = studio_states::get_provider_model(store, group.model_id)?;
+        if model.vision != Some(true) {
+            anyhow::bail!("Model does not support images.");
+        }
+        Some(prepared.images.clone())
+    };
+    let prompt = format!("{text}{}", prepared.inline);
+    // the message and its attachments land in one transaction: a
+    // failed insert never leaves a half-sent message behind
+    // the row keeps the typed text only: the file content rides the
+    // prompt and the blobs, the stats carry the size
+    let user = studio_states::add_chat_message_attachments(
         store,
         chat_id,
-        ChatMessageType::User,
-        None,
-        None,
-        ChatStatus::Complete,
         text,
-        None,
-        studio_cluster::count_tokens(text) as i32,
+        studio_cluster::count_tokens(&prompt) as i32,
+        &prepared.rows,
     )?;
-    chat_send_stream(store, chat_id, text, user.id.expect("stored user id"), on_event).await
+    chat_send_stream(
+        store,
+        chat_id,
+        &prompt,
+        images,
+        user.id.expect("stored user id"),
+        on_event,
+    )
+    .await
 }
 
 /// Resends the user's message: everything below it is deleted and the
@@ -509,7 +541,10 @@ pub async fn chat_resend_message(
         anyhow::bail!("Only a user message can be resent.");
     }
     studio_states::delete_chat_histories_after(store, chat_id, message_id)?;
-    chat_send_stream(store, chat_id, &message.text, message_id, on_event).await
+    // the prompt is rebuilt from the stored bytes: the resend context
+    // matches the original send whatever happened to the files
+    let stored = attachment::prepare_stored(store, message)?;
+    chat_send_stream(store, chat_id, &stored.prompt, stored.images, message_id, on_event).await
 }
 
 /// Deletes the message with everything below it — the later messages
@@ -542,6 +577,7 @@ async fn chat_send_stream(
     store: &Store,
     chat_id: i32,
     text: &str,
+    images: Option<Vec<String>>,
     skip_id: i32,
     on_event: impl Fn(ChatStreamEvent) + Send + Sync + 'static,
 ) -> Result<()> {
@@ -575,8 +611,15 @@ async fn chat_send_stream(
         .into_iter()
         .filter(|message| message.status == ChatStatus::Complete)
         .filter(|message| message.id != Some(skip_id))
-        .map(|message| (utils::history_role(&message), message.text))
-        .collect();
+        .map(|message| -> Result<(String, String, Vec<String>)> {
+            let (content, images) = attachment::render_message_parts(store, &message)?;
+            Ok((
+                utils::history_role(&message),
+                content,
+                images.into_iter().map(|(_, data)| data).collect(),
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     let system = [model.system_prompt.as_deref(), group.system_prompt.as_deref()]
         .into_iter()
@@ -625,6 +668,7 @@ async fn chat_send_stream(
         model.num_ctx.unwrap_or(4096),
         model.num_predict.unwrap_or(2048),
         if system.is_empty() { None } else { Some(system) },
+        images,
         history,
         text,
         cancel.as_ref(),
@@ -992,11 +1036,20 @@ pub async fn chat_compress_message(
     // the model context: everything said so far, in order — only
     // complete messages count; the compress base goes as the user
     // turn it is, the assistant answers keep their role
-    let history: Vec<(String, String)> = studio_states::get_chat_histories(store, chat_id)?
+    // the attachments are rebuilt from the stored bytes: the base
+    // keeps the file texts, the images go as named placeholders —
+    // the prompt history carries text only
+    let mut history: Vec<(String, String, Vec<String>)> = Vec::new();
+    for message in studio_states::get_chat_histories(store, chat_id)?
         .iter()
         .filter(|message| message.status == ChatStatus::Complete)
-        .map(|message| (utils::history_role(message), message.text.clone()))
-        .collect();
+    {
+        history.push((
+            utils::history_role(message),
+            attachment::render_message(store, message)?,
+            Vec::new(),
+        ));
+    }
     if history.is_empty() {
         anyhow::bail!("Chat has no messages.");
     }
@@ -1242,4 +1295,10 @@ pub fn clipboard_read() -> Option<ClipboardRead> {
 /// pass.
 pub fn open_in_browser(url: &str) -> Result<()> {
     browser::open_in_browser(url)
+}
+
+/// The draft facts of a dropped path: the directory flag, the image
+/// MIME sniffed from the header, the byte size.
+pub fn attachment_stat(path: &str) -> AttachmentStatData {
+    attachment::stat(path)
 }

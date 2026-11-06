@@ -4,6 +4,7 @@
  * TAGS: ['components']
  * INFO: The views zone barrel.
  */
+export * from './AttachmentChip'
 export * from './BadgeView'
 export * from './DeleteDialog'
 export * from './GroupRow'

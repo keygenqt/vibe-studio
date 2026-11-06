@@ -17,8 +17,6 @@ import {
 } from '@mui/material'
 import AttachFile from '@mui/icons-material/AttachFile'
 import { StatsView } from '../../../components/views'
-import MoreVert from '@mui/icons-material/MoreVert'
-import Public from '@mui/icons-material/Public'
 import Translate from '@mui/icons-material/Translate'
 
 export function QuickActions(props) {
@@ -34,26 +32,14 @@ export function QuickActions(props) {
       <ToggleButtonGroup
         size={'small'}
         value={props.quick}
-        onChange={(_event, value) =>
-          props.onQuick(value.filter(item => item !== 'attach' && item !== 'menu'))
-        }
+        onChange={(_event, value) => props.onQuick(value.filter(item => item !== 'attach'))}
       >
         <Tooltip title={t('chat.t_attach_file')}>
           <Badge badgeContent={props.attachCount} color={'primary'}>
-            <ToggleButton value={'attach'} sx={{ px: '8px' }}>
+            <ToggleButton value={'attach'} onClick={props.onAttach} sx={{ px: '8px' }}>
               <AttachFile sx={{ fontSize: 18, color: 'text.primary' }} />
             </ToggleButton>
           </Badge>
-        </Tooltip>
-        <Tooltip title={t('chat.t_search')}>
-          <ToggleButton value={'search'} sx={{ px: '8px' }}>
-            <Public
-              sx={{
-                fontSize: 18,
-                color: props.quick.includes('search') ? 'primary.main' : 'text.primary',
-              }}
-            />
-          </ToggleButton>
         </Tooltip>
         {props.translateEnabled && (
           <Tooltip title={t('chat.t_translate')}>
@@ -67,11 +53,6 @@ export function QuickActions(props) {
             </ToggleButton>
           </Tooltip>
         )}
-        <Tooltip title={t('chat.t_menu')}>
-          <ToggleButton value={'menu'} sx={{ px: '8px' }}>
-            <MoreVert sx={{ fontSize: 18, color: 'text.primary' }} />
-          </ToggleButton>
-        </Tooltip>
       </ToggleButtonGroup>
       {props.loading ? (
         <CircularProgress size={14} color={'inherit'} />
@@ -85,6 +66,8 @@ export function QuickActions(props) {
 QuickActions.propTypes = {
   quick: PropTypes.array.isRequired,
   onQuick: PropTypes.func.isRequired,
+  // opens the file picker; the selected paths land in the draft
+  onAttach: PropTypes.func.isRequired,
   translateEnabled: PropTypes.bool.isRequired,
   attachCount: PropTypes.number,
   stats: PropTypes.object,

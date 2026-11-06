@@ -13,6 +13,7 @@ import UnfoldMore from '@mui/icons-material/UnfoldMore'
 
 import { ErrorSnackbar } from '../../../components/snackbars'
 import { Methods } from '../../../modules'
+import { AppUtils } from '../../../utils'
 import { CHAT_COLLAPSE_HEIGHT } from '../../../constants'
 
 import { DeferredMarkdown } from './DeferredMarkdown'
@@ -120,16 +121,20 @@ export function CompressMessageView(props) {
           </Stack>
           <Box
             onClick={message.collapsed ? onClickCollapse : undefined}
-            sx={
+            sx={theme =>
               message.collapsed
                 ? {
                     maxHeight: CHAT_COLLAPSE_HEIGHT,
                     overflow: 'hidden',
                     cursor: 'pointer',
-                    maskImage:
-                      'linear-gradient(to bottom, #000 calc(100% - 32px), rgba(0,0,0,0.55) calc(100% - 20px), rgba(0,0,0,0.18) calc(100% - 8px), transparent 100%)',
-                    WebkitMaskImage:
-                      'linear-gradient(to bottom, #000 calc(100% - 32px), rgba(0,0,0,0.55) calc(100% - 20px), rgba(0,0,0,0.18) calc(100% - 8px), transparent 100%)',
+                    position: 'relative',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: 0,
+                      pointerEvents: 'none',
+                      background: `linear-gradient(0deg, ${theme.palette.panel.main} 0%, rgba(0, 0, 0, 0) 100%)`,
+                    },
                   }
                 : undefined
             }

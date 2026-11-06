@@ -6,6 +6,7 @@
  */
 import PropTypes from 'prop-types'
 import { Stack, Typography } from '@mui/material'
+import AttachFile from '@mui/icons-material/AttachFile'
 import AutoAwesome from '@mui/icons-material/AutoAwesome'
 import ChatBubbleOutline from '@mui/icons-material/ChatBubbleOutline'
 import Compress from '@mui/icons-material/Compress'
@@ -60,6 +61,12 @@ export function StatsView(props) {
       icon: <Translate sx={ICON_SX} />,
       value: AppUtils.human(stats.tokens_translate),
     },
+    stats.attachments_bytes > 0 && {
+      key: 'attachments',
+      minor: true,
+      icon: <AttachFile sx={ICON_SX} />,
+      value: AppUtils.humanBytes(stats.attachments_bytes),
+    },
   ].filter(part => part !== false)
 
   return (
@@ -97,5 +104,6 @@ StatsView.propTypes = {
     tokens_compress: PropTypes.number,
     tokens_per_second: PropTypes.number,
     messages: PropTypes.number,
+    attachments_bytes: PropTypes.number,
   }),
 }

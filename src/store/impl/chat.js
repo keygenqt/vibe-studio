@@ -25,7 +25,23 @@ const chatSlice = createSlice({
       state.draft = action.payload
     },
     chatAttachmentsAdd: (state, action) => {
-      state.chatAttachments = [...state.chatAttachments, ...action.payload]
+      // the same file or image joins the draft once — duplicates
+      // are dropped silently, in the batch and against the draft
+      const known = new Set(
+        state.chatAttachments.map(item =>
+          item.kind === 'file' ? `file:${item.path}` : `image:${item.png}`
+        )
+      )
+      const fresh = action.payload.filter(item => {
+        const key = item.kind === 'file' ? `file:${item.path}` : `image:${item.png}`
+        if (known.has(key)) return false
+        known.add(key)
+        return true
+      })
+      state.chatAttachments = [...state.chatAttachments, ...fresh]
+    },
+    chatAttachmentsRemove: (state, action) => {
+      state.chatAttachments = state.chatAttachments.filter((_, index) => index !== action.payload)
     },
     chatAttachmentsClear: state => {
       state.chatAttachments = []
@@ -93,6 +109,7 @@ const chatSlice = createSlice({
 export const {
   chatDraftSet,
   chatAttachmentsAdd,
+  chatAttachmentsRemove,
   chatAttachmentsClear,
   chatSet,
   chatHistorySet,

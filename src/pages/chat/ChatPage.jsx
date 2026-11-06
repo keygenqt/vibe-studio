@@ -8,8 +8,12 @@ import * as React from 'react'
 import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Box, Stack } from '@mui/material'
+import { alpha } from '@mui/material/styles'
+import Add from '@mui/icons-material/Add'
+import { getCurrentWebview } from '@tauri-apps/api/webview'
 
-import { DeleteDialog, HandleView } from '../../components/views'
+import { AttachmentChip, DeleteDialog, HandleView } from '../../components/views'
+import { ErrorSnackbar } from '../../components/snackbars'
 import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
 import { useCoreChat, useCoreGroupsChat, useCoreSettings, useCoreWorkspace } from '../../hooks'
@@ -36,6 +40,9 @@ export function ChatPage() {
     draft,
     chatAttachments,
     addAttachments,
+    removeAttachment,
+    sendError,
+    setSendError,
     setDraft,
     send,
     sending,
@@ -56,6 +63,11 @@ export function ChatPage() {
   // the translation view shows the stored one, an empty column
   // generates once — the errors surface in the view
   const translate = messageId => Methods.chat_translate_message(cid, messageId)
+  // the picker answers with the selected paths or null on the cancel
+  const onAttach = () =>
+    Methods.dialog_open_files()
+      .then(paths => paths && addAttachments(paths.map(path => ({ kind: 'file', path }))))
+      .catch(console.error)
   const chat = chats?.find(item => item.id === cid) ?? null
   // the message text size: the store resolves the untouched value
   const fontSize = settings.appearance_chat_font_size
@@ -86,6 +98,55 @@ export function ChatPage() {
   // the measured delta accumulates against the base, capped
   const [composerGrow, setComposerGrow] = React.useState(0)
   React.useEffect(() => watchBottom('chat.history', setAtBottom), [])
+
+  // the webview drag hover over the composer: paints the overlay
+  const [dragOver, setDragOver] = React.useState(false)
+  const composerRef = React.useRef(null)
+
+  // the callback rides the ref — the re-renders must not rebind
+  // the webview listener
+  const addAttachmentsRef = React.useRef(addAttachments)
+  addAttachmentsRef.current = addAttachments
+
+  // the Tauri webview drag events: the hover scopes to the composer
+  // bounds, the drop feeds the paths into the draft attachments
+  React.useEffect(() => {
+    const unlisten = getCurrentWebview().onDragDropEvent(event => {
+      const payload = event.payload
+      // `leave` carries no position — the hint goes away first
+      if (payload.type === 'leave') {
+        setDragOver(false)
+        return
+      }
+      const rect = composerRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const pos = payload.position.toLogical(window.devicePixelRatio)
+      const inside =
+        pos.x >= rect.left && pos.x <= rect.right && pos.y >= rect.top && pos.y <= rect.bottom
+      if (payload.type === 'drop') {
+        setDragOver(false)
+        // the draft carries the Rust facts: the chip paints the
+        // folder, the image kind and the size; the wire carries
+        // the path only
+        if (inside)
+          Promise.all(
+            payload.paths.map(async path => {
+              const stat = await Methods.attachment_stat(path)
+              return stat.dir
+                ? { kind: 'file', path, dir: true }
+                : { kind: 'file', path, mime: stat.mime, size: stat.size }
+            })
+          )
+            .then(addAttachmentsRef.current)
+            .catch(console.error)
+      } else {
+        setDragOver(inside)
+      }
+    })
+    return () => {
+      unlisten.then(fn => fn())
+    }
+  }, [])
 
   // the chat switch lands at the bottom and re-arms the follow; the
   // content updates are the scroll area's own business
@@ -226,7 +287,9 @@ export function ChatPage() {
             }}
           />
           <Box
+            ref={composerRef}
             sx={{
+              position: 'relative',
               flexShrink: 0,
               // the base from the drag plus the draft growth, capped —
               // the history yields its height to the growing composer
@@ -244,6 +307,7 @@ export function ChatPage() {
               <QuickActions
                 quick={quick}
                 onQuick={setQuick}
+                onAttach={onAttach}
                 translateEnabled={canTranslate}
                 attachCount={chatAttachments.length}
                 stats={stats}
@@ -267,7 +331,62 @@ export function ChatPage() {
                 stop={stop}
               />
             </Stack>
+            {dragOver && (
+              // the drop hint: the green wash over the composer, the plus in the middle
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 2,
+                  border: '2px dashed',
+                  borderColor: 'success.main',
+                  backgroundColor: theme => alpha(theme.palette.success.main, 0.15),
+                  pointerEvents: 'none',
+                }}
+              >
+                <Add sx={{ color: 'success.main' }} />
+              </Box>
+            )}
           </Box>
+          {chatAttachments.length > 0 && (
+            // the attachments bar under the composer: the shape of the title bar
+            <Box
+              sx={{
+                flexShrink: 0,
+                borderRadius: 2,
+                backgroundColor: 'background.paper',
+                boxSizing: 'border-box',
+                padding: 1.5,
+              }}
+            >
+              <Stack direction={'row'} spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+                {chatAttachments.map((attachment, index) => (
+                  <AttachmentChip
+                    key={index}
+                    attachment={
+                      attachment.kind === 'file'
+                        ? {
+                            name: attachment.path.split('/').pop(),
+                            mime: attachment.mime ?? null,
+                            size: attachment.size ?? null,
+                            dir: attachment.dir === true,
+                          }
+                        : {
+                            name: 'image.png',
+                            mime: 'image/png',
+                            size: Math.round((attachment.png.length * 3) / 4),
+                          }
+                    }
+                    onDelete={() => removeAttachment(index)}
+                  />
+                ))}
+              </Stack>
+            </Box>
+          )}
           <DeleteDialog
             open={confirm !== null}
             title={t(
@@ -287,6 +406,10 @@ export function ChatPage() {
               if (confirm?.action === 'delete') remove(confirm.messageId)
               setConfirm(null)
             }}
+          />
+          <ErrorSnackbar
+            text={sendError ? t(String(sendError)) : null}
+            onClose={() => setSendError(null)}
           />
         </>
       ) : (

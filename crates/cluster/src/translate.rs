@@ -47,6 +47,7 @@ pub(crate) async fn call(
         TRANSLATE_NUM_CTX,
         TRANSLATE_NUM_PREDICT,
         Some(prompt),
+        None,
         Vec::new(),
         text,
     )
@@ -79,6 +80,7 @@ pub(crate) async fn call_stream(
         TRANSLATE_NUM_CTX,
         TRANSLATE_NUM_PREDICT,
         Some(prompt),
+        None,
         Vec::new(),
         text,
         cancel,

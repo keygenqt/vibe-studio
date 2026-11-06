@@ -17,6 +17,7 @@ export const ThemeLight = createTheme({
     ...paletteLight,
     primary: { main: '#0d9488', contrastText: '#fff' },
     secondary: { main: '#115e59', light: '#dbe6e3', contrastText: '#fff' },
+    panel: { main: '#eff1f0' },
   },
   typography: typography,
   transitions: transitions,

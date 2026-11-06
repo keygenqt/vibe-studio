@@ -34,11 +34,8 @@ export const cnLocalization = {
       t_placeholder: '输入消息...',
       t_chat_rename: '更新聊天名称',
       t_chat_compress: '压缩',
-      t_chat_settings: '聊天设置',
       t_attach_file: '附加文件',
-      t_search: '搜索',
       t_translate: '翻译',
-      t_menu: '菜单',
       t_scroll_down: '滚动到底部',
       t_generating: '思考中...',
       t_cancelled: '生成已取消',
@@ -202,6 +199,8 @@ export const cnLocalization = {
     'Chat has no messages.': '聊天中还没有消息。',
     'Clipboard is not available.': '剪贴板不可用。',
     'Invalid image data.': '图像数据无效。',
+    'Model does not support images.': '模型不支持图像。',
+    'Attachments are too large.': '附件总体积过大。',
 
     // -- chats
     // fabrics
