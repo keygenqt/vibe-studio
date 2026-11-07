@@ -205,6 +205,88 @@ CodeBlockBase.propTypes = {
 // highlight — only the open block repaints per tick
 const CodeBlock = React.memo(CodeBlockBase)
 
+// the plain block: the copy in the header, the raw text without
+// highlighting — a language outside the registry or no language at
+// all keeps the framed look of a code block
+function PlainCodeBlockBase(props) {
+  const [copied, setCopied] = React.useState(false)
+  const timer = React.useRef(null)
+  React.useEffect(() => () => timer.current && clearTimeout(timer.current), [])
+
+  // resolves silently: a failed copy just skips the accent paint
+  const onClickCopy = () => {
+    if (copied) return
+    Methods.clipboard_write_text(props.code)
+      .then(() => {
+        setCopied(true)
+        timer.current = setTimeout(() => setCopied(false), 2000)
+      })
+      .catch(() => {})
+  }
+
+  return (
+    <Box
+      sx={{
+        my: 2,
+        overflow: 'hidden',
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Stack
+        direction={'row'}
+        justifyContent={'space-between'}
+        alignItems={'center'}
+        sx={theme => ({
+          pl: 1.5,
+          pr: 0.5,
+          py: 0.25,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          backgroundColor: alpha(theme.palette.primary.main, 0.08),
+        })}
+      >
+        {props.language && (
+          <Typography variant={'caption'} color={'text.primary'}>
+            {props.language}
+          </Typography>
+        )}
+        <IconButton size={'small'} onClick={onClickCopy} sx={{ ml: 'auto' }}>
+          <ContentCopy sx={{ fontSize: 14, color: copied ? 'primary.main' : 'text.secondary' }} />
+        </IconButton>
+      </Stack>
+      <Box
+        component={'code'}
+        sx={{
+          display: 'block',
+          px: 1.5,
+          py: 1.25,
+          overflowX: 'auto',
+          whiteSpace: 'pre-wrap',
+          fontSize: props.fontSize,
+          lineHeight: 1.35,
+          color: 'text.primary',
+          backgroundColor: 'background.paper',
+        }}
+      >
+        {props.code}
+      </Box>
+    </Box>
+  )
+}
+
+PlainCodeBlockBase.propTypes = {
+  // the fence info, empty when the model gave none
+  language: PropTypes.string.isRequired,
+  code: PropTypes.string.isRequired,
+  fontSize: PropTypes.number.isRequired,
+}
+
+// the memo: the finished blocks skip the stream ticks — only the
+// growing one re-renders
+const PlainCodeBlock = React.memo(PlainCodeBlockBase)
+
 function MarkdownViewBase(props) {
   const theme = useTheme()
   const syntaxStyle = theme.palette.mode === 'dark' ? oneDark : oneLight
@@ -250,37 +332,40 @@ function MarkdownViewBase(props) {
           </Box>
         )
       },
-      // a registered fenced block paints through the highlighter, an
-      // inline code stays plain
+      // the inline code stays plain: the fenced blocks live in `pre`
       code({ node, children, className, ...rest }) {
-        const match = /language-([\w+-]+)/.exec(className || '')
-        if (match && REGISTERED.has(match[1])) {
-          return (
-            <CodeBlock
-              language={match[1]}
-              code={React.Children.toArray(children).join('').replace(/\n$/, '')}
-              style={syntaxStyle}
-              fontSize={props.fontSize}
-            />
-          )
-        }
         return (
           <code {...rest} className={className}>
             {children}
           </code>
         )
       },
-      // the highlighted block brings its own container — the markdown
-      // `pre` steps aside; the plain code keeps the real `pre` and
-      // the container styles over it
-      pre({ node, children, ...rest }) {
+      // the fenced block: a registered language paints through the
+      // highlighter, everything else keeps the raw text in the framed
+      // plain block — the fallback covers the stream with a partial
+      // fence info (`jav`), not only the unknown languages
+      pre({ children }) {
         const child = React.Children.toArray(children).find(React.isValidElement)
         const className = React.isValidElement(child) ? String(child.props.className ?? '') : ''
-        const match = /language-([\w+-]+)/.exec(className)
+        const match = /language-(\S+)/.exec(className)
+        const code = React.Children.toArray(React.isValidElement(child) ? child.props.children : [])
+          .join('')
+          .replace(/\n$/, '')
         if (match && REGISTERED.has(match[1])) {
-          return <React.Fragment>{children}</React.Fragment>
+          return (
+            <CodeBlock
+              language={match[1]}
+              code={code}
+              style={syntaxStyle}
+              fontSize={props.fontSize}
+            />
+          )
         }
-        return <pre {...rest}>{children}</pre>
+        // no language or an unregistered one: the caption shows the
+        // fence info when the model gave it
+        return (
+          <PlainCodeBlock language={match ? match[1] : ''} code={code} fontSize={props.fontSize} />
+        )
       },
     }),
     [props.fontSize, syntaxStyle]
@@ -354,16 +439,6 @@ function MarkdownViewBase(props) {
             borderBottom: 'none',
           },
         },
-        // a fenced block without a registered language: plain code
-        // over the quiet surface
-        '& pre': theme => ({
-          my: 2,
-          p: 1.5,
-          overflowX: 'auto',
-          borderRadius: 2,
-          backgroundColor: alpha(theme.palette.text.primary, 0.05),
-          '& code': { whiteSpace: 'pre-wrap', fontSize: 'inherit', lineHeight: 1.5 },
-        }),
         '& p > code, & li > code': theme => ({
           px: 0.5,
           borderRadius: 1,

@@ -14,7 +14,7 @@ const DEFAULT_SYSTEM_PROMPT: &str = "";
 const DEFAULT_TEMPERATURE: f64 = 1.0;
 const DEFAULT_SEED: i64 = 42;
 const DEFAULT_NUM_CTX: i32 = 32768;
-const DEFAULT_NUM_PREDICT: i32 = 8192;
+const DEFAULT_NUM_PREDICT: i32 = 16384;
 
 /// A model of a provider catalog. `id` is `None` until the row is
 /// stored — SQLite owns the id. Config `None` means the user has not
