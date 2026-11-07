@@ -63,7 +63,7 @@ pub async fn get_provider_models_by_type(
     let models = client.list_models().await?;
     Ok(models
         .into_iter()
-        .filter(|model| model.embedding != Some(true))
+        .filter(|model| model.capabilities.abilities.embedding != Some(true))
         .map(ModelInfoData::from)
         .collect())
 }

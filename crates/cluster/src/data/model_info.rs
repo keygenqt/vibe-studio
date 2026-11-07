@@ -65,10 +65,10 @@ impl From<ModelInfo> for ModelInfoData {
             quantization: info.quantization,
             size: info.size,
             context_length: info.context_length,
-            vision: info.vision,
-            tools: info.tools,
-            thinking: info.thinking,
-            embedding: info.embedding,
+            vision: info.capabilities.input.vision,
+            tools: info.capabilities.abilities.tools,
+            thinking: info.capabilities.abilities.thinking,
+            embedding: info.capabilities.abilities.embedding,
         }
     }
 }
