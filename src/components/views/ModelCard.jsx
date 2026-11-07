@@ -2,20 +2,21 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
- * INFO: Model row card: avatar, fact line, optional action.
+ * INFO: Model row card: avatar, capability badges, fact line, optional action.
  */
 import PropTypes from 'prop-types'
-import { useTranslation } from 'react-i18next'
 import { Avatar, Card, CardActionArea, Stack, Typography } from '@mui/material'
 
+import { ModelCapability } from './ModelCapability'
+
+// context in tokens, human form: 262144 → "262k ctx"
+const formatContext = context => {
+  if (!context) return null
+  return context >= 1000 ? `${Math.round(context / 1000)}k ctx` : `${context} ctx`
+}
+
 export function ModelCard(props) {
-  const { t } = useTranslation()
-  const facts = [
-    props.description,
-    props.vision === true && t('models.t_badge_vision'),
-    props.thinking === true && t('models.t_badge_thinking'),
-    props.tools === true && t('models.t_badge_tools'),
-  ].filter(Boolean)
+  const facts = [props.description, formatContext(props.context)].filter(Boolean)
 
   const body = (
     <Stack direction={'row'} spacing={2} alignItems={'center'} sx={{ py: 1, pr: 2, pl: 2 }}>
@@ -32,6 +33,7 @@ export function ModelCard(props) {
         <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
           {props.title}
         </Typography>
+        <ModelCapability capabilities={props.capabilities} />
         {facts.length > 0 && (
           <Typography variant={'body2'} noWrap>
             {facts.join(' · ')}
@@ -52,9 +54,8 @@ export function ModelCard(props) {
 ModelCard.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string,
-  vision: PropTypes.bool,
-  thinking: PropTypes.bool,
-  tools: PropTypes.bool,
+  capabilities: PropTypes.object,
+  context: PropTypes.number,
   color: PropTypes.string,
   action: PropTypes.node,
   onClick: PropTypes.func,

@@ -83,9 +83,8 @@ export function ProviderPage() {
                 key={`model-${model.id}`}
                 title={model.display_name ? `${model.display_name} (${model.name})` : model.name}
                 description={model.params}
-                vision={model.vision}
-                thinking={model.reasoning}
-                tools={model.tools}
+                capabilities={model.capabilities ?? undefined}
+                context={model.context_length ?? undefined}
                 color={catalog.find(info => info.provider === provider.provider)?.color}
                 onClick={() => AppNav.open(navigate, AppRoutes.model(model.id))}
                 action={<ChevronRightOutlined color={'action'} />}

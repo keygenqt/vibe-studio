@@ -11,10 +11,10 @@ use crate::Store;
 
 /// Defaults for a missing row.
 const DEFAULT_SYSTEM_PROMPT: &str = "";
-const DEFAULT_TEMPERATURE: f64 = 0.7;
+const DEFAULT_TEMPERATURE: f64 = 1.0;
 const DEFAULT_SEED: i64 = 42;
-const DEFAULT_NUM_CTX: i32 = 8192;
-const DEFAULT_NUM_PREDICT: i32 = 4096;
+const DEFAULT_NUM_CTX: i32 = 32768;
+const DEFAULT_NUM_PREDICT: i32 = 8192;
 
 /// A model of a provider catalog. `id` is `None` until the row is
 /// stored — SQLite owns the id. Config `None` means the user has not
@@ -29,14 +29,11 @@ pub struct ProviderModelData {
     pub name: String,
     /// Sync-owned: approximate parameter count label, e.g. "8.0B".
     pub params: Option<String>,
-    /// Sync-owned tri-state: vision, `None` = the provider did not say.
-    pub vision: Option<bool>,
-    /// Sync-owned tri-state: tool calling, `None` = the provider did not say.
-    pub tools: Option<bool>,
-    /// Sync-owned tri-state: reasoning output (Ollama `thinking`).
-    pub reasoning: Option<bool>,
-    /// Sync-owned tri-state: web access; reserved, no provider fills it yet.
-    pub web: Option<bool>,
+    /// Sync-owned: context window in tokens the host reports.
+    pub context_length: Option<i64>,
+    /// Sync-owned capability matrix as a JSON document of the
+    /// cluster's shape; `None` = the host said nothing.
+    pub capabilities: Option<serde_json::Value>,
     /// User-owned display title; `None` = the UI derives it from `name`.
     pub display_name: Option<String>,
     /// User-owned system prompt; `None` = not set yet, resolves to empty.
@@ -57,10 +54,8 @@ diesel::table! {
         provider_id -> Integer,
         name -> Text,
         params -> Nullable<Text>,
-        vision -> Nullable<Bool>,
-        tools -> Nullable<Bool>,
-        reasoning -> Nullable<Bool>,
-        web -> Nullable<Bool>,
+        context_length -> Nullable<BigInt>,
+        capabilities -> Nullable<Text>,
         display_name -> Nullable<Text>,
         system_prompt -> Nullable<Text>,
         temperature -> Nullable<Double>,
@@ -79,10 +74,8 @@ struct ProviderModelRow {
     provider_id: i32,
     name: String,
     params: Option<String>,
-    vision: Option<bool>,
-    tools: Option<bool>,
-    reasoning: Option<bool>,
-    web: Option<bool>,
+    context_length: Option<i64>,
+    capabilities: Option<String>,
     display_name: Option<String>,
     system_prompt: Option<String>,
     temperature: Option<f64>,
@@ -98,10 +91,8 @@ struct ProviderModelNewData {
     provider_id: i32,
     name: String,
     params: Option<String>,
-    vision: Option<bool>,
-    tools: Option<bool>,
-    reasoning: Option<bool>,
-    web: Option<bool>,
+    context_length: Option<i64>,
+    capabilities: Option<String>,
     display_name: Option<String>,
     system_prompt: Option<String>,
     temperature: Option<f64>,
@@ -120,10 +111,8 @@ impl From<ProviderModelRow> for ProviderModelData {
             provider_id: row.provider_id,
             name: row.name,
             params: row.params,
-            vision: row.vision,
-            tools: row.tools,
-            reasoning: row.reasoning,
-            web: row.web,
+            context_length: row.context_length,
+            capabilities: row.capabilities.and_then(|json| serde_json::from_str(&json).ok()),
             display_name: row.display_name,
             system_prompt: row.system_prompt.or_else(|| Some(DEFAULT_SYSTEM_PROMPT.to_string())),
             temperature: row.temperature.or(Some(DEFAULT_TEMPERATURE)),
@@ -141,10 +130,11 @@ impl From<&ProviderModelData> for ProviderModelNewData {
             provider_id: data.provider_id,
             name: data.name.clone(),
             params: data.params.clone(),
-            vision: data.vision,
-            tools: data.tools,
-            reasoning: data.reasoning,
-            web: data.web,
+            context_length: data.context_length,
+            capabilities: data
+                .capabilities
+                .as_ref()
+                .and_then(|value| serde_json::to_string(value).ok()),
             display_name: data.display_name.clone(),
             system_prompt: data.system_prompt.clone(),
             temperature: data.temperature,

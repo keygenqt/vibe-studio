@@ -7,12 +7,18 @@
 import * as React from 'react'
 import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Box, Stack } from '@mui/material'
+import { Box, CircularProgress, Stack } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import Add from '@mui/icons-material/Add'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
 
-import { AttachmentChip, DeleteDialog, HandleView } from '../../components/views'
+import {
+  AttachmentChip,
+  DeleteDialog,
+  HandleView,
+  ModelCapability,
+  StatsView,
+} from '../../components/views'
 import { ErrorSnackbar } from '../../components/snackbars'
 import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
@@ -36,7 +42,7 @@ export function ChatPage() {
   const { t, i18n } = useTranslation()
   const cid = Number(chatId)
   const workspace = useCoreWorkspace()
-  const { chats, ready: groupsReady } = useCoreGroupsChat()
+  const { chats, groupsChat, models, ready: groupsReady } = useCoreGroupsChat()
   const {
     draft,
     chatAttachments,
@@ -70,6 +76,9 @@ export function ChatPage() {
       .then(paths => paths && addAttachments(paths.map(path => ({ kind: 'file', path }))))
       .catch(console.error)
   const chat = chats?.find(item => item.id === cid) ?? null
+  // the group's model: the capability badges paint near the quick actions
+  const group = (groupsChat ?? []).find(item => item.id === chat?.group_chat_id) ?? null
+  const groupModel = (models ?? []).find(item => item.id === group?.model_id) ?? null
   // the message text size: the store resolves the untouched value
   const fontSize = settings.appearance_chat_font_size
   // the translate actions live only with the translation model set
@@ -326,15 +335,28 @@ export function ChatPage() {
             }}
           >
             <Stack spacing={2} sx={{ height: '100%' }}>
-              <QuickActions
-                quick={quick}
-                onQuick={setQuick}
-                onAttach={onAttach}
-                translateEnabled={canTranslate}
-                attachCount={chatAttachments.length}
-                stats={stats}
-                loading={streaming}
-              />
+              <Stack
+                direction={'row'}
+                spacing={1}
+                alignItems={'center'}
+                justifyContent={'space-between'}
+              >
+                <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                  <QuickActions
+                    quick={quick}
+                    onQuick={setQuick}
+                    onAttach={onAttach}
+                    translateEnabled={canTranslate}
+                    attachCount={chatAttachments.length}
+                  />
+                  <ModelCapability capabilities={groupModel?.capabilities ?? undefined} />
+                </Stack>
+                {streaming ? (
+                  <CircularProgress size={14} color={'inherit'} />
+                ) : (
+                  <StatsView stats={stats} />
+                )}
+              </Stack>
               <InputView
                 draft={draft}
                 setDraft={setDraft}

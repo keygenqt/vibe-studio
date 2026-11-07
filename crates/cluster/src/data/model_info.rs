@@ -3,6 +3,7 @@
 // TAGS: ['facts']
 // INFO: A model as the provider host reports it, mirrored from vibe_cluster.
 
+use super::ModeCapabilityData;
 use vibe_cluster::ModelInfo;
 
 /// A single model as a provider host reports it. Mirrors
@@ -38,14 +39,8 @@ pub struct ModelInfoData {
     pub size: Option<u64>,
     /// Context window in tokens (/api/show → model_info.<arch>.context_length).
     pub context_length: Option<u64>,
-    /// Model accepts images as input.
-    pub vision: Option<bool>,
-    /// Model supports tool calling.
-    pub tools: Option<bool>,
-    /// Model produces reasoning (thinking) output.
-    pub thinking: Option<bool>,
-    /// Model produces embeddings, not chat completions.
-    pub embedding: Option<bool>,
+    /// The full capability matrix: modalities and abilities together.
+    pub capabilities: ModeCapabilityData,
 }
 
 impl From<ModelInfo> for ModelInfoData {
@@ -65,10 +60,7 @@ impl From<ModelInfo> for ModelInfoData {
             quantization: info.quantization,
             size: info.size,
             context_length: info.context_length,
-            vision: info.capabilities.input.vision,
-            tools: info.capabilities.abilities.tools,
-            thinking: info.capabilities.abilities.thinking,
-            embedding: info.capabilities.abilities.embedding,
+            capabilities: info.capabilities.into(),
         }
     }
 }

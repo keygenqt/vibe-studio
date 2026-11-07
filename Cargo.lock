@@ -4749,6 +4749,7 @@ name = "studio-cluster"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "log",
  "serde",
  "vibe-cluster",
 ]
@@ -4764,6 +4765,7 @@ dependencies = [
  "image",
  "open",
  "serde",
+ "serde_json",
  "studio-cluster",
  "studio-states",
  "tokio",
@@ -4779,6 +4781,7 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "serde",
+ "serde_json",
  "serde_with",
 ]
 

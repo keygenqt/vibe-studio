@@ -6,29 +6,14 @@
  */
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
-import {
-  Badge,
-  CircularProgress,
-  Stack,
-  ToggleButton,
-  ToggleButtonGroup,
-  Tooltip,
-  Typography,
-} from '@mui/material'
+import { Badge, Stack, ToggleButton, ToggleButtonGroup, Tooltip } from '@mui/material'
 import AttachFile from '@mui/icons-material/AttachFile'
-import { StatsView } from '../../../components/views'
 import Translate from '@mui/icons-material/Translate'
 
 export function QuickActions(props) {
   const { t } = useTranslation()
   return (
-    <Stack
-      direction={'row'}
-      spacing={2}
-      justifyContent={'space-between'}
-      alignItems={'center'}
-      sx={{ width: 1 }}
-    >
+    <Stack direction={'row'} spacing={1} alignItems={'center'}>
       <ToggleButtonGroup
         size={'small'}
         value={props.quick}
@@ -54,11 +39,6 @@ export function QuickActions(props) {
           </Tooltip>
         )}
       </ToggleButtonGroup>
-      {props.loading ? (
-        <CircularProgress size={14} color={'inherit'} />
-      ) : (
-        <StatsView stats={props.stats} />
-      )}
     </Stack>
   )
 }
@@ -70,6 +50,4 @@ QuickActions.propTypes = {
   onAttach: PropTypes.func.isRequired,
   translateEnabled: PropTypes.bool.isRequired,
   attachCount: PropTypes.number,
-  stats: PropTypes.object,
-  loading: PropTypes.bool,
 }

@@ -19,6 +19,7 @@ use vibe_cluster::HistoryMessage;
 use vibe_cluster::Prompt;
 use vibe_cluster::Role;
 
+pub use data::ModeCapabilityData;
 pub use data::ModelInfoData;
 pub use data::ProviderInfoData;
 pub use data::ProviderTypeData;
@@ -61,6 +62,23 @@ pub async fn get_provider_models_by_type(
     });
 
     let models = client.list_models().await?;
+    // the sync log: what the host reports and how we read it —
+    // the base for the capability rules
+    let kind = ProviderInfoData::from(provider).provider;
+    log::info!("model sync [{kind}] {host}: {} models", models.len());
+    for model in &models {
+        log::info!(
+            "model sync [{kind}] {} — vision={:?} tools={:?} thinking={:?} embedding={:?} family={:?} owned_by={:?} context={:?}",
+            model.name,
+            model.capabilities.input.vision,
+            model.capabilities.abilities.tools,
+            model.capabilities.abilities.thinking,
+            model.capabilities.abilities.embedding,
+            model.family,
+            model.owned_by,
+            model.context_length,
+        );
+    }
     Ok(models
         .into_iter()
         .filter(|model| model.capabilities.abilities.embedding != Some(true))

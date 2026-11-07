@@ -39,6 +39,9 @@ export function ModelsPage() {
     }
   }, [providers, provider, t])
 
+  // the fetch keys on the provider id, not the object: every block
+  // re-read replaces the store objects — identity would refetch
+  const providerKey = provider?.id ?? null
   React.useEffect(() => {
     if (!provider) return undefined
     let active = true
@@ -52,7 +55,8 @@ export function ModelsPage() {
     return () => {
       active = false
     }
-  }, [provider])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providerKey])
 
   // the commit: persist the selection against the live catalog;
   // a failed sync shows a banner — the page keeps its state
@@ -168,9 +172,8 @@ export function ModelsPage() {
                     key={`model-${model.name}`}
                     title={model.name}
                     description={model.params ?? undefined}
-                    vision={model.vision}
-                    thinking={model.thinking}
-                    tools={model.tools}
+                    capabilities={model.capabilities}
+                    context={model.context_length ?? undefined}
                     color={color}
                     action={
                       <Switch

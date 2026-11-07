@@ -233,9 +233,8 @@ pub async fn save_provider_models(
             provider_id,
             name: model.name,
             params: model.params,
-            vision: model.vision,
-            tools: model.tools,
-            reasoning: model.thinking,
+            context_length: model.context_length.map(|value| value as i64),
+            capabilities: serde_json::to_value(model.capabilities).ok(),
             ..Default::default()
         })
         .collect();
@@ -499,7 +498,13 @@ pub async fn chat_send_message(
         let chat = studio_states::get_chat(store, chat_id)?;
         let group = studio_states::get_group_chat(store, chat.group_chat_id)?;
         let model = studio_states::get_provider_model(store, group.model_id)?;
-        if model.vision != Some(true) {
+        if model
+            .capabilities
+            .as_ref()
+            .and_then(|caps| caps.get("input_vision"))
+            .and_then(serde_json::Value::as_bool)
+            != Some(true)
+        {
             anyhow::bail!("Model does not support images.");
         }
         Some(prepared.images.clone())
