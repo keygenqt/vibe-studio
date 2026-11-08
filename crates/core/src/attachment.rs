@@ -122,6 +122,10 @@ fn expand_dir(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
     let mut entries: Vec<std::fs::DirEntry> = std::fs::read_dir(dir)?.collect::<std::io::Result<Vec<_>>>()?;
     entries.sort_by_key(|entry| entry.file_name());
     for entry in entries {
+        // hidden files and directories stay out of the tree
+        if entry.file_name().to_string_lossy().starts_with('.') {
+            continue;
+        }
         // `file_type` does not follow symlinks
         if entry.file_type()?.is_dir() {
             expand_dir(&entry.path(), files)?;

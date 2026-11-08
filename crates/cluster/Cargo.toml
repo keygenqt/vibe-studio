@@ -12,4 +12,6 @@ path = "src/lib.rs"
 anyhow.workspace = true
 log.workspace = true
 serde.workspace = true
-vibe-cluster = { path = "../../../vibe-cluster" }
+# @todo
+vibe-cluster = { path = "../../submodules/vibe-cluster" }
+# vibe-cluster = { path = "../../../vibe-cluster" }

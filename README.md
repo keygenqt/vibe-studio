@@ -24,11 +24,17 @@ pre-alpha — far from beta, and there is a lot of work ahead.
 ## Run
 
 Requires the [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/)
-(Rust toolchain, Node.js).
+(Rust toolchain, Node.js). The `vibe-cluster` crate is a git submodule —
+clone with `--recurse-submodules` or init it after cloning.
 
 ```bash
+git submodule update --init
 npm install
-npm run tauri dev
+./scripts/run.sh
 ```
 
-Packaged builds are not published yet — they will appear with the alpha.
+A release build installed to the system (macOS bundle / Linux deb):
+
+```bash
+./scripts/install.sh
+```

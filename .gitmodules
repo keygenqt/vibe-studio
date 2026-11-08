@@ -1,0 +1,3 @@
+[submodule "submodules/vibe-cluster"]
+	path = submodules/vibe-cluster
+	url = https://github.com/keygenqt/vibe-cluster.git
