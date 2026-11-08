@@ -1,5 +1,6 @@
 {
   ".gitignore": ["misc"],
+  ".gitmodules": ["deps"],
   "AGENTS.md": ["context"],
   "CONTRIBUTING.md": ["misc"],
   "Cargo.lock": ["deps"],
@@ -14,6 +15,7 @@
   "agents/data.md": ["context"],
   "agents/scripts.md": ["context"],
   "agents/src.md": ["context"],
+  "agents/submodules.md": ["context"],
   "agents/src-tauri.md": ["context"],
   "book/.gitignore": ["misc"],
   "book/book.toml": ["misc"],
@@ -63,6 +65,7 @@
   "scripts/run.sh": ["misc"],
   "scripts/stats.sh": ["misc"],
   "scripts/tree.sh": ["misc"],
+  "submodules/vibe-cluster": ["deps"],
   "src-tauri/.gitignore": ["misc"],
   "src-tauri/Cargo.toml": ["deps"],
   "src-tauri/capabilities/default.json": ["misc"],

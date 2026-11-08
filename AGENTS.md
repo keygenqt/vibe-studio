@@ -58,6 +58,7 @@ given to the session.
   a whole, but are not part of it directly
 - `scripts.md` — shell utilities of the project; a tool for humans,
   not application logic
+- `submodules.md` — external repositories connected as git submodules
 - `src.md` — React frontend, a thin layer: Rust is the source of
   truth, JS holds copies only for rendering
 - `src-tauri.md` — the UI layer on Tauri: a middleman between Rust
