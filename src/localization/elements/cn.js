@@ -57,6 +57,7 @@ export const cnLocalization = {
       t_compressing: '压缩中...',
       t_compress_author: '上下文',
       t_context_limit_reached: '已达上下文限制（{{limit}}k）',
+      t_stats_context: '上下文',
       t_stats_speed: '速度',
       t_stats_answer: '输出',
       t_stats_messages: '消息',

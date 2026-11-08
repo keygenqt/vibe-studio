@@ -57,6 +57,7 @@ export const enLocalization = {
       t_compressing: 'Compressing...',
       t_compress_author: 'Context',
       t_context_limit_reached: 'Context limit reached ({{limit}}k)',
+      t_stats_context: 'Context',
       t_stats_speed: 'Speed',
       t_stats_answer: 'Output',
       t_stats_messages: 'Messages',

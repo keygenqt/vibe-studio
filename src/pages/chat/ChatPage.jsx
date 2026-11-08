@@ -24,7 +24,7 @@ import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
 import { useCoreChat, useCoreGroupsChat, useCoreSettings, useCoreWorkspace } from '../../hooks'
 import { Methods } from '../../modules'
-import { CHAT_INPUT_SIZE_MAX } from '../../constants'
+import { CHAT_INPUT_SIZE_MAX, COMPACT_PAGE_WIDTH } from '../../constants'
 import { pauseFollow, scrollToBottom, watchBottom } from '../../init'
 import { AppUtils } from '../../utils'
 
@@ -349,12 +349,19 @@ export function ChatPage() {
                     translateEnabled={canTranslate}
                     attachCount={chatAttachments.length}
                   />
-                  <ModelCapability capabilities={groupModel?.capabilities ?? undefined} />
+                  {/* the capability badges fold away in the narrow composer */}
+                  <Box
+                    sx={{
+                      [`@container (max-width: ${COMPACT_PAGE_WIDTH - 1}px)`]: { display: 'none' },
+                    }}
+                  >
+                    <ModelCapability capabilities={groupModel?.capabilities ?? undefined} />
+                  </Box>
                 </Stack>
                 {streaming ? (
                   <CircularProgress size={14} color={'inherit'} />
                 ) : (
-                  <StatsView stats={stats} />
+                  <StatsView stats={stats} contextLimit={settings.chat_context_limit} />
                 )}
               </Stack>
               <InputView

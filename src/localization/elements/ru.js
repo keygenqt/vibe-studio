@@ -57,6 +57,7 @@ export const ruLocalization = {
       t_compressing: 'Сжимаем...',
       t_compress_author: 'Контекст',
       t_context_limit_reached: 'Достигнут лимит {{limit}}k',
+      t_stats_context: 'Контекст',
       t_stats_speed: 'Скорость',
       t_stats_answer: 'Вывод',
       t_stats_messages: 'Сообщения',
