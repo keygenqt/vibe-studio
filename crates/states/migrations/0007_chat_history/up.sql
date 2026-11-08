@@ -15,6 +15,9 @@ CREATE TABLE chat_history (
     tokens_translate INTEGER NULL,
     tokens_summary INTEGER NULL,
     tokens_compress INTEGER NULL,
+    tokens_user INTEGER NULL,
+    tokens_system INTEGER NULL,
+    tokens_history INTEGER NULL,
     tokens_gen_ms INTEGER NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     collapsed BOOLEAN NOT NULL DEFAULT 0

@@ -4763,6 +4763,7 @@ dependencies = [
  "clipboard-rs",
  "dark-light",
  "image",
+ "log",
  "open",
  "serde",
  "serde_json",

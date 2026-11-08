@@ -25,6 +25,7 @@ pub use data::ProviderInfoData;
 pub use data::ProviderTypeData;
 pub use data::StreamAnswerData;
 pub use data::StreamEvent;
+pub use data::StreamStatsData;
 
 pub use vibe_cluster::CancelToken;
 pub use vibe_cluster::count_tokens;
@@ -194,12 +195,13 @@ pub async fn call_prompt_stream(
         })
         .await?;
 
+    let stats = result.stats.map(StreamStatsData::from);
     match result.error {
         Some(ClusterError::Cancelled) => Ok(StreamAnswerData {
             text: result.text.unwrap_or_default(),
             thinking: result.thinking,
             cancelled: true,
-            completion_tokens: result.completion_tokens,
+            stats,
         }),
         // a failed stream is an error, not an empty answer
         Some(error) => Err(error.into()),
@@ -207,7 +209,7 @@ pub async fn call_prompt_stream(
             text: result.text.unwrap_or_default(),
             thinking: result.thinking,
             cancelled: false,
-            completion_tokens: result.completion_tokens,
+            stats,
         }),
     }
 }

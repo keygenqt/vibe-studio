@@ -168,6 +168,14 @@ pub struct ChatHistoryData {
     pub tokens_summary: Option<i32>,
     /// Estimated tokens of the compressed base; `None` = not compressed.
     pub tokens_compress: Option<i32>,
+    /// Estimated tokens of the prompt's user part of the call that
+    /// produced this answer; `None` = not counted.
+    pub tokens_user: Option<i32>,
+    /// Estimated tokens of that call's system prompt; `None` = not
+    /// counted.
+    pub tokens_system: Option<i32>,
+    /// Estimated tokens of that call's history; `None` = not counted.
+    pub tokens_history: Option<i32>,
     /// Duration of the answer text generation in milliseconds; `None`
     /// for user messages and failed answers.
     pub tokens_gen_ms: Option<i32>,
@@ -197,6 +205,9 @@ diesel::table! {
         tokens_translate -> Nullable<Integer>,
         tokens_summary -> Nullable<Integer>,
         tokens_compress -> Nullable<Integer>,
+        tokens_user -> Nullable<Integer>,
+        tokens_system -> Nullable<Integer>,
+        tokens_history -> Nullable<Integer>,
         tokens_gen_ms -> Nullable<Integer>,
         created_at -> Timestamp,
         collapsed -> Bool,
@@ -224,6 +235,9 @@ struct ChatHistoryRow {
     tokens_translate: Option<i32>,
     tokens_summary: Option<i32>,
     tokens_compress: Option<i32>,
+    tokens_user: Option<i32>,
+    tokens_system: Option<i32>,
+    tokens_history: Option<i32>,
     tokens_gen_ms: Option<i32>,
     created_at: NaiveDateTime,
     collapsed: bool,
@@ -249,6 +263,9 @@ impl From<ChatHistoryRow> for ChatHistoryData {
             tokens_translate: row.tokens_translate,
             tokens_summary: row.tokens_summary,
             tokens_compress: row.tokens_compress,
+            tokens_user: row.tokens_user,
+            tokens_system: row.tokens_system,
+            tokens_history: row.tokens_history,
             tokens_gen_ms: row.tokens_gen_ms,
             created_at: row.created_at,
             collapsed: row.collapsed,
@@ -412,6 +429,9 @@ impl Store {
         status: ChatStatus,
         tokens_answer: i32,
         tokens_thinking: Option<i32>,
+        tokens_user: Option<i32>,
+        tokens_system: Option<i32>,
+        tokens_history: Option<i32>,
         tokens_gen_ms: Option<i32>,
     ) -> Result<usize> {
         let affected = diesel::update(chat_history::table.find(id))
@@ -421,6 +441,9 @@ impl Store {
                 chat_history::status.eq(status.as_str().to_string()),
                 chat_history::tokens_answer.eq(tokens_answer),
                 chat_history::tokens_thinking.eq(tokens_thinking),
+                chat_history::tokens_user.eq(tokens_user),
+                chat_history::tokens_system.eq(tokens_system),
+                chat_history::tokens_history.eq(tokens_history),
                 chat_history::tokens_gen_ms.eq(tokens_gen_ms),
             ))
             .execute(&mut *self.lock())?;

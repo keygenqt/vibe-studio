@@ -25,3 +25,4 @@ pub use provider_info::ProviderInfoData;
 pub use provider_type::ProviderTypeData;
 pub use stream::StreamAnswerData;
 pub use stream::StreamEvent;
+pub use stream::StreamStatsData;

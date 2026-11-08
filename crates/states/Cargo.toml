@@ -13,6 +13,6 @@ diesel = { version = "2.3", features = ["sqlite", "chrono"] }
 chrono = "0.4.43"
 serde_with = { version = "3.16", features = ["chrono"] }
 diesel_migrations = "2"
-serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1"
-anyhow = "1.0.104"
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true

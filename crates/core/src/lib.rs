@@ -514,13 +514,8 @@ pub async fn chat_send_message(
     // failed insert never leaves a half-sent message behind
     // the row keeps the typed text only: the file content rides the
     // prompt and the blobs, the stats carry the size
-    let user = studio_states::add_chat_message_attachments(
-        store,
-        chat_id,
-        text,
-        studio_cluster::count_tokens(&prompt) as i32,
-        &prepared.rows,
-    )?;
+    let user =
+        studio_states::add_chat_message_attachments(store, chat_id, text, utils::count(&prompt), &prepared.rows)?;
     chat_send_stream(
         store,
         chat_id,
@@ -640,6 +635,14 @@ async fn chat_send_stream(
         .collect::<Vec<_>>()
         .join("\n\n");
 
+    // the full user prompt in the log: the shell-side inspection of
+    // what the model receives — no truncation, the files ride inline
+    log::debug!(
+        "chat prompt [chat {chat_id}]: system {} chars, history {} messages, user prompt:\n{text}",
+        system.chars().count(),
+        history.len(),
+    );
+
     // the answer row is born with the stream and grows in the store
     let answer = studio_states::add_chat_history(
         store,
@@ -736,7 +739,7 @@ async fn chat_send_stream(
         };
         if persisted_at.elapsed() >= std::time::Duration::from_millis(PERSIST_INTERVAL_MS) {
             persisted_at = std::time::Instant::now();
-            // tokens land only with the final write — the authority
+            // the interim write lands no tokens or timings
             studio_states::update_chat_history(
                 store,
                 answer_id,
@@ -746,6 +749,9 @@ async fn chat_send_stream(
                 0,
                 None,
                 None,
+                None,
+                None,
+                None,
             )?;
         }
         Ok(())
@@ -753,18 +759,26 @@ async fn chat_send_stream(
     let outcome = stream::pump(call, &mut rx, handle).await?;
 
     // the final write is the only authority: full text, thinking, status
-    let (final_text, final_thinking, status) = match outcome {
-        Err(error) => (format!("{error}"), None, ChatStatus::Error),
-        Ok(result) => (
-            result.text,
-            result.thinking,
-            if result.cancelled {
+    let (final_text, final_thinking, stats, status) = match outcome {
+        Err(error) => (format!("{error}"), None, None, ChatStatus::Error),
+        Ok(result) => {
+            let status = if result.cancelled {
                 ChatStatus::Cancelled
             } else {
                 ChatStatus::Complete
-            },
-        ),
+            };
+            (result.text, result.thinking, result.stats, status)
+        }
     };
+    // the call-input breakdown rides the cluster's report; without it
+    // the columns stay unset
+    let (tokens_user, tokens_system, tokens_history) = stats.as_ref().map_or((None, None, None), |stats| {
+        (
+            Some(stats.user_tokens as i32),
+            Some(stats.system_tokens as i32),
+            Some(stats.history_tokens as i32),
+        )
+    });
     let tokens_gen_ms = gen_start.map(|start| start.elapsed().as_millis() as i32);
     studio_states::update_chat_history(
         store,
@@ -772,12 +786,50 @@ async fn chat_send_stream(
         &final_text,
         final_thinking.as_deref(),
         status,
-        studio_cluster::count_tokens(&final_text) as i32,
-        final_thinking
-            .as_deref()
-            .map(|text| studio_cluster::count_tokens(text) as i32),
+        utils::count(&final_text),
+        final_thinking.as_deref().map(|text| utils::count(text)),
+        tokens_user,
+        tokens_system,
+        tokens_history,
         tokens_gen_ms,
     )?;
+    // the cache check: the history prefix must grow exactly by the
+    // previous answer; the estimates are deterministic — a gap means
+    // the prefix broke and the provider cache fell with it
+    if let Some(stats) = &stats {
+        let prev = studio_states::get_chat_histories(store, chat_id)?
+            .into_iter()
+            .filter(|message| message.id.is_some_and(|id| id < answer_id))
+            .filter(|message| message.status == ChatStatus::Complete)
+            .rev()
+            .find(|message| message.tokens_user.is_some());
+        let sent = (stats.user_tokens + stats.system_tokens + stats.history_tokens) as i32;
+        match prev {
+            Some(message) => {
+                let user = message.tokens_user.unwrap_or(0);
+                let system = message.tokens_system.unwrap_or(0);
+                let history = message.tokens_history.unwrap_or(0);
+                let input = user + system + history;
+                let output = message.tokens_answer.unwrap_or(0);
+                // the expected history: the previous input without its
+                // system, grown by the previous answer
+                let expected = input - system + output;
+                let gap = stats.history_tokens as i32 - expected;
+                log::info!(
+                    "chat cache check [chat {chat_id}]: before input {input} (user {user}, system {system}, history {history}), output {output}; now input {sent} (user {}, system {}, history {}); history gap {gap}",
+                    stats.user_tokens,
+                    stats.system_tokens,
+                    stats.history_tokens,
+                );
+            }
+            None => log::info!(
+                "chat cache check [chat {chat_id}]: first counted call, input {sent} (user {}, system {}, history {})",
+                stats.user_tokens,
+                stats.system_tokens,
+                stats.history_tokens,
+            ),
+        }
+    }
     Ok(())
 }
 
@@ -897,12 +949,7 @@ fn finish_translation(store: &Store, message_id: i32, token: &Arc<CancelToken>, 
     }
     drop(tokens);
     if owned {
-        studio_states::update_chat_history_translate(
-            store,
-            message_id,
-            text,
-            studio_cluster::count_tokens(text) as i32,
-        )?;
+        studio_states::update_chat_history_translate(store, message_id, text, utils::count(text))?;
     }
     Ok(())
 }
@@ -997,12 +1044,7 @@ pub async fn chat_summarize_message(store: &Store, chat_id: i32, message_id: i32
     if summary.is_empty() {
         anyhow::bail!("Summary must not be blank.");
     }
-    studio_states::update_chat_history_summary(
-        store,
-        message_id,
-        &summary,
-        studio_cluster::count_tokens(&summary) as i32,
-    )?;
+    studio_states::update_chat_history_summary(store, message_id, &summary, utils::count(&summary))?;
     Ok(())
 }
 
@@ -1148,6 +1190,7 @@ pub async fn chat_compress_message(
         };
         if persisted_at.elapsed() >= std::time::Duration::from_millis(PERSIST_INTERVAL_MS) {
             persisted_at = std::time::Instant::now();
+            // the interim write lands no tokens or timings
             studio_states::update_chat_history(
                 store,
                 attempt_id,
@@ -1155,6 +1198,9 @@ pub async fn chat_compress_message(
                 thinking,
                 ChatStatus::Progress,
                 0,
+                None,
+                None,
+                None,
                 None,
                 None,
             )?;
@@ -1169,7 +1215,7 @@ pub async fn chat_compress_message(
     match outcome {
         // the success gate: the cluster reports a cut request by the
         // missing completion tokens — a partial text never passes
-        Ok(result) if !result.cancelled && result.completion_tokens.is_some() => {
+        Ok(result) if !result.cancelled && result.stats.is_some() => {
             let base = result.text.trim().to_string();
             if base.is_empty() {
                 studio_states::delete_chat_history(store, attempt_id)?;
@@ -1182,7 +1228,7 @@ pub async fn chat_compress_message(
                 chat_id,
                 &base,
                 result.thinking.as_deref(),
-                studio_cluster::count_tokens(&base) as i32,
+                utils::count(&base),
             )?;
             studio_states::delete_chat_histories_except(store, chat_id, base.id.expect("stored base id"))?;
         }

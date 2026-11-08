@@ -1,7 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['misc']
-// INFO: Private helpers of the core functions.
+// INFO: Token counting for the store and the cancel token registries.
+
+//! Token counting for the store's `i32` columns and the cancel
+//! token registries of the running generations.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -9,9 +12,13 @@ use std::sync::Mutex;
 use std::sync::OnceLock;
 
 use studio_cluster::CancelToken;
+use studio_cluster::count_tokens;
 
-use crate::ChatHistoryData;
-use crate::ChatMessageType;
+/// Counts the tokens of the text as the store keeps it: the store's
+/// token columns are `i32`.
+pub(crate) fn count(text: &str) -> i32 {
+    count_tokens(text) as i32
+}
 
 /// The active stream tokens by the provider+model pair. Abort
 /// handles only: the truth about the running streams lives in the
@@ -31,26 +38,6 @@ pub(crate) fn cancel_stream_token(key: &(String, String)) {
 /// A fresh cancel token for a new stream, Arc-shared with the registry.
 pub(crate) fn stream_token() -> Arc<CancelToken> {
     Arc::new(CancelToken::new())
-}
-
-/// The wire role of a stored message by its sender kind: only the
-/// model answers as the assistant.
-pub(crate) fn history_role(message: &ChatHistoryData) -> String {
-    if message.message_type == ChatMessageType::Assistant {
-        "assistant".to_string()
-    } else {
-        "user".to_string()
-    }
-}
-
-/// The prompt language name of a locale code; an unknown code reads
-/// as English.
-pub(crate) fn locale_language(locale: &str) -> &'static str {
-    match locale {
-        "ru" => "Russian",
-        "cn" => "Chinese",
-        _ => "English",
-    }
 }
 
 /// The active translation tokens by message id — a registry of its
@@ -107,36 +94,4 @@ pub(crate) fn drop_summary_token(message_id: i32) {
         .lock()
         .expect("summary tokens poisoned")
         .remove(&message_id);
-}
-
-/// The markdown kept whole on the fly: a code fence opened but not
-/// yet closed by the stream is closed in the copy for the shell —
-/// the closer matches the opener's marker and run length. `None`:
-/// the text is already balanced, the raw accumulator serves as is.
-pub(crate) fn close_open_fence(text: &str) -> Option<String> {
-    // the open fence: its marker char and the marker run length
-    let mut open: Option<(char, usize)> = None;
-    for line in text.lines() {
-        let line = line.trim_start();
-        let marker = match line.chars().next() {
-            Some(c @ ('`' | '~')) => c,
-            _ => continue,
-        };
-        let run = line.chars().take_while(|&c| c == marker).count();
-        if run < 3 {
-            continue;
-        }
-        match open {
-            // the closer: the same marker, at least the opener's run,
-            // nothing else on the line
-            Some((open_marker, open_run))
-                if marker == open_marker && run >= open_run && line.chars().all(|c| c == marker) =>
-            {
-                open = None;
-            }
-            None => open = Some((marker, run)),
-            _ => {}
-        }
-    }
-    open.map(|(marker, run)| format!("{text}\n{}", marker.to_string().repeat(run)))
 }

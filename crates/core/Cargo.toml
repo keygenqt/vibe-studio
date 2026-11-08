@@ -11,10 +11,11 @@ path = "src/lib.rs"
 [dependencies]
 studio-states = { path = "../states" }
 studio-cluster = { path = "../cluster" }
+log.workspace = true
 dark-light = "3"
-serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1"
-anyhow = "1.0.104"
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
 tokio = { version = "1", default-features = false, features = [
     "sync",
     "macros",

@@ -9,7 +9,7 @@ name = "studio_cluster"
 path = "src/lib.rs"
 
 [dependencies]
-anyhow = "1.0.104"
-log = "0.4"
-serde = { version = "1.0.229", features = ["derive"] }
+anyhow.workspace = true
+log.workspace = true
+serde.workspace = true
 vibe-cluster = { path = "../../../vibe-cluster" }

@@ -197,6 +197,9 @@ pub fn update_chat_history(
     status: ChatStatus,
     tokens_answer: i32,
     tokens_thinking: Option<i32>,
+    tokens_user: Option<i32>,
+    tokens_system: Option<i32>,
+    tokens_history: Option<i32>,
     tokens_gen_ms: Option<i32>,
 ) -> Result<usize> {
     store.update_chat_history(
@@ -206,6 +209,9 @@ pub fn update_chat_history(
         status,
         tokens_answer,
         tokens_thinking,
+        tokens_user,
+        tokens_system,
+        tokens_history,
         tokens_gen_ms,
     )
 }

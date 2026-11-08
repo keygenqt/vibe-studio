@@ -66,7 +66,7 @@ export function ModelCapability(props) {
   if (groups.length === 0) return null
 
   return (
-    <Stack direction={'row'} spacing={0.75} alignItems={'center'} flexWrap={'wrap'} rowGap={0.25}>
+    <Stack direction={'row'} spacing={0.75} alignItems={'center'} sx={{ flexShrink: 0 }}>
       {groups.map((group, index) => (
         <Fragment key={group.key}>
           {index > 0 && (
