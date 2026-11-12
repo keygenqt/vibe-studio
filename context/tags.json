@@ -29,6 +29,7 @@
   "context/tags.json": ["context"],
   "crates/cluster/Cargo.toml": ["deps"],
   "crates/core/Cargo.toml": ["deps"],
+  "crates/core/src/defaults/models.json": ["facts"],
   "crates/states/Cargo.toml": ["deps"],
   "crates/states/migrations/0001_states/down.sql": ["states"],
   "crates/states/migrations/0001_states/up.sql": ["states"],

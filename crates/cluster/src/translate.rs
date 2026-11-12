@@ -12,6 +12,7 @@ use anyhow::Result;
 use crate::CancelToken;
 use crate::ProviderTypeData;
 use crate::StreamEvent;
+use crate::StreamStatsData;
 use crate::call_prompt;
 use crate::call_prompt_stream;
 
@@ -25,7 +26,7 @@ const TRANSLATE_NUM_PREDICT: i32 = 8192;
 const TRANSLATE_PROMPT: &str = "Translate the text to {language}. Answer with the translation only: keep the original formatting, no explanations.";
 
 /// Translates one text to the given language; returns the trimmed
-/// translation.
+/// translation with the provider-reported token facts.
 pub(crate) async fn call(
     provider: ProviderTypeData,
     host: &str,
@@ -34,9 +35,9 @@ pub(crate) async fn call(
     model: &str,
     language: &str,
     text: &str,
-) -> Result<String> {
+) -> Result<(String, StreamStatsData)> {
     let prompt = TRANSLATE_PROMPT.replace("{language}", language);
-    let text = call_prompt(
+    let (text, stats) = call_prompt(
         provider,
         host,
         api_key,
@@ -52,11 +53,12 @@ pub(crate) async fn call(
         text,
     )
     .await?;
-    Ok(text.trim().to_string())
+    Ok((text.trim().to_string(), stats))
 }
 
 /// Streams the translation of one text: only the text deltas go to
-/// `on_delta` — thinking stays out; returns the full trimmed answer.
+/// `on_delta` — thinking stays out; returns the full trimmed answer
+/// with the provider-reported token facts.
 pub(crate) async fn call_stream(
     provider: ProviderTypeData,
     host: &str,
@@ -67,7 +69,7 @@ pub(crate) async fn call_stream(
     text: &str,
     cancel: &CancelToken,
     on_delta: impl Fn(&str) + Send + Sync + 'static,
-) -> Result<String> {
+) -> Result<(String, StreamStatsData)> {
     let prompt = TRANSLATE_PROMPT.replace("{language}", language);
     let result = call_prompt_stream(
         provider,
@@ -92,5 +94,6 @@ pub(crate) async fn call_stream(
         },
     )
     .await?;
-    Ok(result.text.trim().to_string())
+    let stats = result.stats.map(StreamStatsData::from).unwrap_or_default();
+    Ok((result.text.trim().to_string(), stats))
 }

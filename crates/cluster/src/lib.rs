@@ -14,8 +14,12 @@ mod translate;
 use anyhow::Result;
 use vibe_cluster::Cluster;
 use vibe_cluster::ClusterError;
-use vibe_cluster::ConnectionParams;
+use vibe_cluster::Connection;
+use vibe_cluster::GigaChatParams;
 use vibe_cluster::HistoryMessage;
+use vibe_cluster::OllamaParams;
+use vibe_cluster::OpenAiParams;
+use vibe_cluster::Params;
 use vibe_cluster::Prompt;
 use vibe_cluster::Role;
 
@@ -28,7 +32,6 @@ pub use data::StreamEvent;
 pub use data::StreamStatsData;
 
 pub use vibe_cluster::CancelToken;
-pub use vibe_cluster::count_tokens;
 
 /// Catalog of supported provider kinds — the source for the add form.
 pub fn get_providers() -> Vec<ProviderInfoData> {
@@ -54,13 +57,21 @@ pub async fn get_provider_models_by_type(
     api_key: Option<&str>,
     project: Option<&str>,
 ) -> Result<Vec<ModelInfoData>> {
-    let client = vibe_cluster::create_client(ConnectionParams {
+    // the sync path carries no generation, but the params variant
+    // must still match the provider family for the factory
+    let params = match provider {
+        ProviderTypeData::Ollama => Params::Ollama(OllamaParams::default()),
+        ProviderTypeData::GigaChat => Params::GigaChat(GigaChatParams::default()),
+        _ => Params::OpenAi(OpenAiParams::default()),
+    };
+    let client = vibe_cluster::create_client(Connection {
         provider: provider.into(),
         host: host.to_string(),
+        params,
         api_key: api_key.map(String::from),
         project: project.map(String::from),
         ..Default::default()
-    });
+    })?;
 
     let models = client.list_models().await?;
     // the sync log: what the host reports and how we read it —
@@ -87,9 +98,56 @@ pub async fn get_provider_models_by_type(
         .collect())
 }
 
+/// The cluster connection of a call: the generation config lands in
+/// the params of the provider family — `num_ctx` exists only in the
+/// Ollama schema, the cloud families do not carry it.
+fn connection(
+    provider: ProviderTypeData,
+    host: &str,
+    model: &str,
+    temperature: f64,
+    seed: i64,
+    num_ctx: i32,
+    num_predict: i32,
+    api_key: Option<&str>,
+    project: Option<&str>,
+) -> Connection {
+    let params = match provider {
+        ProviderTypeData::Ollama => Params::Ollama(OllamaParams {
+            temperature: Some(temperature),
+            seed: Some(seed.max(0) as u64),
+            num_ctx: Some(num_ctx.max(0) as usize),
+            num_predict: Some(num_predict.max(0) as usize),
+            ..Default::default()
+        }),
+        ProviderTypeData::GigaChat => Params::GigaChat(GigaChatParams {
+            temperature: Some(temperature),
+            seed: Some(seed.max(0) as u64),
+            num_predict: Some(num_predict.max(0) as usize),
+            ..Default::default()
+        }),
+        _ => Params::OpenAi(OpenAiParams {
+            temperature: Some(temperature),
+            seed: Some(seed.max(0) as u64),
+            num_predict: Some(num_predict.max(0) as usize),
+            ..Default::default()
+        }),
+    };
+    Connection {
+        provider: provider.into(),
+        host: host.to_string(),
+        model: model.to_string(),
+        params,
+        api_key: api_key.map(String::from),
+        project: project.map(String::from),
+        ..Default::default()
+    }
+}
+
 /// Runs one prompt on one host+model with the given generation config
-/// and the conversation history; returns the response text. The
-/// history is (role, content, images) triples — "user" |
+/// and the conversation history; returns the response text with the
+/// provider-reported token facts — what the provider did not report
+/// stays `None`. The history is (role, content, images) triples — "user" |
 /// "assistant", oldest first; the images are the turn's base64
 /// parts. Errors keep the cluster's message.
 pub async fn call_prompt(
@@ -106,21 +164,18 @@ pub async fn call_prompt(
     images: Option<Vec<String>>,
     history: Vec<(String, String, Vec<String>)>,
     user: &str,
-) -> Result<String> {
-    // config bounds are validated in core; the casts keep u64 happy
-    let cluster = Cluster::new(vec![ConnectionParams {
-        provider: provider.into(),
-        host: host.to_string(),
-        model: model.to_string(),
-        temperature: Some(temperature),
-        seed: Some(seed.max(0) as u64),
-        num_ctx: Some(num_ctx.max(0) as usize),
-        num_predict: Some(num_predict.max(0) as usize),
-        api_key: api_key.map(String::from),
-        project: project.map(String::from),
-        stats: false,
-        ..Default::default()
-    }])?;
+) -> Result<(String, StreamStatsData)> {
+    let cluster = Cluster::new(vec![connection(
+        provider,
+        host,
+        model,
+        temperature,
+        seed,
+        num_ctx,
+        num_predict,
+        api_key,
+        project,
+    )])?;
 
     let mut prompt = Prompt::new(user, system, images);
     prompt.history = history
@@ -136,7 +191,8 @@ pub async fn call_prompt(
         .collect();
 
     let result = cluster.call(prompt).await?;
-    Ok(result.text.unwrap_or_default())
+    let stats = result.stats.map(StreamStatsData::from).unwrap_or_default();
+    Ok((result.text.unwrap_or_default(), stats))
 }
 
 /// Streams one prompt on one host+model with the given generation
@@ -160,20 +216,17 @@ pub async fn call_prompt_stream(
     cancel: &CancelToken,
     on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
 ) -> Result<StreamAnswerData> {
-    // config bounds are validated in core; the casts keep u64 happy
-    let cluster = Cluster::new(vec![ConnectionParams {
-        provider: provider.into(),
-        host: host.to_string(),
-        model: model.to_string(),
-        temperature: Some(temperature),
-        seed: Some(seed.max(0) as u64),
-        num_ctx: Some(num_ctx.max(0) as usize),
-        num_predict: Some(num_predict.max(0) as usize),
-        api_key: api_key.map(String::from),
-        project: project.map(String::from),
-        stats: true,
-        ..Default::default()
-    }])?;
+    let cluster = Cluster::new(vec![connection(
+        provider,
+        host,
+        model,
+        temperature,
+        seed,
+        num_ctx,
+        num_predict,
+        api_key,
+        project,
+    )])?;
 
     let mut prompt = Prompt::new(user, system, images);
     prompt.history = history
@@ -192,6 +245,8 @@ pub async fn call_prompt_stream(
         .call_stream(prompt, cancel, move |event| match event {
             vibe_cluster::PromptEvent::Thinking(chunk) => on_event(&StreamEvent::Thinking(chunk.clone())),
             vibe_cluster::PromptEvent::Text(chunk) => on_event(&StreamEvent::Text(chunk.clone())),
+            // the usage event is intercepted into the result by the cluster
+            _ => {}
         })
         .await?;
 
@@ -215,7 +270,8 @@ pub async fn call_prompt_stream(
 }
 
 /// Translates one text to the given language with the translation
-/// task config; returns the trimmed translation.
+/// task config; returns the trimmed translation with the
+/// provider-reported token facts.
 pub async fn call_translate(
     provider: ProviderTypeData,
     host: &str,
@@ -224,12 +280,13 @@ pub async fn call_translate(
     model: &str,
     language: &str,
     text: &str,
-) -> Result<String> {
+) -> Result<(String, StreamStatsData)> {
     translate::call(provider, host, api_key, project, model, language, text).await
 }
 
 /// Streams the translation of one text: only the text deltas go to
-/// `on_delta` — thinking stays out; returns the full trimmed answer.
+/// `on_delta` — thinking stays out; returns the full trimmed answer
+/// with the provider-reported token facts.
 pub async fn call_translate_stream(
     provider: ProviderTypeData,
     host: &str,
@@ -240,7 +297,7 @@ pub async fn call_translate_stream(
     text: &str,
     cancel: &CancelToken,
     on_delta: impl Fn(&str) + Send + Sync + 'static,
-) -> Result<String> {
+) -> Result<(String, StreamStatsData)> {
     translate::call_stream(
         provider, host, api_key, project, model, language, text, cancel, on_delta,
     )
@@ -248,8 +305,10 @@ pub async fn call_translate_stream(
 }
 
 /// Summarizes one text with the light task config: a brief plain-text
-/// digest in the language of the text itself. The answer is trimmed
-/// to its first line and capped to 200 chars (unicode), closed with `…`.
+/// digest in the language of the text itself. Returns the trimmed
+/// summary with the provider-reported token facts — the answer is
+/// trimmed to its first line and capped to 200 chars (unicode),
+/// closed with `…`.
 pub async fn call_summary(
     provider: ProviderTypeData,
     host: &str,
@@ -257,7 +316,7 @@ pub async fn call_summary(
     project: Option<&str>,
     model: &str,
     text: &str,
-) -> Result<String> {
+) -> Result<(String, StreamStatsData)> {
     summary::call(provider, host, api_key, project, model, text).await
 }
 

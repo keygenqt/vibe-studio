@@ -65,6 +65,10 @@ export const providers = {
     store.dispatch(modelSet(model))
     return model
   },
+  // the model's parameter spec: the page builds the form bounds from it
+  get_model_defaults: async function (name) {
+    return invoke('get_model_defaults', { name })
+  },
   save_provider_model: async function (model, config) {
     const state = await invoke('save_provider_model', { model: { ...model, ...config } })
     store.dispatch(catalogSet(state.catalog))

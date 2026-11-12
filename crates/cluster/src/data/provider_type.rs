@@ -31,7 +31,7 @@ impl ProviderTypeData {
     ];
 }
 
-/// Adapts the kind for `ConnectionParams` — the only point where the
+/// Adapts the kind for `Connection` — the only point where the
 /// external enum is produced.
 impl From<ProviderTypeData> for Provider {
     fn from(provider: ProviderTypeData) -> Self {

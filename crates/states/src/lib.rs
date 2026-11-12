@@ -132,7 +132,8 @@ pub fn get_chat_histories(store: &Store, chat_id: i32) -> Result<Vec<ChatHistory
 }
 
 /// Appends a message to the chat history; returns the stored row. A
-/// model answer is born with `ChatStatus::Progress`.
+/// model answer is born with `ChatStatus::Progress`; token facts
+/// land only with the final update.
 pub fn add_chat_history(
     store: &Store,
     chat_id: i32,
@@ -142,28 +143,19 @@ pub fn add_chat_history(
     status: ChatStatus,
     text: &str,
     thinking: Option<&str>,
-    tokens_answer: i32,
 ) -> Result<ChatHistoryData> {
-    store.add_chat_history(
-        chat_id,
-        message_type,
-        provider,
-        model,
-        status,
-        text,
-        thinking,
-        tokens_answer,
-    )
+    store.add_chat_history(chat_id, message_type, provider, model, status, text, thinking)
 }
 
 /// Inserts the compressed base the session continues from; the
-/// message is born final with its reasoning and counted tokens.
+/// message is born final with its reasoning and the provider token
+/// facts of the compress call.
 pub fn add_chat_history_compress(
     store: &Store,
     chat_id: i32,
     text: &str,
     thinking: Option<&str>,
-    tokens_compress: i32,
+    tokens_compress: Option<i32>,
 ) -> Result<ChatHistoryData> {
     store.add_chat_history_compress(chat_id, text, thinking, tokens_compress)
 }
@@ -174,10 +166,9 @@ pub fn add_chat_message_attachments(
     store: &Store,
     chat_id: i32,
     text: &str,
-    tokens_answer: i32,
     attachments: &[ChatAttachmentNewData],
 ) -> Result<ChatHistoryData> {
-    store.add_chat_message_attachments(chat_id, text, tokens_answer, attachments)
+    store.add_chat_message_attachments(chat_id, text, attachments)
 }
 
 /// The stored bytes of one message's attachments — the source for
@@ -186,20 +177,19 @@ pub fn get_chat_attachment_blobs(store: &Store, message_id: i32) -> Result<Vec<C
     store.get_chat_attachment_blobs(message_id)
 }
 
-/// Updates a growing message in place: the stream text/thinking, the
-/// counted answer and thinking tokens with the generation time, and
-/// the outcome status. Returns affected rows.
+/// The final write of a finished run: the stream text/thinking, the
+/// outcome status and the provider-reported token facts — `None`
+/// stays `NULL`, nothing is invented. Returns affected rows.
 pub fn update_chat_history(
     store: &Store,
     id: i32,
     text: &str,
     thinking: Option<&str>,
     status: ChatStatus,
-    tokens_answer: i32,
+    tokens_output: Option<i32>,
     tokens_thinking: Option<i32>,
-    tokens_user: Option<i32>,
-    tokens_system: Option<i32>,
-    tokens_history: Option<i32>,
+    tokens_input: Option<i32>,
+    tokens_cached: Option<i32>,
     tokens_gen_ms: Option<i32>,
 ) -> Result<usize> {
     store.update_chat_history(
@@ -207,18 +197,22 @@ pub fn update_chat_history(
         text,
         thinking,
         status,
-        tokens_answer,
+        tokens_output,
         tokens_thinking,
-        tokens_user,
-        tokens_system,
-        tokens_history,
+        tokens_input,
+        tokens_cached,
         tokens_gen_ms,
     )
 }
 
-/// Writes the message translation with its counted tokens — the
-/// final write of a finished run.
-pub fn update_chat_history_translate(store: &Store, id: i32, translate: &str, tokens_translate: i32) -> Result<usize> {
+/// Writes the message translation with the provider-reported tokens;
+/// `None` stays `NULL` — the final write of a finished run.
+pub fn update_chat_history_translate(
+    store: &Store,
+    id: i32,
+    translate: &str,
+    tokens_translate: Option<i32>,
+) -> Result<usize> {
     store.update_chat_history_translate(id, translate, tokens_translate)
 }
 
@@ -232,9 +226,14 @@ pub fn update_chat_history_collapsed(store: &Store, id: i32, collapsed: bool) ->
     store.update_chat_history_collapsed(id, collapsed)
 }
 
-/// Writes the message summary with its counted tokens — the final
-/// write of a finished run.
-pub fn update_chat_history_summary(store: &Store, id: i32, summary: &str, tokens_summary: i32) -> Result<usize> {
+/// Writes the message summary with the provider-reported tokens;
+/// `None` stays `NULL` — the final write of a finished run.
+pub fn update_chat_history_summary(
+    store: &Store,
+    id: i32,
+    summary: &str,
+    tokens_summary: Option<i32>,
+) -> Result<usize> {
     store.update_chat_history_summary(id, summary, tokens_summary)
 }
 

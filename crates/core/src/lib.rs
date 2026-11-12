@@ -20,6 +20,7 @@ mod attachment;
 mod browser;
 mod clipboard;
 mod data;
+mod defaults;
 mod stream;
 pub(crate) mod theme;
 mod utils;
@@ -28,6 +29,7 @@ pub use attachment::AttachmentStatData;
 pub use attachment::ChatAttachmentInput;
 pub use data::ChatStreamEvent;
 pub use data::ClipboardRead;
+pub use defaults::models::ModelDefaultsData;
 pub use studio_cluster::ModelInfoData;
 pub use studio_cluster::ProviderInfoData;
 pub use studio_states::ChatData;
@@ -150,6 +152,14 @@ pub fn get_provider_model(store: &Store, id: i32) -> Result<ProviderModelData> {
     studio_states::get_provider_model(store, id)
 }
 
+/// The parameter spec of the model name: the defaults a fresh row is
+/// born with and the bounds the form and the save validation enforce.
+/// The exact name match wins, everything else is the base of the
+/// catalog.
+pub fn get_model_defaults(name: &str) -> ModelDefaultsData {
+    defaults::models::resolve(name)
+}
+
 /// Fetches the live model catalog of a provider host. The kind is not
 /// trusted: must be in the catalog; the host is trimmed, blank is an
 /// error. Embedding models are filtered out on the cluster layer.
@@ -168,41 +178,50 @@ pub async fn get_provider_models_by_type(
     Ok(studio_cluster::get_provider_models_by_type(provider, host, api_key, project).await?)
 }
 
-/// Validates and persists the model; the UI is not trusted: the id
-/// must exist, whitespace-only texts and out-of-range config values
-/// are errors; everything else is stored as sent.
+/// Validates and persists the model. The UI is not trusted: the id
+/// must exist, whitespace-only texts are errors, the config values
+/// must fit the bounds of the model's catalog entry; everything else
+/// is stored as sent.
 pub fn save_provider_model(store: &Store, model: &ProviderModelData) -> Result<ProviderModelData> {
     let Some(id) = model.id else {
         anyhow::bail!("Model id is required.");
     };
-    if studio_states::get_provider_model(store, id).is_err() {
-        anyhow::bail!("Unknown model.");
-    }
-    if model
-        .display_name
-        .as_deref()
-        .is_some_and(|text| !text.is_empty() && text.trim().is_empty())
-    {
+    let stored = studio_states::get_provider_model(store, id)?;
+    if !model.display_name.is_empty() && model.display_name.trim().is_empty() {
         anyhow::bail!("Display name must not be blank.");
     }
-    if model
-        .system_prompt
-        .as_deref()
-        .is_some_and(|text| !text.is_empty() && text.trim().is_empty())
-    {
+    if !model.system_prompt.is_empty() && model.system_prompt.trim().is_empty() {
         anyhow::bail!("System prompt must not be blank.");
     }
-    if model.temperature.is_some_and(|value| !(0.0..=2.0).contains(&value)) {
-        anyhow::bail!("Temperature must be between 0 and 2.");
+    let spec = defaults::models::resolve(&model.name);
+    let in_range = |value: f64, spec: defaults::models::ModelParamSpec| {
+        spec.min.is_none_or(|min| value >= min) && spec.max.is_none_or(|max| value <= max)
+    };
+    if !in_range(model.temperature, spec.temperature) {
+        anyhow::bail!("Temperature is out of range.");
     }
-    if model.seed.is_some_and(|value| value < 0) {
-        anyhow::bail!("Seed must not be negative.");
+    if !in_range(model.seed as f64, spec.seed) {
+        anyhow::bail!("Seed is out of range.");
     }
-    if model.num_ctx.is_some_and(|value| value < 1) {
-        anyhow::bail!("Context must not be empty.");
+    if !in_range(model.top_p, spec.top_p) {
+        anyhow::bail!("Top p is out of range.");
     }
-    if model.num_predict.is_some_and(|value| value < 1) {
-        anyhow::bail!("Predict limit must not be empty.");
+    if !in_range(model.top_k as f64, spec.top_k) {
+        anyhow::bail!("Top k is out of range.");
+    }
+    if !in_range(model.min_p, spec.min_p) {
+        anyhow::bail!("Min p is out of range.");
+    }
+    if !in_range(model.num_ctx as f64, spec.num_ctx) {
+        anyhow::bail!("Num ctx is out of range.");
+    }
+    if let Some(limit) = stored.context_length {
+        if model.num_ctx > limit as i32 {
+            anyhow::bail!("Num ctx must not exceed the model context window.");
+        }
+    }
+    if !in_range(model.num_predict as f64, spec.num_predict) {
+        anyhow::bail!("Num predict is out of range.");
     }
     studio_states::save_provider_model(store, model)
 }
@@ -210,9 +229,11 @@ pub fn save_provider_model(store: &Store, model: &ProviderModelData) -> Result<P
 /// Persists the selection of one provider's model catalog: fetches
 /// the live list from the host and upserts the selected models with
 /// fresh facts; models outside the selection are removed. The UI
-/// sends only the provider id and the selected names. A fetch error
-/// aborts before any mutation — a failed sync never touches the
-/// table. An empty selection is valid.
+/// sends only the provider id and the selected names. A model new to
+/// the table is born with the defaults of its catalog entry; a known
+/// one keeps its stored config — the sync refreshes the facts only.
+/// A fetch error aborts before any mutation — a failed sync never
+/// touches the table. An empty selection is valid.
 pub async fn save_provider_models(
     store: &Store,
     provider_id: i32,
@@ -226,16 +247,40 @@ pub async fn save_provider_models(
         provider.project.as_deref(),
     )
     .await?;
+    let stored = studio_states::get_provider_models(store, Some(provider_id))?;
     let rows: Vec<ProviderModelData> = models
         .into_iter()
         .filter(|model| checked.iter().any(|name| *name == model.name))
-        .map(|model| ProviderModelData {
-            provider_id,
-            name: model.name,
-            params: model.params,
-            context_length: model.context_length.map(|value| value as i64),
-            capabilities: serde_json::to_value(model.capabilities).ok(),
-            ..Default::default()
+        .map(|model| match stored.iter().find(|row| row.name == model.name) {
+            // the stored row keeps its config, the sync refreshes the facts
+            Some(row) => ProviderModelData {
+                params: model.params,
+                context_length: model.context_length.map(|value| value as i64),
+                capabilities: serde_json::to_value(model.capabilities).ok(),
+                ..row.clone()
+            },
+            // a fresh row is born with its catalog defaults
+            None => {
+                let spec = defaults::models::resolve(&model.name);
+                ProviderModelData {
+                    id: None,
+                    provider_id,
+                    name: model.name,
+                    params: model.params,
+                    context_length: model.context_length.map(|value| value as i64),
+                    capabilities: serde_json::to_value(model.capabilities).ok(),
+                    display_name: String::new(),
+                    system_prompt: String::new(),
+                    temperature: spec.temperature.default,
+                    seed: spec.seed.default as i64,
+                    top_p: spec.top_p.default,
+                    top_k: spec.top_k.default as i32,
+                    min_p: spec.min_p.default,
+                    stop: Vec::new(),
+                    num_ctx: spec.num_ctx.default as i32,
+                    num_predict: spec.num_predict.default as i32,
+                }
+            }
         })
         .collect();
     studio_states::save_provider_models(store, provider_id, &rows)
@@ -469,7 +514,8 @@ pub async fn chat_send_message(
     let translated = if translate {
         let settings = studio_states::get_settings(store).unwrap_or_default();
         let target = translate_target(store, settings.translation_mine.as_deref())?;
-        let text = studio_cluster::call_translate(
+        // the stats die here: the user row carries no token facts
+        let (text, _) = studio_cluster::call_translate(
             target.kind,
             &target.host,
             target.api_key.as_deref(),
@@ -511,11 +557,9 @@ pub async fn chat_send_message(
     };
     let prompt = format!("{text}{}", prepared.inline);
     // the message and its attachments land in one transaction: a
-    // failed insert never leaves a half-sent message behind
-    // the row keeps the typed text only: the file content rides the
-    // prompt and the blobs, the stats carry the size
-    let user =
-        studio_states::add_chat_message_attachments(store, chat_id, text, utils::count(&prompt), &prepared.rows)?;
+    // failed insert never leaves a half-sent message behind; the
+    // token facts land only with the final write of the answer
+    let user = studio_states::add_chat_message_attachments(store, chat_id, text, &prepared.rows)?;
     chat_send_stream(
         store,
         chat_id,
@@ -627,7 +671,7 @@ async fn chat_send_stream(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let system = [model.system_prompt.as_deref(), group.system_prompt.as_deref()]
+    let system = [Some(model.system_prompt.as_str()), group.system_prompt.as_deref()]
         .into_iter()
         .flatten()
         .map(str::trim)
@@ -653,7 +697,6 @@ async fn chat_send_stream(
         ChatStatus::Progress,
         "",
         None,
-        0,
     )?;
     let answer_id = answer.id.expect("stored answer id");
 
@@ -677,10 +720,10 @@ async fn chat_send_stream(
         provider.api_key.as_deref(),
         provider.project.as_deref(),
         &model.name,
-        model.temperature.unwrap_or(0.7),
-        model.seed.unwrap_or(42),
-        model.num_ctx.unwrap_or(4096),
-        model.num_predict.unwrap_or(2048),
+        model.temperature,
+        model.seed,
+        model.num_ctx,
+        model.num_predict,
         if system.is_empty() { None } else { Some(system) },
         images,
         history,
@@ -746,7 +789,6 @@ async fn chat_send_stream(
                 &text_acc,
                 thinking,
                 ChatStatus::Progress,
-                0,
                 None,
                 None,
                 None,
@@ -758,7 +800,9 @@ async fn chat_send_stream(
     };
     let outcome = stream::pump(call, &mut rx, handle).await?;
 
-    // the final write is the only authority: full text, thinking, status
+    // the final write is the only authority: full text, thinking,
+    // status and the provider-reported token facts — without the
+    // report the columns stay `NULL`
     let (final_text, final_thinking, stats, status) = match outcome {
         Err(error) => (format!("{error}"), None, None, ChatStatus::Error),
         Ok(result) => {
@@ -770,15 +814,6 @@ async fn chat_send_stream(
             (result.text, result.thinking, result.stats, status)
         }
     };
-    // the call-input breakdown rides the cluster's report; without it
-    // the columns stay unset
-    let (tokens_user, tokens_system, tokens_history) = stats.as_ref().map_or((None, None, None), |stats| {
-        (
-            Some(stats.user_tokens as i32),
-            Some(stats.system_tokens as i32),
-            Some(stats.history_tokens as i32),
-        )
-    });
     let tokens_gen_ms = gen_start.map(|start| start.elapsed().as_millis() as i32);
     studio_states::update_chat_history(
         store,
@@ -786,49 +821,30 @@ async fn chat_send_stream(
         &final_text,
         final_thinking.as_deref(),
         status,
-        utils::count(&final_text),
-        final_thinking.as_deref().map(|text| utils::count(text)),
-        tokens_user,
-        tokens_system,
-        tokens_history,
+        stats
+            .as_ref()
+            .and_then(|stats| stats.output_tokens.map(|value| value as i32)),
+        stats
+            .as_ref()
+            .and_then(|stats| stats.thinking_tokens.map(|value| value as i32)),
+        stats
+            .as_ref()
+            .and_then(|stats| stats.input_tokens.map(|value| value as i32)),
+        stats
+            .as_ref()
+            .and_then(|stats| stats.cached_tokens.map(|value| value as i32)),
         tokens_gen_ms,
     )?;
-    // the cache check: the history prefix must grow exactly by the
-    // previous answer; the estimates are deterministic — a gap means
-    // the prefix broke and the provider cache fell with it
+    // the cache fact: what the provider served from its prefix cache —
+    // the direct signal of the prompt cache health; the provider that
+    // does not report it keeps the fields empty
     if let Some(stats) = &stats {
-        let prev = studio_states::get_chat_histories(store, chat_id)?
-            .into_iter()
-            .filter(|message| message.id.is_some_and(|id| id < answer_id))
-            .filter(|message| message.status == ChatStatus::Complete)
-            .rev()
-            .find(|message| message.tokens_user.is_some());
-        let sent = (stats.user_tokens + stats.system_tokens + stats.history_tokens) as i32;
-        match prev {
-            Some(message) => {
-                let user = message.tokens_user.unwrap_or(0);
-                let system = message.tokens_system.unwrap_or(0);
-                let history = message.tokens_history.unwrap_or(0);
-                let input = user + system + history;
-                let output = message.tokens_answer.unwrap_or(0);
-                // the expected history: the previous input without its
-                // system, grown by the previous answer
-                let expected = input - system + output;
-                let gap = stats.history_tokens as i32 - expected;
-                log::info!(
-                    "chat cache check [chat {chat_id}]: before input {input} (user {user}, system {system}, history {history}), output {output}; now input {sent} (user {}, system {}, history {}); history gap {gap}",
-                    stats.user_tokens,
-                    stats.system_tokens,
-                    stats.history_tokens,
-                );
-            }
-            None => log::info!(
-                "chat cache check [chat {chat_id}]: first counted call, input {sent} (user {}, system {}, history {})",
-                stats.user_tokens,
-                stats.system_tokens,
-                stats.history_tokens,
-            ),
-        }
+        log::info!(
+            "chat cache [chat {chat_id}]: input {:?} (cached {:?}), output {:?}",
+            stats.input_tokens,
+            stats.cached_tokens,
+            stats.output_tokens,
+        );
     }
     Ok(())
 }
@@ -884,7 +900,7 @@ pub async fn chat_translate_message(
         .insert(message_id, cancel.clone());
 
     if !settings.chat_streaming.unwrap_or(true) {
-        let text = studio_cluster::call_translate(
+        let (text, stats) = studio_cluster::call_translate(
             target.kind,
             &target.host,
             target.api_key.as_deref(),
@@ -894,7 +910,7 @@ pub async fn chat_translate_message(
             &message.text,
         )
         .await?;
-        return finish_translation(store, message_id, &cancel, &text);
+        return finish_translation(store, message_id, &cancel, &text, &stats);
     }
 
     // the deltas ride a channel: the callback runs inside the cluster
@@ -932,14 +948,20 @@ pub async fn chat_translate_message(
         Ok(())
     };
     // only the final write lands: a cancelled or failed run writes nothing
-    let result = stream::pump(call, &mut rx, handle).await??;
-    finish_translation(store, message_id, &cancel, &result)
+    let (text, stats) = stream::pump(call, &mut rx, handle).await??;
+    finish_translation(store, message_id, &cancel, &text, &stats)
 }
 
 /// The final write of a translation: only the run that still owns the
 /// message token writes — a cancelled or replaced run leaves the
 /// column alone. The owner's token leaves the registry.
-fn finish_translation(store: &Store, message_id: i32, token: &Arc<CancelToken>, text: &str) -> Result<()> {
+fn finish_translation(
+    store: &Store,
+    message_id: i32,
+    token: &Arc<CancelToken>,
+    text: &str,
+    stats: &studio_cluster::StreamStatsData,
+) -> Result<()> {
     let mut tokens = utils::translate_tokens().lock().expect("translate tokens poisoned");
     let owned = tokens
         .get(&message_id)
@@ -949,7 +971,12 @@ fn finish_translation(store: &Store, message_id: i32, token: &Arc<CancelToken>, 
     }
     drop(tokens);
     if owned {
-        studio_states::update_chat_history_translate(store, message_id, text, utils::count(text))?;
+        studio_states::update_chat_history_translate(
+            store,
+            message_id,
+            text,
+            stats.output_tokens.map(|value| value as i32),
+        )?;
     }
     Ok(())
 }
@@ -1040,11 +1067,16 @@ pub async fn chat_summarize_message(store: &Store, chat_id: i32, message_id: i32
         .expect("summary tokens poisoned")
         .remove(&message_id);
 
-    let summary = result?;
+    let (summary, stats) = result?;
     if summary.is_empty() {
         anyhow::bail!("Summary must not be blank.");
     }
-    studio_states::update_chat_history_summary(store, message_id, &summary, utils::count(&summary))?;
+    studio_states::update_chat_history_summary(
+        store,
+        message_id,
+        &summary,
+        stats.output_tokens.map(|value| value as i32),
+    )?;
     Ok(())
 }
 
@@ -1117,7 +1149,6 @@ pub async fn chat_compress_message(
         ChatStatus::Progress,
         "",
         None,
-        0,
     )?;
     let attempt_id = attempt.id.expect("stored attempt id");
 
@@ -1197,7 +1228,6 @@ pub async fn chat_compress_message(
                 &text_acc,
                 thinking,
                 ChatStatus::Progress,
-                0,
                 None,
                 None,
                 None,
@@ -1228,7 +1258,11 @@ pub async fn chat_compress_message(
                 chat_id,
                 &base,
                 result.thinking.as_deref(),
-                utils::count(&base),
+                result
+                    .stats
+                    .as_ref()
+                    .and_then(|stats| stats.output_tokens)
+                    .map(|value| value as i32),
             )?;
             studio_states::delete_chat_histories_except(store, chat_id, base.id.expect("stored base id"))?;
         }

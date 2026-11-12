@@ -26,13 +26,15 @@ export function StatsView(props) {
   const { t } = useTranslation()
   const stats = props.stats
   if (!stats) return null
-  // the compact line keeps the two token flows; the full breakdown
-  // with the context limit lives in the hover tooltip
+  // only the measured facts paint: what the provider did not report
+  // stays out of the view
   const hasInput = stats.tokens_input > 0
-  const hasAnswer = stats.tokens_answer > 0
+  const hasCached = stats.tokens_cached > 0
+  const hasAnswer = stats.tokens_output > 0
+  const hasThinking = stats.tokens_thinking > 0
+  const hasSpeed = stats.tokens_per_second != null
   if (!hasInput && !hasAnswer) return null
 
-  const breakdown = stats.tokens_input_breakdown
   const limit = props.contextLimit != null ? props.contextLimit * 1000 : null
   // the footer sums the artifacts: summary, compress and translate
   const artifacts =
@@ -72,51 +74,59 @@ export function StatsView(props) {
     <TooltipView
       title={
         <Stack spacing={1} sx={{ minWidth: 220, py: 0.5 }}>
-          {limit != null && (
+          {limit != null && hasInput && (
             <Box>
               <Stack direction={'row'} spacing={1} alignItems={'center'}>
                 <Typography variant={'caption'} color={'text.secondary'}>
                   {t('chat.t_stats_context')}
                 </Typography>
                 <Typography variant={'caption'} sx={{ ml: 'auto' }}>
-                  {AppUtils.human(stats.tokens_input ?? 0)} / {AppUtils.human(limit)}
+                  {AppUtils.human(stats.tokens_input)} / {AppUtils.human(limit)}
                 </Typography>
               </Stack>
               <LinearProgress
                 variant={'determinate'}
                 color={stats.tokens_input > limit ? 'error' : 'primary'}
-                value={Math.min(100, ((stats.tokens_input ?? 0) / limit) * 100)}
+                value={Math.min(100, (stats.tokens_input / limit) * 100)}
                 sx={{ mt: 0.5, height: 4, borderRadius: 1 }}
               />
             </Box>
           )}
-          {section(
-            <ArrowDownward sx={ICON_SX} />,
-            t('chat.t_stats_input'),
-            AppUtils.human(stats.tokens_input ?? 0),
-            breakdown != null
-              ? [
-                  subRow('history', t('chat.t_stats_input_history'), AppUtils.human(breakdown[2])),
-                  subRow('user', t('chat.t_stats_input_user'), AppUtils.human(breakdown[0])),
-                  subRow('system', t('chat.t_stats_input_system'), AppUtils.human(breakdown[1])),
-                ]
-              : []
+          {hasInput &&
+            section(
+              <ArrowDownward sx={ICON_SX} />,
+              t('chat.t_stats_input'),
+              AppUtils.human(stats.tokens_input),
+              hasCached
+                ? [subRow('cached', t('chat.t_stats_cached'), AppUtils.human(stats.tokens_cached))]
+                : []
+            )}
+          {hasAnswer &&
+            section(
+              <ChatBubbleOutline sx={ICON_SX} />,
+              t('chat.t_stats_answer'),
+              AppUtils.human(stats.tokens_output),
+              hasThinking
+                ? [
+                    subRow(
+                      'thinking',
+                      t('chat.t_stats_thinking'),
+                      AppUtils.human(stats.tokens_thinking)
+                    ),
+                  ]
+                : []
+            )}
+          {hasSpeed && (
+            <Stack direction={'row'} spacing={1} alignItems={'center'}>
+              <Speed sx={ICON_SX} />
+              <Typography variant={'caption'} color={'text.secondary'}>
+                {t('chat.t_stats_speed')}
+              </Typography>
+              <Typography variant={'caption'} sx={{ ml: 'auto' }}>
+                {AppUtils.human(stats.tokens_per_second)} t/s
+              </Typography>
+            </Stack>
           )}
-          {section(
-            <ChatBubbleOutline sx={ICON_SX} />,
-            t('chat.t_stats_answer'),
-            AppUtils.human(stats.tokens_answer),
-            [subRow('thinking', t('chat.t_stats_thinking'), AppUtils.human(stats.tokens_thinking))]
-          )}
-          <Stack direction={'row'} spacing={1} alignItems={'center'}>
-            <Speed sx={ICON_SX} />
-            <Typography variant={'caption'} color={'text.secondary'}>
-              {t('chat.t_stats_speed')}
-            </Typography>
-            <Typography variant={'caption'} sx={{ ml: 'auto' }}>
-              {AppUtils.human(stats.tokens_per_second)} t/s
-            </Typography>
-          </Stack>
           <Stack direction={'row'} spacing={1} alignItems={'center'}>
             <Forum sx={ICON_SX} />
             <Typography variant={'caption'} color={'text.secondary'}>
@@ -135,23 +145,25 @@ export function StatsView(props) {
               {AppUtils.humanBytes(stats.attachments_bytes)}
             </Typography>
           </Stack>
-          <Stack
-            direction={'row'}
-            spacing={1}
-            alignItems={'center'}
-            sx={{ pt: 1, borderTop: '1px solid', borderColor: 'divider' }}
-          >
-            <Typography variant={'caption'} color={'text.secondary'} noWrap>
-              {[
-                t('chat.t_stats_summary'),
-                t('chat.t_stats_compress'),
-                t('chat.t_stats_translate'),
-              ].join(', ')}
-            </Typography>
-            <Typography variant={'caption'} sx={{ ml: 'auto' }}>
-              {AppUtils.human(artifacts)}
-            </Typography>
-          </Stack>
+          {artifacts > 0 && (
+            <Stack
+              direction={'row'}
+              spacing={1}
+              alignItems={'center'}
+              sx={{ pt: 1, borderTop: '1px solid', borderColor: 'divider' }}
+            >
+              <Typography variant={'caption'} color={'text.secondary'} noWrap>
+                {[
+                  t('chat.t_stats_summary'),
+                  t('chat.t_stats_compress'),
+                  t('chat.t_stats_translate'),
+                ].join(', ')}
+              </Typography>
+              <Typography variant={'caption'} sx={{ ml: 'auto' }}>
+                {AppUtils.human(artifacts)}
+              </Typography>
+            </Stack>
+          )}
         </Stack>
       }
     >
@@ -170,7 +182,7 @@ export function StatsView(props) {
         {hasAnswer && (
           <Box component={'span'} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
             <ArrowUpward sx={COMPACT_ICON_SX} />
-            {AppUtils.human(stats.tokens_answer)}
+            {AppUtils.human(stats.tokens_output)}
           </Box>
         )}
       </Typography>
@@ -181,13 +193,13 @@ export function StatsView(props) {
 StatsView.propTypes = {
   // the chat usage stats from Rust: the breakdown and the speed
   stats: PropTypes.shape({
-    tokens_answer: PropTypes.number,
+    tokens_output: PropTypes.number,
     tokens_thinking: PropTypes.number,
     tokens_translate: PropTypes.number,
     tokens_summary: PropTypes.number,
     tokens_compress: PropTypes.number,
     tokens_input: PropTypes.number,
-    tokens_input_breakdown: PropTypes.arrayOf(PropTypes.number),
+    tokens_cached: PropTypes.number,
     tokens_per_second: PropTypes.number,
     messages: PropTypes.number,
     attachments_bytes: PropTypes.number,

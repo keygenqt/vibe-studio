@@ -76,6 +76,7 @@ pub fn run() {
             commands::delete_provider,
             commands::get_provider_models,
             commands::get_provider_model,
+            commands::get_model_defaults,
             commands::save_provider_model,
             commands::save_provider_models,
             commands::get_groups_chat,

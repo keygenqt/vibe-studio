@@ -11,6 +11,7 @@
 use anyhow::Result;
 
 use crate::ProviderTypeData;
+use crate::StreamStatsData;
 use crate::call_prompt;
 
 const SUMMARY_TEMPERATURE: f64 = 0.7;
@@ -22,7 +23,8 @@ const SUMMARY_NUM_PREDICT: i32 = 8192;
 // fewer words; the language follows the text itself
 const SUMMARY_PROMPT: &str = "Compress the text: same meaning, fewer words. Keep all key facts and the question if there is one. Do not answer, do not add anything. Be brief: at most 500 characters. Reply in the language of the text with the compressed text only. Do not use markdown or any other formatting, plain text only. The text:\n\n{text}";
 
-/// Summarizes one model answer; returns the trimmed summary.
+/// Summarizes one model answer; returns the trimmed summary with the
+/// provider-reported token facts.
 pub(crate) async fn call(
     provider: ProviderTypeData,
     host: &str,
@@ -30,8 +32,8 @@ pub(crate) async fn call(
     project: Option<&str>,
     model: &str,
     text: &str,
-) -> Result<String> {
-    let summary = call_prompt(
+) -> Result<(String, StreamStatsData)> {
+    let (summary, stats) = call_prompt(
         provider,
         host,
         api_key,
@@ -48,5 +50,5 @@ pub(crate) async fn call(
     )
     .await?;
     let summary = summary.trim().lines().next().unwrap_or("").trim();
-    Ok(summary.to_owned())
+    Ok((summary.to_owned(), stats))
 }

@@ -39,7 +39,7 @@ pub(crate) async fn call(
     let prompt = TITLE_PROMPT
         .replace("{language}", language)
         .replace("{previous}", previous);
-    let name = call_prompt(
+    let (name, _) = call_prompt(
         provider,
         host,
         api_key,

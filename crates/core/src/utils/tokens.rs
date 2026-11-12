@@ -1,10 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['misc']
-// INFO: Token counting for the store and the cancel token registries.
+// INFO: The cancel token registries of the running generations.
 
-//! Token counting for the store's `i32` columns and the cancel
-//! token registries of the running generations.
+//! The cancel token registries of the running generations.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -12,13 +11,6 @@ use std::sync::Mutex;
 use std::sync::OnceLock;
 
 use studio_cluster::CancelToken;
-use studio_cluster::count_tokens;
-
-/// Counts the tokens of the text as the store keeps it: the store's
-/// token columns are `i32`.
-pub(crate) fn count(text: &str) -> i32 {
-    count_tokens(text) as i32
-}
 
 /// The active stream tokens by the provider+model pair. Abort
 /// handles only: the truth about the running streams lives in the

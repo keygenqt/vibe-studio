@@ -128,6 +128,8 @@ impl ChatShowType {
 /// A message of a chat. A user message carries no sender; a model
 /// answer carries the provider kind and the model name it ran on.
 /// `id` is `None` until the row is stored — SQLite owns the id.
+/// Token columns carry only the provider-measured facts; a column
+/// the provider did not report stays `NULL`.
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ChatHistoryData {
@@ -158,24 +160,27 @@ pub struct ChatHistoryData {
     /// The file attachments of a user message; the metadata only —
     /// the bytes never leave the store.
     pub attachments: Vec<ChatAttachmentData>,
-    /// Estimated tokens of the text; `None` = not counted.
-    pub tokens_answer: Option<i32>,
-    /// Estimated tokens of the reasoning; `None` = none or not counted.
+    /// Provider-reported output tokens of the answer (thinking
+    /// included for Ollama); `None` = not reported or the call did
+    /// not complete.
+    pub tokens_output: Option<i32>,
+    /// Provider-reported reasoning tokens; `None` = the provider
+    /// does not report them (Ollama never does).
     pub tokens_thinking: Option<i32>,
-    /// Estimated tokens of the translation; `None` = not generated yet.
+    /// Provider-reported tokens of the translation; `None` = not generated yet.
     pub tokens_translate: Option<i32>,
-    /// Estimated tokens of the summary; `None` = not generated yet.
+    /// Provider-reported tokens of the summary; `None` = not generated yet.
     pub tokens_summary: Option<i32>,
-    /// Estimated tokens of the compressed base; `None` = not compressed.
+    /// Provider-reported tokens of the compress call — the size of
+    /// the base; `None` = not compressed.
     pub tokens_compress: Option<i32>,
-    /// Estimated tokens of the prompt's user part of the call that
-    /// produced this answer; `None` = not counted.
-    pub tokens_user: Option<i32>,
-    /// Estimated tokens of that call's system prompt; `None` = not
-    /// counted.
-    pub tokens_system: Option<i32>,
-    /// Estimated tokens of that call's history; `None` = not counted.
-    pub tokens_history: Option<i32>,
+    /// Provider-reported uncached input tokens of the call that
+    /// produced this answer — the context size as measured; `None` =
+    /// not reported or the call did not complete.
+    pub tokens_input: Option<i32>,
+    /// Provider-reported cache-hit tokens of that call; `None` = not
+    /// reported.
+    pub tokens_cached: Option<i32>,
     /// Duration of the answer text generation in milliseconds; `None`
     /// for user messages and failed answers.
     pub tokens_gen_ms: Option<i32>,
@@ -200,14 +205,13 @@ diesel::table! {
         thinking -> Nullable<Text>,
         translate -> Nullable<Text>,
         summary -> Nullable<Text>,
-        tokens_answer -> Nullable<Integer>,
+        tokens_output -> Nullable<Integer>,
         tokens_thinking -> Nullable<Integer>,
         tokens_translate -> Nullable<Integer>,
         tokens_summary -> Nullable<Integer>,
         tokens_compress -> Nullable<Integer>,
-        tokens_user -> Nullable<Integer>,
-        tokens_system -> Nullable<Integer>,
-        tokens_history -> Nullable<Integer>,
+        tokens_input -> Nullable<Integer>,
+        tokens_cached -> Nullable<Integer>,
         tokens_gen_ms -> Nullable<Integer>,
         created_at -> Timestamp,
         collapsed -> Bool,
@@ -230,14 +234,13 @@ struct ChatHistoryRow {
     thinking: Option<String>,
     translate: Option<String>,
     summary: Option<String>,
-    tokens_answer: Option<i32>,
+    tokens_output: Option<i32>,
     tokens_thinking: Option<i32>,
     tokens_translate: Option<i32>,
     tokens_summary: Option<i32>,
     tokens_compress: Option<i32>,
-    tokens_user: Option<i32>,
-    tokens_system: Option<i32>,
-    tokens_history: Option<i32>,
+    tokens_input: Option<i32>,
+    tokens_cached: Option<i32>,
     tokens_gen_ms: Option<i32>,
     created_at: NaiveDateTime,
     collapsed: bool,
@@ -258,14 +261,13 @@ impl From<ChatHistoryRow> for ChatHistoryData {
             translate: row.translate,
             summary: row.summary,
             attachments: Vec::new(),
-            tokens_answer: row.tokens_answer,
+            tokens_output: row.tokens_output,
             tokens_thinking: row.tokens_thinking,
             tokens_translate: row.tokens_translate,
             tokens_summary: row.tokens_summary,
             tokens_compress: row.tokens_compress,
-            tokens_user: row.tokens_user,
-            tokens_system: row.tokens_system,
-            tokens_history: row.tokens_history,
+            tokens_input: row.tokens_input,
+            tokens_cached: row.tokens_cached,
             tokens_gen_ms: row.tokens_gen_ms,
             created_at: row.created_at,
             collapsed: row.collapsed,
@@ -273,8 +275,9 @@ impl From<ChatHistoryRow> for ChatHistoryData {
     }
 }
 
-/// Insert values: the id and the timestamp are owned by SQLite.
-/// `translate` is never written — the field waits for its feature.
+/// Insert values: the id and the timestamp are owned by SQLite; the
+/// token facts land only with the final update. `translate` is never
+/// written — the field waits for its feature.
 #[derive(Debug, Clone, Insertable, AsChangeset)]
 #[diesel(table_name = chat_history)]
 struct ChatHistoryNewData {
@@ -285,7 +288,6 @@ struct ChatHistoryNewData {
     status: String,
     text: String,
     thinking: Option<String>,
-    tokens_answer: i32,
     // the compress token lands with the insert; `None` is skipped by
     // the changeset on the update path
     tokens_compress: Option<i32>,
@@ -321,7 +323,7 @@ impl Store {
 
     /// Appends a message; returns the stored row. A model answer is
     /// born with `ChatStatus::Progress` and grows in place until the
-    /// final status.
+    /// final status; token facts land only with the final update.
     pub(crate) fn add_chat_history(
         &self,
         chat_id: i32,
@@ -331,7 +333,6 @@ impl Store {
         status: ChatStatus,
         text: &str,
         thinking: Option<&str>,
-        tokens_answer: i32,
     ) -> Result<ChatHistoryData> {
         let row: ChatHistoryRow = self.save(
             chat_history::table,
@@ -344,7 +345,6 @@ impl Store {
                 status: status.as_str().to_string(),
                 text: text.to_string(),
                 thinking: thinking.map(String::from),
-                tokens_answer,
                 tokens_compress: None,
                 // the user prompt is born Complete — collapsed by default
                 collapsed: message_type == ChatMessageType::User,
@@ -359,7 +359,6 @@ impl Store {
         &self,
         chat_id: i32,
         text: &str,
-        tokens_answer: i32,
         attachments: &[ChatAttachmentNewData],
     ) -> Result<ChatHistoryData> {
         let mut conn = self.lock();
@@ -373,7 +372,6 @@ impl Store {
                     status: ChatStatus::Complete.as_str().to_string(),
                     text: text.to_string(),
                     thinking: None,
-                    tokens_answer,
                     tokens_compress: None,
                     // the user prompt is born Complete — collapsed by default
                     collapsed: true,
@@ -391,13 +389,14 @@ impl Store {
     }
 
     /// Inserts the compressed base the session continues from; the
-    /// message is born final with its reasoning and counted tokens.
+    /// message is born final with its reasoning and the provider
+    /// token facts of the compress call.
     pub(crate) fn add_chat_history_compress(
         &self,
         chat_id: i32,
         text: &str,
         thinking: Option<&str>,
-        tokens_compress: i32,
+        tokens_compress: Option<i32>,
     ) -> Result<ChatHistoryData> {
         let row: ChatHistoryRow = self.save(
             chat_history::table,
@@ -410,28 +409,26 @@ impl Store {
                 status: ChatStatus::Complete.as_str().to_string(),
                 text: text.to_string(),
                 thinking: thinking.map(String::from),
-                tokens_answer: 0,
-                tokens_compress: Some(tokens_compress),
+                tokens_compress,
                 collapsed: false,
             },
         )?;
         Ok(ChatHistoryData::from(row))
     }
 
-    /// Updates a growing message in place: the stream text/thinking,
-    /// the counted answer and thinking tokens with the generation
-    /// time, and the outcome status. Returns affected rows.
+    /// The final write of a finished run: the stream text/thinking,
+    /// the outcome status and the provider-reported token facts —
+    /// `None` stays `NULL`, nothing is invented. Returns affected rows.
     pub(crate) fn update_chat_history(
         &self,
         id: i32,
         text: &str,
         thinking: Option<&str>,
         status: ChatStatus,
-        tokens_answer: i32,
+        tokens_output: Option<i32>,
         tokens_thinking: Option<i32>,
-        tokens_user: Option<i32>,
-        tokens_system: Option<i32>,
-        tokens_history: Option<i32>,
+        tokens_input: Option<i32>,
+        tokens_cached: Option<i32>,
         tokens_gen_ms: Option<i32>,
     ) -> Result<usize> {
         let affected = diesel::update(chat_history::table.find(id))
@@ -439,25 +436,25 @@ impl Store {
                 chat_history::text.eq(text.to_string()),
                 chat_history::thinking.eq(thinking.map(String::from)),
                 chat_history::status.eq(status.as_str().to_string()),
-                chat_history::tokens_answer.eq(tokens_answer),
+                chat_history::tokens_output.eq(tokens_output),
                 chat_history::tokens_thinking.eq(tokens_thinking),
-                chat_history::tokens_user.eq(tokens_user),
-                chat_history::tokens_system.eq(tokens_system),
-                chat_history::tokens_history.eq(tokens_history),
+                chat_history::tokens_input.eq(tokens_input),
+                chat_history::tokens_cached.eq(tokens_cached),
                 chat_history::tokens_gen_ms.eq(tokens_gen_ms),
             ))
             .execute(&mut *self.lock())?;
         Ok(affected)
     }
 
-    /// Writes the message translation with its counted tokens — the
-    /// final write of a finished run. The column is a cache of the
-    /// completed artifact: partial texts never land here.
+    /// Writes the message translation with the provider-reported
+    /// tokens — the final write of a finished run; `None` stays
+    /// `NULL`. The column is a cache of the completed artifact:
+    /// partial texts never land here.
     pub(crate) fn update_chat_history_translate(
         &self,
         id: i32,
         translate: &str,
-        tokens_translate: i32,
+        tokens_translate: Option<i32>,
     ) -> Result<usize> {
         let affected = diesel::update(chat_history::table.find(id))
             .set((
@@ -486,10 +483,15 @@ impl Store {
         Ok(affected)
     }
 
-    /// Writes the message summary with its counted tokens — the final
-    /// write of a finished run. The column is a cache of the
-    /// completed artifact.
-    pub(crate) fn update_chat_history_summary(&self, id: i32, summary: &str, tokens_summary: i32) -> Result<usize> {
+    /// Writes the message summary with the provider-reported tokens —
+    /// the final write of a finished run; `None` stays `NULL`. The
+    /// column is a cache of the completed artifact.
+    pub(crate) fn update_chat_history_summary(
+        &self,
+        id: i32,
+        summary: &str,
+        tokens_summary: Option<i32>,
+    ) -> Result<usize> {
         let affected = diesel::update(chat_history::table.find(id))
             .set((
                 chat_history::summary.eq(summary.to_string()),

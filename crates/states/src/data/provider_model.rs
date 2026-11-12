@@ -9,17 +9,10 @@ use diesel::prelude::*;
 
 use crate::Store;
 
-/// Defaults for a missing row.
-const DEFAULT_SYSTEM_PROMPT: &str = "";
-const DEFAULT_TEMPERATURE: f64 = 1.0;
-const DEFAULT_SEED: i64 = 42;
-const DEFAULT_NUM_CTX: i32 = 32768;
-const DEFAULT_NUM_PREDICT: i32 = 16384;
-
 /// A model of a provider catalog. `id` is `None` until the row is
-/// stored — SQLite owns the id. Config `None` means the user has not
-/// touched it yet.
-#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
+/// stored — SQLite owns the id. The config is filled at insert from
+/// the defaults catalog — the stored row always carries it.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ProviderModelData {
     /// Row id; `None` = not stored yet.
     pub id: Option<i32>,
@@ -34,18 +27,26 @@ pub struct ProviderModelData {
     /// Sync-owned capability matrix as a JSON document of the
     /// cluster's shape; `None` = the host said nothing.
     pub capabilities: Option<serde_json::Value>,
-    /// User-owned display title; `None` = the UI derives it from `name`.
-    pub display_name: Option<String>,
-    /// User-owned system prompt; `None` = not set yet, resolves to empty.
-    pub system_prompt: Option<String>,
-    /// User-owned sampling temperature; `None` = not set yet, resolves to 0.7.
-    pub temperature: Option<f64>,
-    /// User-owned sampling seed; `None` = not set yet, resolves to 42.
-    pub seed: Option<i64>,
-    /// User-owned context window, tokens; `None` = not set yet, resolves to 4096.
-    pub num_ctx: Option<i32>,
-    /// User-owned max tokens per generation; `None` = not set yet, resolves to 2048.
-    pub num_predict: Option<i32>,
+    /// User-owned display title; empty = the UI derives it from `name`.
+    pub display_name: String,
+    /// User-owned system prompt; empty = not set.
+    pub system_prompt: String,
+    /// Sampling temperature.
+    pub temperature: f64,
+    /// Sampling seed.
+    pub seed: i64,
+    /// Top-p nucleus sampling cutoff.
+    pub top_p: f64,
+    /// Top-k sampling cutoff.
+    pub top_k: i32,
+    /// Min-p sampling cutoff.
+    pub min_p: f64,
+    /// Stop sequences; empty = none.
+    pub stop: Vec<String>,
+    /// Context window, tokens.
+    pub num_ctx: i32,
+    /// Max tokens per generation.
+    pub num_predict: i32,
 }
 
 diesel::table! {
@@ -56,12 +57,16 @@ diesel::table! {
         params -> Nullable<Text>,
         context_length -> Nullable<BigInt>,
         capabilities -> Nullable<Text>,
-        display_name -> Nullable<Text>,
-        system_prompt -> Nullable<Text>,
-        temperature -> Nullable<Double>,
-        seed -> Nullable<BigInt>,
-        num_ctx -> Nullable<Integer>,
-        num_predict -> Nullable<Integer>,
+        display_name -> Text,
+        system_prompt -> Text,
+        temperature -> Double,
+        seed -> BigInt,
+        top_p -> Double,
+        top_k -> Integer,
+        min_p -> Double,
+        stop -> Text,
+        num_ctx -> Integer,
+        num_predict -> Integer,
     }
 }
 
@@ -76,12 +81,16 @@ struct ProviderModelRow {
     params: Option<String>,
     context_length: Option<i64>,
     capabilities: Option<String>,
-    display_name: Option<String>,
-    system_prompt: Option<String>,
-    temperature: Option<f64>,
-    seed: Option<i64>,
-    num_ctx: Option<i32>,
-    num_predict: Option<i32>,
+    display_name: String,
+    system_prompt: String,
+    temperature: f64,
+    seed: i64,
+    top_p: f64,
+    top_k: i32,
+    min_p: f64,
+    stop: String,
+    num_ctx: i32,
+    num_predict: i32,
 }
 
 /// Insert or update values: the id is owned by SQLite.
@@ -93,17 +102,20 @@ struct ProviderModelNewData {
     params: Option<String>,
     context_length: Option<i64>,
     capabilities: Option<String>,
-    display_name: Option<String>,
-    system_prompt: Option<String>,
-    temperature: Option<f64>,
-    seed: Option<i64>,
-    num_ctx: Option<i32>,
-    num_predict: Option<i32>,
+    display_name: String,
+    system_prompt: String,
+    temperature: f64,
+    seed: i64,
+    top_p: f64,
+    top_k: i32,
+    min_p: f64,
+    stop: String,
+    num_ctx: i32,
+    num_predict: i32,
 }
 
-/// Maps the stored row to the public type: the id becomes `Some`,
-/// untouched config resolves to the model defaults. The single
-/// resolution point — every row leaving this file is full.
+/// Maps the stored row to the public type. The single conversion
+/// point — the stored row is the truth, nothing is resolved here.
 impl From<ProviderModelRow> for ProviderModelData {
     fn from(row: ProviderModelRow) -> Self {
         Self {
@@ -114,16 +126,21 @@ impl From<ProviderModelRow> for ProviderModelData {
             context_length: row.context_length,
             capabilities: row.capabilities.and_then(|json| serde_json::from_str(&json).ok()),
             display_name: row.display_name,
-            system_prompt: row.system_prompt.or_else(|| Some(DEFAULT_SYSTEM_PROMPT.to_string())),
-            temperature: row.temperature.or(Some(DEFAULT_TEMPERATURE)),
-            seed: row.seed.or(Some(DEFAULT_SEED)),
-            num_ctx: row.num_ctx.or(Some(DEFAULT_NUM_CTX)),
-            num_predict: row.num_predict.or(Some(DEFAULT_NUM_PREDICT)),
+            system_prompt: row.system_prompt,
+            temperature: row.temperature,
+            seed: row.seed,
+            top_p: row.top_p,
+            top_k: row.top_k,
+            min_p: row.min_p,
+            stop: serde_json::from_str(&row.stop).unwrap_or_default(),
+            num_ctx: row.num_ctx,
+            num_predict: row.num_predict,
         }
     }
 }
 
-/// Drops the id: insert and update values never carry it.
+/// Drops the id and serializes the list-typed fields: insert and
+/// update values never carry the id.
 impl From<&ProviderModelData> for ProviderModelNewData {
     fn from(data: &ProviderModelData) -> Self {
         ProviderModelNewData {
@@ -139,6 +156,10 @@ impl From<&ProviderModelData> for ProviderModelNewData {
             system_prompt: data.system_prompt.clone(),
             temperature: data.temperature,
             seed: data.seed,
+            top_p: data.top_p,
+            top_k: data.top_k,
+            min_p: data.min_p,
+            stop: serde_json::to_string(&data.stop).unwrap_or_else(|_| String::from("[]")),
             num_ctx: data.num_ctx,
             num_predict: data.num_predict,
         }
@@ -146,9 +167,8 @@ impl From<&ProviderModelData> for ProviderModelNewData {
 }
 
 impl Store {
-    /// All models, optionally of one provider — untouched config
-    /// resolved to the model defaults. `None` takes the whole table:
-    /// the read behind the providers block state.
+    /// All models, optionally of one provider. `None` takes the whole
+    /// table: the read behind the providers block state.
     pub(crate) fn get_provider_models(&self, provider_id: Option<i32>) -> Result<Vec<ProviderModelData>> {
         let mut conn = self.lock();
         let rows: Vec<ProviderModelRow> = match provider_id {
@@ -160,8 +180,7 @@ impl Store {
         Ok(rows.into_iter().map(ProviderModelData::from).collect())
     }
 
-    /// Loads one model by id, untouched config resolved to the
-    /// model defaults.
+    /// Loads one model by id.
     pub(crate) fn get_provider_model(&self, id: i32) -> Result<ProviderModelData> {
         self.find_by_id::<_, ProviderModelRow>(models::table, id)?
             .map(ProviderModelData::from)
@@ -169,43 +188,32 @@ impl Store {
     }
 
     /// Inserts a new model (`id = None`) or updates the one with the
-    /// given id; returns the stored row, untouched config resolved to
-    /// the model defaults.
+    /// given id; returns the stored row.
     pub(crate) fn save_provider_model(&self, model: &ProviderModelData) -> Result<ProviderModelData> {
         let row: ProviderModelRow = self.save(models::table, model.id, ProviderModelNewData::from(model))?;
         Ok(ProviderModelData::from(row))
     }
 
-    /// Persists the selection: upserts the sync-owned facts of the
-    /// given rows — the sync never carries config columns, so the
-    /// user-owned config survives an update and a new row starts
-    /// with NULL config; models of the provider outside the given
-    /// set are removed. Returns the fresh list. One transaction: a
-    /// partial sync is worse than none.
+    /// Persists the full model set of the provider: rows with ids
+    /// update, `None` ids insert, the rest of the table is pruned.
+    /// The caller owns the merge — this is a dumb write.
+    /// Returns the fresh list.
     pub(crate) fn save_provider_models(
         &self,
         provider_id: i32,
         models: &[ProviderModelData],
     ) -> Result<Vec<ProviderModelData>> {
-        // raw id/name pairs: routes insert vs update by name, none of
-        // the resolution here — the sync never carries config
-        let stored: Vec<(i32, String)> = {
+        let stored_ids: Vec<i32> = {
             let mut conn = self.lock();
             models::table
-                .select((models::id, models::name))
+                .select(models::id)
                 .filter(models::provider_id.eq(provider_id))
                 .load(&mut *conn)?
         };
-        let stored_ids: Vec<i32> = stored.iter().map(|(id, _)| *id).collect();
-
         let rows: Vec<(Option<i32>, ProviderModelNewData)> = models
             .iter()
-            .map(|model| {
-                let id = stored.iter().find(|(_, name)| name == &model.name).map(|(id, _)| *id);
-                (id, ProviderModelNewData::from(model))
-            })
+            .map(|model| (model.id, ProviderModelNewData::from(model)))
             .collect();
-
         self.sync(models::table, &stored_ids, rows)?;
         self.get_provider_models(Some(provider_id))
     }

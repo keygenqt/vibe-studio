@@ -67,9 +67,7 @@ export const enLocalization = {
       t_stats_translate: 'Translation',
       t_stats_attachments: 'Attachments',
       t_stats_input: 'Input',
-      t_stats_input_user: 'Message',
-      t_stats_input_system: 'System',
-      t_stats_input_history: 'History',
+      t_stats_cached: 'From cache',
     },
     chat_empty: {
       t_no_chat: 'Select a chat',

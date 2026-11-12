@@ -15,6 +15,7 @@ use studio_core::ChatShowType;
 use studio_core::ChatStreamEvent;
 use studio_core::GroupChatData;
 use studio_core::GroupChatHistoryData;
+use studio_core::ModelDefaultsData;
 use studio_core::ModelInfoData;
 use studio_core::ProviderData;
 use studio_core::ProviderInfoData;
@@ -156,6 +157,13 @@ pub fn get_provider_models(store: State<Store>, provider_id: Option<i32>) -> Vec
 #[tauri::command]
 pub fn get_provider_model(store: State<Store>, id: i32) -> Result<ProviderModelData, String> {
     studio_core::get_provider_model(&store, id).map_err(|e| e.to_string())
+}
+
+/// The parameter spec of the model name: the form builds its bounds
+/// from it.
+#[tauri::command]
+pub fn get_model_defaults(name: String) -> ModelDefaultsData {
+    studio_core::get_model_defaults(&name)
 }
 
 /// Validates and persists the model row. Emits and returns the

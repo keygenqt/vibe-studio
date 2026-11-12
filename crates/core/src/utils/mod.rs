@@ -9,7 +9,7 @@
 //!
 //! - `fence` — the open code fence balancing for the stream snapshots.
 //! - `prompt` — the wire role of a stored message and the prompt language name.
-//! - `tokens` — token counting for the store and the cancel token registries.
+//! - `tokens` — the cancel token registries of the running generations.
 
 mod fence;
 mod prompt;
@@ -21,7 +21,6 @@ pub(crate) use prompt::locale_language;
 pub(crate) use tokens::cancel_stream_token;
 pub(crate) use tokens::cancel_summary_token;
 pub(crate) use tokens::cancel_translate_token;
-pub(crate) use tokens::count;
 pub(crate) use tokens::drop_summary_token;
 pub(crate) use tokens::drop_translate_token;
 pub(crate) use tokens::stream_token;

@@ -99,19 +99,15 @@ export function ChatPage() {
     (history ?? []).find(item => item.message_type === 'compress' && item.status === 'progress') ??
     null
 
-  // the context limit plate: the estimated prompt tokens of the
-  // complete messages against the limit — the plate paints before
-  // the first message that crosses it
+  // the context limit plate: the measured input of each answer — the
+  // plate paints after the first answer whose call crossed the limit
   const contextLimitId = React.useMemo(() => {
     if (!history || !settings.chat_context_limit) return null
     const limit = settings.chat_context_limit * 1000
-    let sum = 0
-    for (const message of history) {
-      if (message.status !== 'complete') continue
-      sum += (message.tokens_answer ?? 0) + (message.tokens_compress ?? 0)
-      if (sum > limit) return message.id
-    }
-    return null
+    const crossed = history.find(
+      message => message.message_type === 'assistant' && message.tokens_input > limit
+    )
+    return crossed?.id ?? null
   }, [history, settings.chat_context_limit])
 
   // the chat opens at the bottom: this many last messages render
