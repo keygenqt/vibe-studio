@@ -47,6 +47,14 @@ pub struct ProviderModelData {
     pub num_ctx: i32,
     /// Max tokens per generation.
     pub num_predict: i32,
+    /// Reasoning depth: "low" | "high"; `None` = not sent, the
+    /// provider default applies.
+    pub effort: Option<String>,
+    /// Cap on reasoning tokens (GigaChat); `None` = not sent.
+    pub reasoning_max_tokens: Option<i32>,
+    /// Think toggle (Ollama); `None` = not sent, the server default
+    /// applies.
+    pub think: Option<bool>,
 }
 
 diesel::table! {
@@ -67,6 +75,9 @@ diesel::table! {
         stop -> Text,
         num_ctx -> Integer,
         num_predict -> Integer,
+        effort -> Nullable<Text>,
+        reasoning_max_tokens -> Nullable<Integer>,
+        think -> Nullable<Bool>,
     }
 }
 
@@ -91,6 +102,9 @@ struct ProviderModelRow {
     stop: String,
     num_ctx: i32,
     num_predict: i32,
+    effort: Option<String>,
+    reasoning_max_tokens: Option<i32>,
+    think: Option<bool>,
 }
 
 /// Insert or update values: the id is owned by SQLite.
@@ -112,6 +126,9 @@ struct ProviderModelNewData {
     stop: String,
     num_ctx: i32,
     num_predict: i32,
+    effort: Option<String>,
+    reasoning_max_tokens: Option<i32>,
+    think: Option<bool>,
 }
 
 /// Maps the stored row to the public type. The single conversion
@@ -135,6 +152,9 @@ impl From<ProviderModelRow> for ProviderModelData {
             stop: serde_json::from_str(&row.stop).unwrap_or_default(),
             num_ctx: row.num_ctx,
             num_predict: row.num_predict,
+            effort: row.effort,
+            reasoning_max_tokens: row.reasoning_max_tokens,
+            think: row.think,
         }
     }
 }
@@ -162,6 +182,9 @@ impl From<&ProviderModelData> for ProviderModelNewData {
             stop: serde_json::to_string(&data.stop).unwrap_or_else(|_| String::from("[]")),
             num_ctx: data.num_ctx,
             num_predict: data.num_predict,
+            effort: data.effort.clone(),
+            reasoning_max_tokens: data.reasoning_max_tokens,
+            think: data.think,
         }
     }
 }

@@ -152,12 +152,14 @@ pub fn get_provider_model(store: &Store, id: i32) -> Result<ProviderModelData> {
     studio_states::get_provider_model(store, id)
 }
 
-/// The parameter spec of the model name: the defaults a fresh row is
-/// born with and the bounds the form and the save validation enforce.
-/// The exact name match wins, everything else is the base of the
-/// catalog.
-pub fn get_model_defaults(name: &str) -> ModelDefaultsData {
-    defaults::models::resolve(name)
+/// The parameter spec of the model: the defaults a fresh row is born
+/// with and the bounds the form and the save validation enforce. The
+/// kind is not trusted: must be in the catalog; the exact name match
+/// wins, everything else is the base of the family.
+pub fn get_model_defaults(kind: &str, name: &str) -> Result<ModelDefaultsData> {
+    let provider =
+        studio_cluster::get_provider_by_kind(kind).ok_or_else(|| anyhow::anyhow!("Unknown provider kind: {kind}."))?;
+    Ok(defaults::models::resolve(provider, name))
 }
 
 /// Fetches the live model catalog of a provider host. The kind is not
@@ -193,35 +195,70 @@ pub fn save_provider_model(store: &Store, model: &ProviderModelData) -> Result<P
     if !model.system_prompt.is_empty() && model.system_prompt.trim().is_empty() {
         anyhow::bail!("System prompt must not be blank.");
     }
-    let spec = defaults::models::resolve(&model.name);
+    let provider = studio_states::get_provider(store, stored.provider_id)?;
+    let kind =
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?;
+    let spec = defaults::models::resolve(kind, &model.name);
     let in_range = |value: f64, spec: defaults::models::ModelParamSpec| {
         spec.min.is_none_or(|min| value >= min) && spec.max.is_none_or(|max| value <= max)
     };
-    if !in_range(model.temperature, spec.temperature) {
-        anyhow::bail!("Temperature is out of range.");
-    }
-    if !in_range(model.seed as f64, spec.seed) {
-        anyhow::bail!("Seed is out of range.");
-    }
-    if !in_range(model.top_p, spec.top_p) {
-        anyhow::bail!("Top p is out of range.");
-    }
-    if !in_range(model.top_k as f64, spec.top_k) {
-        anyhow::bail!("Top k is out of range.");
-    }
-    if !in_range(model.min_p, spec.min_p) {
-        anyhow::bail!("Min p is out of range.");
-    }
-    if !in_range(model.num_ctx as f64, spec.num_ctx) {
-        anyhow::bail!("Num ctx is out of range.");
-    }
-    if let Some(limit) = stored.context_length {
-        if model.num_ctx > limit as i32 {
-            anyhow::bail!("Num ctx must not exceed the model context window.");
+    if let Some(spec) = spec.temperature {
+        if !in_range(model.temperature, spec) {
+            anyhow::bail!("Temperature is out of range.");
         }
     }
-    if !in_range(model.num_predict as f64, spec.num_predict) {
-        anyhow::bail!("Num predict is out of range.");
+    if let Some(spec) = spec.seed {
+        if !in_range(model.seed as f64, spec) {
+            anyhow::bail!("Seed is out of range.");
+        }
+    }
+    if let Some(spec) = spec.top_p {
+        if !in_range(model.top_p, spec) {
+            anyhow::bail!("Top p is out of range.");
+        }
+    }
+    if let Some(spec) = spec.top_k {
+        if !in_range(model.top_k as f64, spec) {
+            anyhow::bail!("Top k is out of range.");
+        }
+    }
+    if let Some(spec) = spec.min_p {
+        if !in_range(model.min_p, spec) {
+            anyhow::bail!("Min p is out of range.");
+        }
+    }
+    if let Some(spec) = spec.num_ctx {
+        if !in_range(model.num_ctx as f64, spec) {
+            anyhow::bail!("Num ctx is out of range.");
+        }
+        if let Some(limit) = stored.context_length {
+            if model.num_ctx > limit as i32 {
+                anyhow::bail!("Num ctx must not exceed the model context window.");
+            }
+        }
+    }
+    if let Some(spec) = spec.num_predict {
+        if !in_range(model.num_predict as f64, spec) {
+            anyhow::bail!("Num predict is out of range.");
+        }
+    }
+    // the effort value must be one of the model's catalog steps; a
+    // model without a catalog entry keeps the universal low/high
+    if let Some(value) = &model.effort {
+        let known = match &spec.effort {
+            Some(spec) => spec.values.iter().any(|item| item == value),
+            None => matches!(value.as_str(), "low" | "high"),
+        };
+        if !known {
+            anyhow::bail!("Unknown effort value.");
+        }
+    }
+    if let Some(spec) = spec.reasoning_max_tokens {
+        if let Some(value) = model.reasoning_max_tokens {
+            if !in_range(value as f64, spec) {
+                anyhow::bail!("Reasoning max tokens is out of range.");
+            }
+        }
     }
     studio_states::save_provider_model(store, model)
 }
@@ -240,6 +277,8 @@ pub async fn save_provider_models(
     checked: Vec<String>,
 ) -> Result<Vec<ProviderModelData>> {
     let provider = studio_states::get_provider(store, provider_id)?;
+    let kind =
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?;
     let models = crate::get_provider_models_by_type(
         &provider.provider,
         &provider.host,
@@ -261,7 +300,16 @@ pub async fn save_provider_models(
             },
             // a fresh row is born with its catalog defaults
             None => {
-                let spec = defaults::models::resolve(&model.name);
+                let spec = defaults::models::resolve(kind, &model.name);
+                // think is born on for a reasoning-capable Ollama
+                // model: the UI carries only the on/off choice
+                let think = if matches!(kind, studio_cluster::ProviderTypeData::Ollama)
+                    && matches!(model.capabilities.effort, Some(true))
+                {
+                    Some(true)
+                } else {
+                    None
+                };
                 ProviderModelData {
                     id: None,
                     provider_id,
@@ -271,14 +319,20 @@ pub async fn save_provider_models(
                     capabilities: serde_json::to_value(model.capabilities).ok(),
                     display_name: String::new(),
                     system_prompt: String::new(),
-                    temperature: spec.temperature.default,
-                    seed: spec.seed.default as i64,
-                    top_p: spec.top_p.default,
-                    top_k: spec.top_k.default as i32,
-                    min_p: spec.min_p.default,
+                    temperature: spec.temperature.map(|spec| spec.default).unwrap_or(0.0),
+                    seed: spec.seed.map(|spec| spec.default).unwrap_or(0.0) as i64,
+                    top_p: spec.top_p.map(|spec| spec.default).unwrap_or(0.0),
+                    top_k: spec.top_k.map(|spec| spec.default as i32).unwrap_or(0),
+                    min_p: spec.min_p.map(|spec| spec.default).unwrap_or(0.0),
                     stop: Vec::new(),
-                    num_ctx: spec.num_ctx.default as i32,
-                    num_predict: spec.num_predict.default as i32,
+                    num_ctx: spec.num_ctx.map(|spec| spec.default as i32).unwrap_or(0),
+                    num_predict: spec.num_predict.map(|spec| spec.default as i32).unwrap_or(0),
+                    // effort is born with the catalog default of the
+                    // model; reasoning_max_tokens stays untouched — the
+                    // provider defaults apply until the user picks
+                    effort: spec.effort.as_ref().map(|spec| spec.default.clone()),
+                    reasoning_max_tokens: spec.reasoning_max_tokens.map(|spec| spec.default as i32),
+                    think,
                 }
             }
         })
@@ -409,12 +463,15 @@ pub async fn chat_regenerate_name(store: &Store, chat_id: i32) -> Result<ChatDat
         }
     };
     let language = utils::locale_language(&settings.appearance_locale);
+    let kind =
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?;
     let name = studio_cluster::call_chat_name(
-        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?,
+        kind,
         &provider.host,
         provider.api_key.as_deref(),
         provider.project.as_deref(),
         &model.name,
+        studio_cluster::CallParamsData::from(defaults::models::resolve(kind, &model.name)),
         history,
         language,
         &chat.name,
@@ -521,6 +578,7 @@ pub async fn chat_send_message(
             target.api_key.as_deref(),
             target.project.as_deref(),
             &target.model,
+            studio_cluster::CallParamsData::from(defaults::models::resolve(target.kind, &target.model)),
             &target.language,
             text,
         )
@@ -720,10 +778,19 @@ async fn chat_send_stream(
         provider.api_key.as_deref(),
         provider.project.as_deref(),
         &model.name,
-        model.temperature,
-        model.seed,
-        model.num_ctx,
-        model.num_predict,
+        studio_cluster::CallParamsData {
+            temperature: Some(model.temperature),
+            seed: Some(model.seed),
+            top_p: Some(model.top_p),
+            top_k: Some(model.top_k),
+            min_p: Some(model.min_p),
+            stop: Some(model.stop.clone()),
+            num_ctx: Some(model.num_ctx),
+            num_predict: Some(model.num_predict),
+            effort: model.effort.clone(),
+            reasoning_max_tokens: model.reasoning_max_tokens,
+            think: model.think,
+        },
         if system.is_empty() { None } else { Some(system) },
         images,
         history,
@@ -906,6 +973,7 @@ pub async fn chat_translate_message(
             target.api_key.as_deref(),
             target.project.as_deref(),
             &target.model,
+            studio_cluster::CallParamsData::from(defaults::models::resolve(target.kind, &target.model)),
             &target.language,
             &message.text,
         )
@@ -922,6 +990,7 @@ pub async fn chat_translate_message(
         target.api_key.as_deref(),
         target.project.as_deref(),
         &target.model,
+        studio_cluster::CallParamsData::from(defaults::models::resolve(target.kind, &target.model)),
         &target.language,
         &message.text,
         cancel.as_ref(),
@@ -1051,12 +1120,15 @@ pub async fn chat_summarize_message(store: &Store, chat_id: i32, message_id: i32
         .expect("summary tokens poisoned")
         .insert(message_id, cancel.clone());
 
+    let kind =
+        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?;
     let result = studio_cluster::call_summary(
-        studio_cluster::get_provider_by_kind(&provider.provider).ok_or_else(|| anyhow::anyhow!("Unknown provider."))?,
+        kind,
         &provider.host,
         provider.api_key.as_deref(),
         provider.project.as_deref(),
         &model.name,
+        studio_cluster::CallParamsData::from(defaults::models::resolve(kind, &model.name)),
         &message.text,
     )
     .await;
@@ -1174,6 +1246,7 @@ pub async fn chat_compress_message(
         provider.api_key.as_deref(),
         provider.project.as_deref(),
         &model_name,
+        studio_cluster::CallParamsData::from(defaults::models::resolve(kind, &model_name)),
         history,
         cancel.as_ref(),
         {

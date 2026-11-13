@@ -5,11 +5,13 @@
  * INFO: The chat page: the message history and the composer draft.
  */
 import * as React from 'react'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Box, CircularProgress, Stack } from '@mui/material'
+import { Box, Button, CircularProgress, Stack, Tooltip, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import Add from '@mui/icons-material/Add'
+import Psychology from '@mui/icons-material/Psychology'
+import Speed from '@mui/icons-material/Speed'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
 
 import {
@@ -24,9 +26,9 @@ import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
 import { useCoreChat, useCoreGroupsChat, useCoreSettings, useCoreWorkspace } from '../../hooks'
 import { Methods } from '../../modules'
-import { CHAT_INPUT_SIZE_MAX, COMPACT_PAGE_WIDTH } from '../../constants'
+import { AppRoutes, CHAT_INPUT_SIZE_MAX, COMPACT_PAGE_WIDTH } from '../../constants'
 import { pauseFollow, scrollToBottom, watchBottom } from '../../init'
-import { AppUtils } from '../../utils'
+import { AppNav, AppUtils } from '../../utils'
 
 import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
 import { ChatTitleView } from './elements/ChatTitleView'
@@ -39,6 +41,7 @@ import { InputView } from './elements/InputView'
 
 export function ChatPage() {
   const { chatId } = useParams()
+  const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const cid = Number(chatId)
   const workspace = useCoreWorkspace()
@@ -357,7 +360,38 @@ export function ChatPage() {
                 {streaming ? (
                   <CircularProgress size={14} color={'inherit'} />
                 ) : (
-                  <StatsView stats={stats} contextLimit={settings.chat_context_limit} />
+                  <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                    {/* the untouched knob hides: the provider default applies */}
+                    {groupModel?.effort && (
+                      <Tooltip title={t('chat.t_effort')}>
+                        <Button
+                          size={'small'}
+                          startIcon={<Speed sx={{ fontSize: 16 }} />}
+                          onClick={() => AppNav.open(navigate, AppRoutes.model(groupModel.id))}
+                          sx={{ color: 'text.secondary', minWidth: 0, px: 1 }}
+                        >
+                          <Typography variant={'caption'}>
+                            {groupModel.effort.charAt(0).toUpperCase() + groupModel.effort.slice(1)}
+                          </Typography>
+                        </Button>
+                      </Tooltip>
+                    )}
+                    {groupModel?.think != null && (
+                      <Tooltip title={t('chat.t_think')}>
+                        <Button
+                          size={'small'}
+                          startIcon={<Psychology sx={{ fontSize: 16 }} />}
+                          onClick={() => AppNav.open(navigate, AppRoutes.model(groupModel.id))}
+                          sx={{ color: 'text.secondary', minWidth: 0, px: 1 }}
+                        >
+                          <Typography variant={'caption'}>
+                            {groupModel.think ? t('chat.t_enabled') : t('chat.t_disabled')}
+                          </Typography>
+                        </Button>
+                      </Tooltip>
+                    )}
+                    <StatsView stats={stats} contextLimit={settings.chat_context_limit} />
+                  </Stack>
                 )}
               </Stack>
               <InputView

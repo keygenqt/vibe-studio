@@ -1,25 +1,64 @@
 {
-  "base": {
-    "temperature": { "default": 0.7, "min": 0.0, "max": 2.0 },
-    "seed": { "default": 42, "min": 0 },
-    "top_p": { "default": 0.95, "min": 0.0, "max": 1.0 },
-    "top_k": { "default": 40, "min": 1 },
-    "min_p": { "default": 0.05, "min": 0.0, "max": 1.0 },
-    "num_ctx": { "default": 32768, "min": 1 },
-    "num_predict": { "default": 16384, "min": 1 }
+  "ollama": {
+    "base": {
+      "temperature": { "default": 0.7, "min": 0.0, "max": 2.0 },
+      "seed": { "default": 42, "min": 0 },
+      "top_p": { "default": 0.95, "min": 0.0, "max": 1.0 },
+      "top_k": { "default": 40, "min": 1 },
+      "min_p": { "default": 0.05, "min": 0.0, "max": 1.0 },
+      "stop": true,
+      "num_ctx": { "default": 32768, "min": 1 },
+      "num_predict": { "default": 16384, "min": 1 }
+    },
+    "models": []
   },
-  "models": [
-    {
-      "name": "kimi-k3",
-      "temperature": { "default": 1.0, "min": 1.0, "max": 1.0 }
+  "openai": {
+    "base": {
+      "temperature": { "default": 0.7, "min": 0.0, "max": 2.0 },
+      "seed": { "default": 42, "min": 0 },
+      "top_p": { "default": 0.95, "min": 0.0, "max": 1.0 },
+      "top_k": { "default": 40, "min": 1 },
+      "min_p": { "default": 0.05, "min": 0.0, "max": 1.0 },
+      "stop": true,
+      "num_predict": { "default": 16384, "min": 1 },
+      "effort": { "default": "medium", "values": ["low", "medium", "high"] }
     },
-    {
-      "name": "kimi-k3.1-pro",
-      "temperature": { "default": 1.0, "min": 1.0, "max": 1.0 }
+    "models": [
+      {
+        "name": "kimi-k3",
+        "temperature": { "default": 1.0, "min": 1.0, "max": 1.0 }
+      },
+      {
+        "name": "kimi-k3.1-pro",
+        "temperature": { "default": 1.0, "min": 1.0, "max": 1.0 }
+      },
+      {
+        "name": "kimi-k3.1-pro-highspeed",
+        "temperature": { "default": 1.0, "min": 1.0, "max": 1.0 }
+      },
+      {
+        "name": "glm-5.2",
+        "effort": { "default": "max", "values": ["low", "medium", "high", "xhigh", "max"] }
+      },
+      {
+        "name": "glm-5.3",
+        "effort": { "default": "max", "values": ["low", "high", "max"] }
+      },
+      {
+        "name": "glm-5.3-flash",
+        "effort": { "default": "max", "values": ["low", "high", "max"] }
+      }
+    ]
+  },
+  "gigachat": {
+    "base": {
+      "temperature": { "default": 0.7, "min": 0.0, "max": 2.0 },
+      "seed": { "default": 42, "min": 0 },
+      "top_p": { "default": 0.95, "min": 0.0, "max": 1.0 },
+      "num_predict": { "default": 16384, "min": 1 },
+      "reasoning_max_tokens": { "default": 1024, "min": 1 },
+      "effort": { "default": "medium", "values": ["low", "medium", "high"] }
     },
-    {
-      "name": "kimi-k3.1-pro-highspeed",
-      "temperature": { "default": 1.0, "min": 1.0, "max": 1.0 }
-    }
-  ]
+    "models": []
+  }
 }

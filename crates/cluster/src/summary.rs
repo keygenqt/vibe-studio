@@ -1,23 +1,18 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['facts']
-// INFO: The chat answer summary task: the prompt, the task config and the call.
+// INFO: The chat answer summary task: the prompt and the call.
 
 //! The answer summary task: a brief plain-text digest of one model
-//! answer, answered in the language of the text itself. The config is
-//! the task's own — the task never uses the model's generation
-//! settings.
+//! answer, answered in the language of the text itself. The config
+//! arrives with the call — the model's catalog defaults.
 
 use anyhow::Result;
 
+use crate::CallParamsData;
 use crate::ProviderTypeData;
 use crate::StreamStatsData;
 use crate::call_prompt;
-
-const SUMMARY_TEMPERATURE: f64 = 0.7;
-const SUMMARY_SEED: i64 = 42;
-const SUMMARY_NUM_CTX: i32 = 8192;
-const SUMMARY_NUM_PREDICT: i32 = 8192;
 
 // the summary instruction: compress the text to the same meaning in
 // fewer words; the language follows the text itself
@@ -31,6 +26,7 @@ pub(crate) async fn call(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     text: &str,
 ) -> Result<(String, StreamStatsData)> {
     let (summary, stats) = call_prompt(
@@ -39,10 +35,7 @@ pub(crate) async fn call(
         api_key,
         project,
         model,
-        SUMMARY_TEMPERATURE,
-        SUMMARY_SEED,
-        SUMMARY_NUM_CTX,
-        SUMMARY_NUM_PREDICT,
+        params,
         None,
         None,
         Vec::new(),

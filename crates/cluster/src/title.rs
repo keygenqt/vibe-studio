@@ -1,21 +1,16 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['facts']
-// INFO: The chat naming task: the prompt, the task config and the call.
+// INFO: The chat naming task: the prompt and the call.
 
 //! The chat naming task: the model answers with the title only. The
-//! config is the task's own — the task never uses the model's
-//! generation settings.
+//! config arrives with the call — the model's catalog defaults.
 
 use anyhow::Result;
 
+use crate::CallParamsData;
 use crate::ProviderTypeData;
 use crate::call_prompt;
-
-const TITLE_TEMPERATURE: f64 = 0.7;
-const TITLE_SEED: i64 = 42;
-const TITLE_NUM_CTX: i32 = 8192;
-const TITLE_NUM_PREDICT: i32 = 8192;
 
 // the title cap: a longer model answer is cut to this many chars
 // and closed with `…`
@@ -32,6 +27,7 @@ pub(crate) async fn call(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     history: Vec<(String, String)>,
     language: &str,
     previous: &str,
@@ -45,10 +41,7 @@ pub(crate) async fn call(
         api_key,
         project,
         model,
-        TITLE_TEMPERATURE,
-        TITLE_SEED,
-        TITLE_NUM_CTX,
-        TITLE_NUM_PREDICT,
+        params,
         None,
         None,
         history

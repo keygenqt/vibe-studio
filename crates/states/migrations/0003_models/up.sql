@@ -15,5 +15,8 @@ CREATE TABLE models (
     stop TEXT NOT NULL,
     num_ctx INTEGER NOT NULL,
     num_predict INTEGER NOT NULL,
+    effort TEXT,
+    reasoning_max_tokens INTEGER,
+    think BOOLEAN,
     UNIQUE(provider_id, name)
 );

@@ -23,6 +23,7 @@ use vibe_cluster::Params;
 use vibe_cluster::Prompt;
 use vibe_cluster::Role;
 
+pub use data::CallParamsData;
 pub use data::ModeCapabilityData;
 pub use data::ModelInfoData;
 pub use data::ProviderInfoData;
@@ -105,39 +106,15 @@ fn connection(
     provider: ProviderTypeData,
     host: &str,
     model: &str,
-    temperature: f64,
-    seed: i64,
-    num_ctx: i32,
-    num_predict: i32,
+    params: CallParamsData,
     api_key: Option<&str>,
     project: Option<&str>,
 ) -> Connection {
-    let params = match provider {
-        ProviderTypeData::Ollama => Params::Ollama(OllamaParams {
-            temperature: Some(temperature),
-            seed: Some(seed.max(0) as u64),
-            num_ctx: Some(num_ctx.max(0) as usize),
-            num_predict: Some(num_predict.max(0) as usize),
-            ..Default::default()
-        }),
-        ProviderTypeData::GigaChat => Params::GigaChat(GigaChatParams {
-            temperature: Some(temperature),
-            seed: Some(seed.max(0) as u64),
-            num_predict: Some(num_predict.max(0) as usize),
-            ..Default::default()
-        }),
-        _ => Params::OpenAi(OpenAiParams {
-            temperature: Some(temperature),
-            seed: Some(seed.max(0) as u64),
-            num_predict: Some(num_predict.max(0) as usize),
-            ..Default::default()
-        }),
-    };
     Connection {
         provider: provider.into(),
         host: host.to_string(),
         model: model.to_string(),
-        params,
+        params: params.to_params(provider),
         api_key: api_key.map(String::from),
         project: project.map(String::from),
         ..Default::default()
@@ -156,26 +133,13 @@ pub async fn call_prompt(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
-    temperature: f64,
-    seed: i64,
-    num_ctx: i32,
-    num_predict: i32,
+    params: CallParamsData,
     system: Option<String>,
     images: Option<Vec<String>>,
     history: Vec<(String, String, Vec<String>)>,
     user: &str,
 ) -> Result<(String, StreamStatsData)> {
-    let cluster = Cluster::new(vec![connection(
-        provider,
-        host,
-        model,
-        temperature,
-        seed,
-        num_ctx,
-        num_predict,
-        api_key,
-        project,
-    )])?;
+    let cluster = Cluster::new(vec![connection(provider, host, model, params, api_key, project)])?;
 
     let mut prompt = Prompt::new(user, system, images);
     prompt.history = history
@@ -205,10 +169,7 @@ pub async fn call_prompt_stream(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
-    temperature: f64,
-    seed: i64,
-    num_ctx: i32,
-    num_predict: i32,
+    params: CallParamsData,
     system: Option<String>,
     images: Option<Vec<String>>,
     history: Vec<(String, String, Vec<String>)>,
@@ -216,17 +177,7 @@ pub async fn call_prompt_stream(
     cancel: &CancelToken,
     on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
 ) -> Result<StreamAnswerData> {
-    let cluster = Cluster::new(vec![connection(
-        provider,
-        host,
-        model,
-        temperature,
-        seed,
-        num_ctx,
-        num_predict,
-        api_key,
-        project,
-    )])?;
+    let cluster = Cluster::new(vec![connection(provider, host, model, params, api_key, project)])?;
 
     let mut prompt = Prompt::new(user, system, images);
     prompt.history = history
@@ -269,8 +220,8 @@ pub async fn call_prompt_stream(
     }
 }
 
-/// Translates one text to the given language with the translation
-/// task config; returns the trimmed translation with the
+/// Translates one text to the given language with the given task
+/// config; returns the trimmed translation with the
 /// provider-reported token facts.
 pub async fn call_translate(
     provider: ProviderTypeData,
@@ -278,10 +229,11 @@ pub async fn call_translate(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     language: &str,
     text: &str,
 ) -> Result<(String, StreamStatsData)> {
-    translate::call(provider, host, api_key, project, model, language, text).await
+    translate::call(provider, host, api_key, project, model, params, language, text).await
 }
 
 /// Streams the translation of one text: only the text deltas go to
@@ -293,13 +245,14 @@ pub async fn call_translate_stream(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     language: &str,
     text: &str,
     cancel: &CancelToken,
     on_delta: impl Fn(&str) + Send + Sync + 'static,
 ) -> Result<(String, StreamStatsData)> {
     translate::call_stream(
-        provider, host, api_key, project, model, language, text, cancel, on_delta,
+        provider, host, api_key, project, model, params, language, text, cancel, on_delta,
     )
     .await
 }
@@ -315,9 +268,10 @@ pub async fn call_summary(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     text: &str,
 ) -> Result<(String, StreamStatsData)> {
-    summary::call(provider, host, api_key, project, model, text).await
+    summary::call(provider, host, api_key, project, model, params, text).await
 }
 
 /// Streams the compression of one conversation into a context base
@@ -333,11 +287,15 @@ pub async fn call_compress(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     history: Vec<(String, String, Vec<String>)>,
     cancel: &CancelToken,
     on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
 ) -> Result<StreamAnswerData> {
-    compress::call_stream(provider, host, api_key, project, model, history, cancel, on_event).await
+    compress::call_stream(
+        provider, host, api_key, project, model, params, history, cancel, on_event,
+    )
+    .await
 }
 
 /// Names a chat by its conversation: the messages go as the prompt
@@ -351,9 +309,13 @@ pub async fn call_chat_name(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     history: Vec<(String, String)>,
     language: &str,
     previous: &str,
 ) -> Result<String> {
-    title::call(provider, host, api_key, project, model, history, language, previous).await
+    title::call(
+        provider, host, api_key, project, model, params, history, language, previous,
+    )
+    .await
 }

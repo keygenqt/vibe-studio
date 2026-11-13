@@ -1,24 +1,20 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['facts']
-// INFO: The chat compression task: the prompt, the task config and the call.
+// INFO: The chat compression task: the prompt and the call.
 
 //! The chat compression task: the whole conversation compressed into
-//! a context base for continuing the session. The config is the
-//! task's own — the task never uses the model's generation settings.
+//! a context base for continuing the session. The config arrives
+//! with the call — the model's catalog defaults.
 
 use anyhow::Result;
 
+use crate::CallParamsData;
 use crate::CancelToken;
 use crate::ProviderTypeData;
 use crate::StreamAnswerData;
 use crate::StreamEvent;
 use crate::call_prompt_stream;
-
-const COMPRESS_TEMPERATURE: f64 = 0.7;
-const COMPRESS_SEED: i64 = 42;
-const COMPRESS_NUM_CTX: i32 = 32768;
-const COMPRESS_NUM_PREDICT: i32 = 16384;
 
 // the compression instruction: the conversation becomes the sole
 // context of the next session — a working document, not a report;
@@ -102,6 +98,7 @@ pub(crate) async fn call_stream(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     history: Vec<(String, String, Vec<String>)>,
     cancel: &CancelToken,
     on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
@@ -112,10 +109,7 @@ pub(crate) async fn call_stream(
         api_key,
         project,
         model,
-        COMPRESS_TEMPERATURE,
-        COMPRESS_SEED,
-        COMPRESS_NUM_CTX,
-        COMPRESS_NUM_PREDICT,
+        params,
         None,
         None,
         history,

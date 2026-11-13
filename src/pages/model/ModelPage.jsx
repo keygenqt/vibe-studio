@@ -25,8 +25,12 @@ export function ModelPage() {
 
   React.useEffect(() => {
     setDefaults(null)
-    if (model) Methods.get_model_defaults(model.name).then(setDefaults).catch(console.error)
-  }, [model?.name])
+    if (model && provider) {
+      Methods.get_model_defaults(provider.provider, model.name)
+        .then(setDefaults)
+        .catch(console.error)
+    }
+  }, [model?.name, provider?.id])
 
   if (error) {
     return (
@@ -44,7 +48,12 @@ export function ModelPage() {
             title={model.name}
             subtitle={provider ? `${provider.name} · ${provider.host}` : ''}
           />
-          <ModelForm key={`model-${id}`} model={model} defaults={defaults} />
+          <ModelForm
+            key={`model-${id}`}
+            model={model}
+            defaults={defaults}
+            kind={provider?.provider ?? null}
+          />
         </Stack>
       )}
     </WaitState>

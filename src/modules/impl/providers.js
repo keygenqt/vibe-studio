@@ -66,8 +66,8 @@ export const providers = {
     return model
   },
   // the model's parameter spec: the page builds the form bounds from it
-  get_model_defaults: async function (name) {
-    return invoke('get_model_defaults', { name })
+  get_model_defaults: async function (provider, name) {
+    return invoke('get_model_defaults', { provider, name })
   },
   save_provider_model: async function (model, config) {
     const state = await invoke('save_provider_model', { model: { ...model, ...config } })

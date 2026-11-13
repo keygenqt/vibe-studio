@@ -30,6 +30,8 @@ pub struct ModeCapabilityData {
     pub tools: Option<bool>,
     /// Produces reasoning (thinking) output.
     pub thinking: Option<bool>,
+    /// Accepts reasoning depth control (`reasoning_effort` / `think`).
+    pub effort: Option<bool>,
     /// Produces embeddings, not chat completions.
     pub embedding: Option<bool>,
     /// System One classification (Ollama `decision`).
@@ -49,6 +51,7 @@ impl From<Capabilities> for ModeCapabilityData {
             output_video: caps.output.video,
             tools: caps.abilities.tools,
             thinking: caps.abilities.thinking,
+            effort: caps.abilities.effort,
             embedding: caps.abilities.embedding,
             decision: caps.abilities.decision,
         }

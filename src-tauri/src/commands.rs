@@ -159,11 +159,11 @@ pub fn get_provider_model(store: State<Store>, id: i32) -> Result<ProviderModelD
     studio_core::get_provider_model(&store, id).map_err(|e| e.to_string())
 }
 
-/// The parameter spec of the model name: the form builds its bounds
-/// from it.
+/// The parameter spec of the model: the form builds its bounds from
+/// it; the provider kind scopes the catalog family.
 #[tauri::command]
-pub fn get_model_defaults(name: String) -> ModelDefaultsData {
-    studio_core::get_model_defaults(&name)
+pub fn get_model_defaults(provider: String, name: String) -> Result<ModelDefaultsData, String> {
+    studio_core::get_model_defaults(&provider, &name).map_err(|e| e.to_string())
 }
 
 /// Validates and persists the model row. Emits and returns the

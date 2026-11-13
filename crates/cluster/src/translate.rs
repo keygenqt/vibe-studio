@@ -1,25 +1,20 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['facts']
-// INFO: The translation task: the prompt, the task config and the two call variants.
+// INFO: The translation task: the prompt and the two call variants.
 
-//! The translation task: one text to one language. The config is
-//! the task's own — the task never uses the model's generation
-//! settings.
+//! The translation task: one text to one language. The config
+//! arrives with the call — the model's catalog defaults.
 
 use anyhow::Result;
 
+use crate::CallParamsData;
 use crate::CancelToken;
 use crate::ProviderTypeData;
 use crate::StreamEvent;
 use crate::StreamStatsData;
 use crate::call_prompt;
 use crate::call_prompt_stream;
-
-const TRANSLATE_TEMPERATURE: f64 = 0.7;
-const TRANSLATE_SEED: i64 = 42;
-const TRANSLATE_NUM_CTX: i32 = 8192;
-const TRANSLATE_NUM_PREDICT: i32 = 8192;
 
 // the shared prompt of both variants: `{language}` is replaced at
 // the call site
@@ -33,6 +28,7 @@ pub(crate) async fn call(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     language: &str,
     text: &str,
 ) -> Result<(String, StreamStatsData)> {
@@ -43,10 +39,7 @@ pub(crate) async fn call(
         api_key,
         project,
         model,
-        TRANSLATE_TEMPERATURE,
-        TRANSLATE_SEED,
-        TRANSLATE_NUM_CTX,
-        TRANSLATE_NUM_PREDICT,
+        params,
         Some(prompt),
         None,
         Vec::new(),
@@ -65,6 +58,7 @@ pub(crate) async fn call_stream(
     api_key: Option<&str>,
     project: Option<&str>,
     model: &str,
+    params: CallParamsData,
     language: &str,
     text: &str,
     cancel: &CancelToken,
@@ -77,10 +71,7 @@ pub(crate) async fn call_stream(
         api_key,
         project,
         model,
-        TRANSLATE_TEMPERATURE,
-        TRANSLATE_SEED,
-        TRANSLATE_NUM_CTX,
-        TRANSLATE_NUM_PREDICT,
+        params,
         Some(prompt),
         None,
         Vec::new(),
