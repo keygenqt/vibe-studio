@@ -8,9 +8,8 @@
 // Collapsed chat bubble: the preview height of the clamped content.
 export const CHAT_COLLAPSE_HEIGHT = 120
 
-// Composer height: user-dragged between min and max.
+// Composer height: user-dragged, at least the minimum.
 export const CHAT_INPUT_SIZE_MIN = 132
-export const CHAT_INPUT_SIZE_MAX = 285
 export const CHAT_INPUT_SIZE_DEFAULT = 132
 
 // Sidebar width: user-dragged, shared by chat and settings sidebars.

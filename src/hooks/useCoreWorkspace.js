@@ -7,12 +7,7 @@
 import * as React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
-import {
-  CHAT_INPUT_SIZE_MAX,
-  CHAT_INPUT_SIZE_MIN,
-  SIDE_BAR_SIZE_MAX,
-  SIDE_BAR_SIZE_MIN,
-} from '../constants'
+import { CHAT_INPUT_SIZE_MIN, SIDE_BAR_SIZE_MAX, SIDE_BAR_SIZE_MIN } from '../constants'
 import { Methods } from '../modules'
 import { AppUtils } from '../utils'
 import { chatInputSizeSet, sideBarSizeSet, workspaceSet } from '../store/impl/workspace'
@@ -71,29 +66,19 @@ export function useCoreWorkspace() {
     handle.addEventListener('pointerup', onPointerUp)
   }
 
-  // `currentSize` starts the drag from the live height — the growth
-  // the composer carries folds into the dragged base
-  const onComposerHandlePointerDown = (event, currentSize) => {
+  const onComposerHandlePointerDown = event => {
     if (!raw.ready) return
     event.preventDefault()
     const handle = event.currentTarget
     handle.setPointerCapture(event.pointerId)
     const startY = event.clientY
     const base = wire()
-    // the movement anchors at the live start size, not the saved base
-    const startSize = currentSize ?? base.chat_input_size
-    // the fold: the start size lands in the store in the same batch
-    // as the growth clearing — the box does not jump on the grab
-    if (currentSize !== undefined) dispatch(chatInputSizeSet(currentSize))
-    let size = startSize
+    let size = base.chat_input_size
     setDragging(true)
 
     const onPointerMove = move => {
-      size = AppUtils.clamp(
-        startSize + startY - move.clientY,
-        CHAT_INPUT_SIZE_MIN,
-        CHAT_INPUT_SIZE_MAX
-      )
+      // no upper bound: the drag stores the user's size as-is
+      size = Math.max(CHAT_INPUT_SIZE_MIN, base.chat_input_size + startY - move.clientY)
       dispatch(chatInputSizeSet(size))
     }
 

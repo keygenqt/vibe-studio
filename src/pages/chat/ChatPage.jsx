@@ -5,30 +5,18 @@
  * INFO: The chat page: the message history and the composer draft.
  */
 import * as React from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Box, Button, CircularProgress, Stack, Tooltip, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
-import Add from '@mui/icons-material/Add'
-import Psychology from '@mui/icons-material/Psychology'
-import Speed from '@mui/icons-material/Speed'
-import { getCurrentWebview } from '@tauri-apps/api/webview'
+import { Box, Stack } from '@mui/material'
 
-import {
-  AttachmentChip,
-  DeleteDialog,
-  HandleView,
-  ModelCapability,
-  StatsView,
-} from '../../components/views'
+import { AttachmentChip, DeleteDialog } from '../../components/views'
 import { ErrorSnackbar } from '../../components/snackbars'
 import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
 import { useCoreChat, useCoreGroupsChat, useCoreSettings, useCoreWorkspace } from '../../hooks'
 import { Methods } from '../../modules'
-import { AppRoutes, CHAT_INPUT_SIZE_MAX, COMPACT_PAGE_WIDTH } from '../../constants'
+import { AppUtils } from '../../utils'
 import { pauseFollow, scrollToBottom, watchBottom } from '../../init'
-import { AppNav, AppUtils } from '../../utils'
 
 import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
 import { ChatTitleView } from './elements/ChatTitleView'
@@ -41,7 +29,6 @@ import { InputView } from './elements/InputView'
 
 export function ChatPage() {
   const { chatId } = useParams()
-  const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const cid = Number(chatId)
   const workspace = useCoreWorkspace()
@@ -67,7 +54,6 @@ export function ChatPage() {
     ready: chatReady,
   } = useCoreChat({ chatId: cid })
   const { settings } = useCoreSettings()
-  const [quick, setQuick] = React.useState([])
   // the pending confirmation: {action: 'delete' | 'resend', messageId}
   const [confirm, setConfirm] = React.useState(null)
   // the translation view shows the stored one, an empty column
@@ -119,59 +105,7 @@ export function ChatPage() {
 
   // the follow state of the history: the down button reads it
   const [atBottom, setAtBottom] = React.useState(true)
-  // the composer growth over the base: the draft content, ephemeral —
-  // the measured delta accumulates against the base, capped
-  const [composerGrow, setComposerGrow] = React.useState(0)
   React.useEffect(() => watchBottom('chat.history', setAtBottom), [])
-
-  // the webview drag hover over the composer: paints the overlay
-  const [dragOver, setDragOver] = React.useState(false)
-  const composerRef = React.useRef(null)
-
-  // the callback rides the ref — the re-renders must not rebind
-  // the webview listener
-  const addAttachmentsRef = React.useRef(addAttachments)
-  addAttachmentsRef.current = addAttachments
-
-  // the Tauri webview drag events: the hover scopes to the composer
-  // bounds, the drop feeds the paths into the draft attachments
-  React.useEffect(() => {
-    const unlisten = getCurrentWebview().onDragDropEvent(event => {
-      const payload = event.payload
-      // `leave` carries no position — the hint goes away first
-      if (payload.type === 'leave') {
-        setDragOver(false)
-        return
-      }
-      const rect = composerRef.current?.getBoundingClientRect()
-      if (!rect) return
-      const pos = payload.position.toLogical(window.devicePixelRatio)
-      const inside =
-        pos.x >= rect.left && pos.x <= rect.right && pos.y >= rect.top && pos.y <= rect.bottom
-      if (payload.type === 'drop') {
-        setDragOver(false)
-        // the draft carries the Rust facts: the chip paints the
-        // folder, the image kind and the size; the wire carries
-        // the path only
-        if (inside)
-          Promise.all(
-            payload.paths.map(async path => {
-              const stat = await Methods.attachment_stat(path)
-              return stat.dir
-                ? { kind: 'file', path, dir: true }
-                : { kind: 'file', path, mime: stat.mime, size: stat.size }
-            })
-          )
-            .then(addAttachmentsRef.current)
-            .catch(console.error)
-      } else {
-        setDragOver(inside)
-      }
-    })
-    return () => {
-      unlisten.then(fn => fn())
-    }
-  }, [])
 
   // the chat switch lands at the bottom and re-arms the follow; the
   // content updates are the scroll area's own business
@@ -302,137 +236,28 @@ export function ChatPage() {
               )}
             </Stack>
           </ScrollPanel>
-          {/* horizontal mirror of the sidebar handle: dragging up grows the composer */}
-          <HandleView
-            orientation="horizontal"
-            onPointerDown={event => {
-              // the drag starts from the live height and folds the
-              // growth into the saved base; the draft scrolls inside
-              // until the next content change
-              setComposerGrow(0)
-              workspace.onComposerHandlePointerDown(
-                event,
-                Math.min(workspace.chatInputSize + composerGrow, CHAT_INPUT_SIZE_MAX)
-              )
+
+          <InputView
+            draft={draft}
+            setDraft={setDraft}
+            send={translate => {
+              // the running compress owns the chat: the send waits
+              if (!compressAttempt) send(translate)
             }}
+            sending={sending}
+            streaming={streaming}
+            stop={stop}
+            chatInputSize={workspace.chatInputSize}
+            onHandlePointerDown={workspace.onComposerHandlePointerDown}
+            onAttach={onAttach}
+            addAttachments={addAttachments}
+            chatAttachments={chatAttachments}
+            canTranslate={canTranslate}
+            groupModel={groupModel}
+            stats={stats}
+            contextLimit={settings.chat_context_limit}
           />
-          <Box
-            ref={composerRef}
-            sx={{
-              position: 'relative',
-              flexShrink: 0,
-              // the base from the drag plus the draft growth, capped —
-              // the history yields its height to the growing composer
-              height: Math.min(workspace.chatInputSize + composerGrow, CHAT_INPUT_SIZE_MAX),
-              overflow: 'hidden',
-              borderRadius: 2,
-              backgroundColor: 'background.paper',
-              boxSizing: 'border-box',
-              padding: 2,
-              // the stats line folds by the box width, not the row
-              containerType: 'inline-size',
-            }}
-          >
-            <Stack spacing={2} sx={{ height: '100%' }}>
-              <Stack
-                direction={'row'}
-                spacing={1}
-                alignItems={'center'}
-                justifyContent={'space-between'}
-              >
-                <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                  <QuickActions
-                    quick={quick}
-                    onQuick={setQuick}
-                    onAttach={onAttach}
-                    translateEnabled={canTranslate}
-                    attachCount={chatAttachments.length}
-                  />
-                  {/* the capability badges fold away in the narrow composer */}
-                  <Box
-                    sx={{
-                      [`@container (max-width: ${COMPACT_PAGE_WIDTH - 1}px)`]: { display: 'none' },
-                    }}
-                  >
-                    <ModelCapability capabilities={groupModel?.capabilities ?? undefined} />
-                  </Box>
-                </Stack>
-                {streaming ? (
-                  <CircularProgress size={14} color={'inherit'} />
-                ) : (
-                  <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                    {/* the untouched knob hides: the provider default applies */}
-                    {groupModel?.effort && (
-                      <Tooltip title={t('chat.t_effort')}>
-                        <Button
-                          size={'small'}
-                          startIcon={<Speed sx={{ fontSize: 16 }} />}
-                          onClick={() => AppNav.open(navigate, AppRoutes.model(groupModel.id))}
-                          sx={{ color: 'text.secondary', minWidth: 0, px: 1 }}
-                        >
-                          <Typography variant={'caption'}>
-                            {groupModel.effort.charAt(0).toUpperCase() + groupModel.effort.slice(1)}
-                          </Typography>
-                        </Button>
-                      </Tooltip>
-                    )}
-                    {groupModel?.think != null && (
-                      <Tooltip title={t('chat.t_think')}>
-                        <Button
-                          size={'small'}
-                          startIcon={<Psychology sx={{ fontSize: 16 }} />}
-                          onClick={() => AppNav.open(navigate, AppRoutes.model(groupModel.id))}
-                          sx={{ color: 'text.secondary', minWidth: 0, px: 1 }}
-                        >
-                          <Typography variant={'caption'}>
-                            {groupModel.think ? t('chat.t_enabled') : t('chat.t_disabled')}
-                          </Typography>
-                        </Button>
-                      </Tooltip>
-                    )}
-                    <StatsView stats={stats} contextLimit={settings.chat_context_limit} />
-                  </Stack>
-                )}
-              </Stack>
-              <InputView
-                draft={draft}
-                setDraft={setDraft}
-                onGrow={delta =>
-                  setComposerGrow(g =>
-                    Math.max(0, Math.min(g + delta, CHAT_INPUT_SIZE_MAX - workspace.chatInputSize))
-                  )
-                }
-                onAttachments={addAttachments}
-                send={() => {
-                  // the running compress owns the chat: the send waits
-                  if (!compressAttempt) send(quick.includes('translate'))
-                }}
-                sending={sending}
-                streaming={streaming}
-                stop={stop}
-              />
-            </Stack>
-            {dragOver && (
-              // the drop hint: the green wash over the composer, the plus in the middle
-              <Box
-                sx={{
-                  position: 'absolute',
-                  inset: 0,
-                  zIndex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: 2,
-                  border: '2px dashed',
-                  borderColor: 'success.main',
-                  backgroundColor: theme => alpha(theme.palette.success.main, 0.15),
-                  pointerEvents: 'none',
-                }}
-              >
-                <Add sx={{ color: 'success.main' }} />
-              </Box>
-            )}
-          </Box>
+
           {chatAttachments.length > 0 && (
             // the attachments bar under the composer: the shape of the title bar
             <Box
