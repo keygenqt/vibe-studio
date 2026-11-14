@@ -5,20 +5,7 @@ copies only for rendering.
 
 ## Rules
 
-- All Rust calls go through `Methods` (`src/modules`): one method —
-  one command.
-- Render copies live in the store (`src/store`): a read lands its
-  answer in the store; pages read the models through the `useCore*`
-  hooks (`src/hooks`) and revalidate on mount. Mutations do not
-  write the store — the block's event brings the fresh state.
-- Direction: a mutation response carries the fresh block state and
-  the block's event mirrors it — JS dispatches one of them, re-reads
-  after a mutation are not needed. The groups chat block follows
-  this; the providers block is not migrated yet.
 - Rust data travels through JS in the wire format, as is.
-- Redux holds the block copies and pure UI state; live values
-  arrive over the block event channels, the source of truth is
-  Rust.
 - `constants/` holds only UI constants that do not touch the
   backend; Rust defaults stay in Rust — the sides share no
   constants.
@@ -29,6 +16,51 @@ copies only for rendering.
   shell keys in `settings`; a key with one consumer lives in its
   block, a shared one — in `common`; a new key lands in all three
   locales in one commit.
+
+## Core
+
+`core/` is the single JS surface to Rust. A block is a `<block>/`
+directory of five files; below is the contract of each role — the
+file is only its carrier.
+
+- `use*` — **all reading**. The page gets its render data only from
+  the hook; the copy's mount loads live here too, and so do all Rust
+  `get*` calls. One block — one block hook; it returns the data,
+  `ready` and `errors`.
+- `method` — **mutations only** plus `cleanError`. No `get*`, no
+  requests whose result the page needs to show — those belong to the
+  hook. Mutations go through the shared `runMutation` envelope: the
+  error lands in the block map and is rethrown to the caller, success
+  cleans the key.
+- `events` — **the only writer of the copy from Rust**: the event
+  payload → dispatch. Mutations do not dispatch the copy — JS takes
+  the fresh state from the event, the mutation answer stays
+  undispatched.
+- `store` — **the copy only**: the block slice, the whole-payload
+  `xxxStateSet`, the errors map — `ERRORS` (keys) + `errorsSet`
+  (merge per key) / `errorsClean` / `errorsCleanAll`. No request
+  logic and no knowledge of Tauri.
+- `tauri` — **the connection only**: invoke wrappers and channels.
+  No dispatch into the copy.
+- **Query hooks** `use<Query>` (the name inherits the tauri command)
+  — one-shot requests whose result lives on a single screen: local
+  state, local error, refetched on every mount. They touch no store
+  and no `method` and call Tauri directly. The criterion for moving a
+  read out is data ownership: a load that writes the block copy
+  belongs to the block hook; the answer to a screen's request belongs
+  to a query hook. A query hook lives in its block's directory.
+- **Errors are always obtainable**: a mount load and a mutation write
+  the block map, a query hook holds its error locally. No error ever
+  disappears silently; the page cleans through
+  `XxxMethod.cleanError(key)`.
+- Pages know neither Tauri nor the store — only `use*` and
+  `XxxMethod` through the `core/index.js` barrel.
+
+## Hooks
+
+- `hooks/` — shared React hooks without block data: no copies, no
+  dispatch, no block command invokes; side effects target the
+  environment only (DOM, window, timers).
 
 ## Navigation
 
@@ -43,10 +75,12 @@ copies only for rendering.
 ## Loading
 
 - A page with data loading gates its content in `WaitState`
-  (`components/states`): readiness is the page's own data; the
-  loader shows only when a load starts without data.
+  (`components/states`): readiness is the block hook's `ready`.
+- A block error is shown by `!ready && errors`: the key comes from
+  the block's `ERRORS`, the cleanup — `XxxMethod.cleanError(key)`.
 - One row — one command: a page fetches its item by id, never
-  derives it from the collection list.
+  derives it from the collection list; the read-through row maps are
+  invalidated by a block mutation and refetched on the next open.
 
 ## Structure
 

@@ -32,5 +32,9 @@ export const ACCENTS = ['default', 'wave', 'moss', 'twilight', 'sunset']
 export const ACCENT_DEFAULT = ACCENTS[0]
 
 // Settings UI defaults: applied to the untouched (null) stored values.
+export const THEME_DEFAULT = 'system'
+export const LOCALE_DEFAULT = 'ru'
+export const CHAT_STREAMING_DEFAULT = true
+export const NOTIFICATIONS_DEFAULT = true
 export const CHAT_FONT_SIZE_DEFAULT = 15
 export const TRANSLATE_LOCALE_DEFAULT = 'ru'

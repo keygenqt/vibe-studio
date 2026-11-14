@@ -191,7 +191,7 @@ export function ChatPage() {
             scrollKey={'chat.history'}
             follow
             ready={chatReady}
-            sx={{ flexGrow: 1, minHeight: 0 }}
+            sx={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 0 }}
           >
             <Stack spacing={1.5}>
               {compressAttempt ? (

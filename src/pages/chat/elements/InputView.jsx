@@ -19,7 +19,7 @@ import { getCurrentWebview } from '@tauri-apps/api/webview'
 
 import { HandleView, ModelCapability, StatsView } from '../../../components/views'
 import { Methods } from '../../../modules'
-import { AppRoutes, COMPACT_PAGE_WIDTH } from '../../../constants'
+import { CHAT_INPUT_SIZE_MIN, AppRoutes, COMPACT_PAGE_WIDTH } from '../../../constants'
 import { AppNav } from '../../../utils'
 
 import { QuickActions } from './QuickActions'
@@ -35,7 +35,6 @@ export function InputView(props) {
     streaming,
     stop,
     chatInputSize,
-    onHandlePointerDown,
     onAttach,
     addAttachments,
     chatAttachments,
@@ -136,7 +135,10 @@ export function InputView(props) {
         ref={composerRef}
         sx={{
           position: 'relative',
-          flexShrink: 0,
+          // the user size yields to the column: the flex deficit
+          // shrinks the box, the floor keeps the minimum
+          flexShrink: 1,
+          minHeight: CHAT_INPUT_SIZE_MIN,
           height: chatInputSize,
           overflow: 'hidden',
           borderRadius: 2,
