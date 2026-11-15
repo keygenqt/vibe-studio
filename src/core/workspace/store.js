@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['states']
- * INFO: Workspace state: the actual shell copy and its active save snapshot.
+ * INFO: Workspace state: the shell copy and the OS theme.
  */
 import { createSlice } from '@reduxjs/toolkit'
 
@@ -13,24 +13,28 @@ import {
   THEME_DEFAULT,
 } from '../../../constants'
 
-// the block error keys: one per mount load
-export const ERRORS = { load: 'load' }
+// the block error keys: one per hook meaning, one per the background save
+export const ERRORS = {
+  window: 'window',
+  chatInput: 'chatInput',
+  locale: 'locale',
+  sidebar: 'sidebar',
+  theme: 'theme',
+  save: 'save',
+}
 
 const workspaceSlice = createSlice({
   name: 'workspace',
   initialState: {
-    ready: false,
     errors: {},
-    window_width: null,
-    window_height: null,
+    windowWidth: null,
+    windowHeight: null,
     theme: THEME_DEFAULT,
     locale: LOCALE_DEFAULT,
-    chat_input_size: CHAT_INPUT_SIZE_DEFAULT,
-    side_bar_size: SIDE_BAR_SIZE_DEFAULT,
-    side_bar_collapsed: false,
-    // the flat fields above are Actual; this is the snapshot of the active save
-    workspaceSave: null,
-    workspaceSaveError: null,
+    chatInputSize: CHAT_INPUT_SIZE_DEFAULT,
+    sideBarSize: SIDE_BAR_SIZE_DEFAULT,
+    sideBarCollapsed: false,
+    systemTheme: null,
   },
   reducers: {
     errorsSet: (state, action) => {
@@ -42,31 +46,25 @@ const workspaceSlice = createSlice({
     errorsCleanAll: state => {
       state.errors = {}
     },
+    // the wire lands in snake_case: the copy translates it on the boundary
     workspaceSet: (state, action) => {
-      Object.assign(state, action.payload)
-      state.chat_input_size = state.chat_input_size ?? CHAT_INPUT_SIZE_DEFAULT
-      state.side_bar_size = state.side_bar_size ?? SIDE_BAR_SIZE_DEFAULT
-      state.ready = true
+      state.windowWidth = action.payload.window_width
+      state.windowHeight = action.payload.window_height
+      state.chatInputSize = action.payload.chat_input_size ?? CHAT_INPUT_SIZE_DEFAULT
+      state.sideBarSize = action.payload.side_bar_size ?? SIDE_BAR_SIZE_DEFAULT
+      state.sideBarCollapsed = action.payload.side_bar_collapsed
     },
     sideBarSizeSet: (state, action) => {
-      state.side_bar_size = action.payload
+      state.sideBarSize = action.payload
     },
     chatInputSizeSet: (state, action) => {
-      state.chat_input_size = action.payload
+      state.chatInputSize = action.payload
     },
     sideBarCollapsedSet: (state, action) => {
-      state.side_bar_collapsed = action.payload
+      state.sideBarCollapsed = action.payload
     },
-    workspaceSaveStart: (state, action) => {
-      state.workspaceSave = action.payload
-      state.workspaceSaveError = null
-    },
-    workspaceSaveFinish: state => {
-      state.workspaceSave = null
-    },
-    workspaceSaveFail: (state, action) => {
-      state.workspaceSave = null
-      state.workspaceSaveError = action.payload
+    systemThemeSet: (state, action) => {
+      state.systemTheme = String(action.payload).toLowerCase()
     },
   },
 })
@@ -79,8 +77,6 @@ export const {
   sideBarSizeSet,
   chatInputSizeSet,
   sideBarCollapsedSet,
-  workspaceSaveStart,
-  workspaceSaveFinish,
-  workspaceSaveFail,
+  systemThemeSet,
 } = workspaceSlice.actions
 export default workspaceSlice.reducer

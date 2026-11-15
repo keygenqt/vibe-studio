@@ -9,6 +9,7 @@ import { createSlice } from '@reduxjs/toolkit'
 export const ERRORS = {
   catalog: 'catalog',
   providers: 'providers',
+  provider: 'provider',
   model: 'model',
   models: 'models',
   defaults: 'defaults',

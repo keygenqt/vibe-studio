@@ -2,84 +2,50 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['states']
- * INFO: Workspace writes: the background save writer and shell mutations.
+ * INFO: Workspace writes: the background save and shell mutations.
  */
 import store from '../store'
 import {
   chatInputSizeSet,
   errorsClean,
   errorsCleanAll,
+  errorsSet,
+  ERRORS,
   sideBarCollapsedSet,
   sideBarSizeSet,
-  workspaceSaveFail,
-  workspaceSaveFinish,
-  workspaceSaveStart,
 } from './store'
 import { WorkspaceTauri } from './tauri'
 
+// the copy is camelCase, the wire is snake_case
 const wire = state => ({
-  window_width: state.window_width,
-  window_height: state.window_height,
-  chat_input_size: state.chat_input_size,
-  side_bar_size: state.side_bar_size,
-  side_bar_collapsed: state.side_bar_collapsed,
+  window_width: state.windowWidth,
+  window_height: state.windowHeight,
+  chat_input_size: state.chatInputSize,
+  side_bar_size: state.sideBarSize,
+  side_bar_collapsed: state.sideBarCollapsed,
 })
 
-const equal = (left, right) => Object.keys(left).every(key => left[key] === right[key])
-
-const workspaceState = () => store.getState().workspace
-
-let saving = null
-
-// one writer: changes accumulated during a request produce one follow-up save
-const synchronize = () => {
-  if (saving !== null) return saving
-
-  saving = (async () => {
-    if (!workspaceState().ready) return true
-
-    while (true) {
-      const snapshot = wire(workspaceState())
-      store.dispatch(workspaceSaveStart(snapshot))
-
-      try {
-        await WorkspaceTauri.save(snapshot)
-      } catch (error) {
-        store.dispatch(workspaceSaveFail(String(error)))
-        return false
-      }
-
-      if (equal(snapshot, wire(workspaceState()))) {
-        store.dispatch(workspaceSaveFinish())
-        return true
-      }
-    }
-  })().finally(() => {
-    saving = null
-  })
-
-  return saving
-}
+// the save speaks through the errors map only: no error is a success
+const save = () =>
+  WorkspaceTauri.save(wire(store.getState().workspace)).catch(error =>
+    store.dispatch(errorsSet({ [ERRORS.save]: String(error) }))
+  )
 
 export const WorkspaceMethod = {
   setSideBarSize: function (size) {
-    if (!workspaceState().ready) return
     store.dispatch(sideBarSizeSet(size))
-    return synchronize()
+    return save()
   },
   setChatInputSize: function (size) {
-    if (!workspaceState().ready) return
     store.dispatch(chatInputSizeSet(size))
-    return synchronize()
+    return save()
   },
   toggleSidebar: function () {
-    const state = workspaceState()
-    if (!state.ready) return
-    store.dispatch(sideBarCollapsedSet(!state.side_bar_collapsed))
-    return synchronize()
+    store.dispatch(sideBarCollapsedSet(!store.getState().workspace.sideBarCollapsed))
+    return save()
   },
   flush: function () {
-    return synchronize()
+    return save()
   },
   cleanError: function (key) {
     store.dispatch(key ? errorsClean(key) : errorsCleanAll())

@@ -7,6 +7,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 
 import appReducer from './app/store'
+import uiReducer from './ui/store'
 import chatReducer from './chat/store'
 import groupsChatReducer from './groups_chat/store'
 import providersReducer from './providers/store'
@@ -16,6 +17,7 @@ import workspaceReducer from './workspace/store'
 const store = configureStore({
   reducer: {
     app: appReducer,
+    ui: uiReducer,
     chat: chatReducer,
     groups_chat: groupsChatReducer,
     providers: providersReducer,

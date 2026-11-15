@@ -36,7 +36,6 @@ export const SettingsMethod = {
   setTheme: function (theme) {
     return catchError(ERRORS.theme, () => {
       const state = settingsState()
-      if (!state.ready) return
 
       const previous = state.appearance_theme
       const next = { ...wire(state), appearance_theme: theme }

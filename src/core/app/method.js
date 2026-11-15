@@ -2,29 +2,16 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['facts']
- * INFO: App writes: user actions and the form success flag.
+ * INFO: App writes: user actions over the Tauri commands.
  */
 import store, { runMutation } from '../store'
-import {
-  ERRORS,
-  errorsClean,
-  errorsCleanAll,
-  errorsSet,
-  formSuccessClear,
-  formSuccessSet,
-} from './store'
+import { ERRORS, errorsClean, errorsCleanAll, errorsSet } from './store'
 import { AppTauri } from './tauri'
 
 // the shared envelope bound to the block error actions
 const catchError = (key, action) => runMutation({ errorsSet, errorsClean }, key, action)
 
 export const AppMethod = {
-  setFormSuccess: function (value) {
-    store.dispatch(formSuccessSet(value))
-  },
-  clearFormSuccess: function () {
-    store.dispatch(formSuccessClear())
-  },
   clipboardWriteText: function (text) {
     return catchError(ERRORS.writeText, () => AppTauri.clipboardWriteText(text))
   },

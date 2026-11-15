@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['states', 'facts']
- * INFO: The app copy: version, debug flag, saved alert, OS theme.
+ * INFO: The app copy: version, debug flag, startup readiness.
  */
 import { createSlice } from '@reduxjs/toolkit'
 
@@ -25,8 +25,6 @@ const appSlice = createSlice({
     isDebug: false,
     ready: false,
     errors: {},
-    formSuccess: null,
-    systemTheme: 'light',
   },
   reducers: {
     errorsSet: (state, action) => {
@@ -45,26 +43,8 @@ const appSlice = createSlice({
     appReadySet: state => {
       state.ready = true
     },
-    formSuccessSet: (state, action) => {
-      state.formSuccess = action.payload
-    },
-    formSuccessClear: state => {
-      state.formSuccess = null
-    },
-    systemThemeSet: (state, action) => {
-      state.systemTheme = String(action.payload).toLowerCase()
-    },
   },
 })
 
-export const {
-  errorsSet,
-  errorsClean,
-  errorsCleanAll,
-  appSet,
-  appReadySet,
-  formSuccessSet,
-  formSuccessClear,
-  systemThemeSet,
-} = appSlice.actions
+export const { errorsSet, errorsClean, errorsCleanAll, appSet, appReadySet } = appSlice.actions
 export default appSlice.reducer

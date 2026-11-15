@@ -21,7 +21,6 @@ export const ERRORS = { load: 'load', save: 'save', theme: 'theme' }
 const settingsSlice = createSlice({
   name: 'settings',
   initialState: {
-    ready: false,
     errors: {},
     appearance_theme: THEME_DEFAULT,
     appearance_locale: LOCALE_DEFAULT,
@@ -57,7 +56,6 @@ const settingsSlice = createSlice({
       state.translation_answers = state.translation_answers ?? TRANSLATE_LOCALE_DEFAULT
       state.notifications_ready = state.notifications_ready ?? NOTIFICATIONS_DEFAULT
       state.notifications_updates = state.notifications_updates ?? NOTIFICATIONS_DEFAULT
-      state.ready = true
     },
   },
 })

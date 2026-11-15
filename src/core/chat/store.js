@@ -76,15 +76,9 @@ const chatSlice = createSlice({
       state.historyChatId = action.payload.chat?.id ?? null
       state.stats = action.payload.stats
     },
-    chatSet: (state, action) => {
-      state.chat = action.payload
-    },
     chatHistorySet: (state, action) => {
       state.history = action.payload.history
       state.historyChatId = action.payload.chatId
-    },
-    chatStatsSet: (state, action) => {
-      state.stats = action.payload
     },
     // the stream generations: `seq` marks the newest send — stale
     // deltas and completions of a cancelled request change nothing
@@ -145,9 +139,7 @@ export const {
   chatAttachmentsAdd,
   chatAttachmentsRemove,
   chatAttachmentsClear,
-  chatSet,
   chatHistorySet,
-  chatStatsSet,
   chatStreamStart,
   chatStreamAppend,
   chatStreamFinal,
