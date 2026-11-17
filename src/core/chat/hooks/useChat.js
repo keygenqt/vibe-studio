@@ -4,34 +4,40 @@
  * TAGS: ['hooks', 'states']
  * INFO: Chat read: the history mount load, the chat row and the page gate.
  */
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { ERRORS, chatStateSet, errorsSet } from '../store'
+import { chatStateSet } from '../store'
 import { ChatTauri } from '../tauri'
 
 export function useChat({ chatId } = {}) {
-  // the copy reads: the base hook owns the chat row and its history
   const chat = useSelector(s => s.chat.chat)
+  const stats = useSelector(s => s.chat.stats)
   const historyChatId = useSelector(s => s.chat.historyChatId)
   const history = useSelector(s => (s.chat.historyChatId === chatId ? s.chat.history : null))
-  const errors = useSelector(s => s.chat.errors)
+  const [error, setError] = useState(null)
 
-  // the mount load: the routed chat history
   useEffectSingle({
     keys: [chatId],
     enabled: Boolean(chatId) && historyChatId !== chatId,
-    callback: () =>
-      ChatTauri.getHistory(chatId)
-        .then(state => store.dispatch(chatStateSet(state)))
-        .catch(error => store.dispatch(errorsSet({ [ERRORS.history]: String(error) }))),
+    callback: async () => {
+      setError(null)
+      try {
+        const state = await ChatTauri.getHistory(chatId)
+        store.dispatch(chatStateSet(state))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
   return {
     chat,
+    stats,
     history,
-    errors,
+    error,
     ready: history !== null,
   }
 }

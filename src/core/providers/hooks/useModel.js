@@ -4,31 +4,35 @@
  * TAGS: ['hooks', 'states']
  * INFO: Model read: the routed model row load and the copy for render.
  */
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { ERRORS, errorsSet, modelSet } from '../store'
+import { modelSet } from '../store'
 import { ProvidersTauri } from '../tauri'
 
 export function useModel(id) {
-  // the copy read: the row paints for the routed model only
   const model = useSelector(s => s.providers.model[id] ?? null)
-  const errors = useSelector(s => s.providers.errors)
+  const [error, setError] = useState(null)
 
-  // the mount load: the routed model row
   useEffectSingle({
     keys: [id],
     enabled: Boolean(id) && !model,
-    callback: () =>
-      ProvidersTauri.getProviderModel(id)
-        .then(value => store.dispatch(modelSet(value)))
-        .catch(error => store.dispatch(errorsSet({ [ERRORS.model]: String(error) }))),
+    callback: async () => {
+      setError(null)
+      try {
+        const value = await ProvidersTauri.getProviderModel(id)
+        store.dispatch(modelSet(value))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
   return {
     model,
-    errors,
+    error,
     ready: id ? model !== null : true,
   }
 }

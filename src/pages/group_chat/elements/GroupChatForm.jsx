@@ -62,7 +62,7 @@ export function GroupChatForm(props) {
         )
         const savedId = state?.history.find(item => item.current_is_active)?.group_chat_id
         if (state && !isEdit && savedId) {
-          dispatch(formSuccessSet(state.groups_chat.find(group => group.id === savedId)))
+          dispatch(formSuccessSet(state.groupsChat.find(group => group.id === savedId)))
           AppNav.openWithReplace(navigate, AppRoutes.groupChat(savedId))
         }
       }}

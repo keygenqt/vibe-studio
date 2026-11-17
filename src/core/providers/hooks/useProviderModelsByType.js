@@ -10,22 +10,24 @@ import { useEffectSingle } from '../../../hooks'
 import { ProvidersTauri } from '../tauri'
 
 export function useProviderModelsByType(provider) {
-  // the live host catalog: a query result owned by the screen, not by the block copy
   const [models, setModels] = useState(null)
   const [error, setError] = useState(null)
 
-  // the mount load: refetched per mount — the host catalog is live data
   useEffectSingle({
     keys: [provider?.id],
     enabled: Boolean(provider),
-    callback: () =>
-      ProvidersTauri.getProviderModelsByType(provider)
-        .then(value => {
-          setModels(value)
-          setError(null)
-        })
-        .catch(err => setError(String(err))),
+    callback: async () => {
+      setError(null)
+      try {
+        setModels(await ProvidersTauri.getProviderModelsByType(provider))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
-  return { models, error }
+  return {
+    models,
+    error,
+  }
 }

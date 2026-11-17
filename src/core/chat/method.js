@@ -4,9 +4,8 @@
  * TAGS: ['states']
  * INFO: Chat writes: composer mutations, streams and translation.
  */
-import store, { runMutation } from '../store'
+import store from '../store'
 import {
-  ERRORS,
   chatAttachmentsAdd,
   chatAttachmentsClear,
   chatAttachmentsRemove,
@@ -18,20 +17,18 @@ import {
   chatTranslateAppend,
   chatTranslateFinal,
   chatTranslateStart,
-  errorsClean,
-  errorsCleanAll,
-  errorsSet,
 } from './store'
 import { ChatTauri } from './tauri'
 
-// the newest generation wins: stale streams paint and reset nothing
 let streamSeq = 0
 let translateSeq = 0
 
-// every chunk is a whole snapshot — the copy replaces, not appends
-const runStream = async (seq, chatId, invokeStream) => {
+// the newest generation wins: stale streams paint and reset nothing
+const runStream = (chatId, invoke) => {
+  const seq = ++streamSeq
+  store.dispatch(chatStreamStart({ seq, chatId }))
   try {
-    await invokeStream(chunk => {
+    return invoke(chunk => {
       if (seq !== streamSeq) return
       store.dispatch(chatStreamAppend({ seq, chatId, kind: chunk.kind, text: chunk.text }))
     })
@@ -42,8 +39,22 @@ const runStream = async (seq, chatId, invokeStream) => {
   }
 }
 
-// the shared envelope bound to the block error actions
-const catchError = (key, action) => runMutation({ errorsSet, errorsClean }, key, action)
+// the translation generation: only text chunks land in its own slice
+const runTranslate = (messageId, invoke) => {
+  const seq = ++translateSeq
+  store.dispatch(chatTranslateStart({ seq, messageId }))
+  try {
+    return invoke(chunk => {
+      if (seq === translateSeq && chunk.kind === 'text') {
+        store.dispatch(chatTranslateAppend({ seq, messageId, text: chunk.text }))
+      }
+    })
+  } finally {
+    if (seq === translateSeq) {
+      store.dispatch(chatTranslateFinal(seq))
+    }
+  }
+}
 
 export const ChatMethod = {
   setDraft: function (value) {
@@ -61,67 +72,30 @@ export const ChatMethod = {
   clearHistory: function () {
     store.dispatch(chatHistorySet({ chatId: null, history: null }))
   },
-  sendMessage: function (chatId, text, translate, attachments) {
-    return catchError(ERRORS.send, async () => {
-      const seq = ++streamSeq
-      store.dispatch(chatStreamStart({ seq, chatId }))
-      // the fresh state lands through the block event; the answer stays undispatched
-      await runStream(seq, chatId, onDelta =>
-        ChatTauri.sendMessage(chatId, text, translate, attachments, onDelta)
-      )
-    })
+  sendMessage: async function (chatId, text, translate, attachments) {
+    await runStream(chatId, onDelta =>
+      ChatTauri.sendMessage(chatId, text, translate, attachments, onDelta)
+    )
   },
   cancelSend: function (chatId) {
-    return catchError(ERRORS.cancel, () => ChatTauri.cancelSend(chatId))
+    return ChatTauri.cancelSend(chatId)
   },
   setMessageShowType: function (chatId, messageId, showType) {
-    return catchError(ERRORS.showType, () =>
-      ChatTauri.setMessageShowType(chatId, messageId, showType)
-    )
+    return ChatTauri.setMessageShowType(chatId, messageId, showType)
   },
   deleteMessage: function (chatId, messageId) {
-    return catchError(ERRORS.deleteMessage, () => ChatTauri.deleteMessage(chatId, messageId))
+    return ChatTauri.deleteMessage(chatId, messageId)
   },
   setMessageCollapsed: function (chatId, messageId, collapsed) {
-    return catchError(ERRORS.collapsed, () =>
-      ChatTauri.setMessageCollapsed(chatId, messageId, collapsed)
-    )
+    return ChatTauri.setMessageCollapsed(chatId, messageId, collapsed)
   },
-  resendMessage: function (chatId, messageId) {
-    return catchError(ERRORS.resend, async () => {
-      const seq = ++streamSeq
-      store.dispatch(chatStreamStart({ seq, chatId }))
-      await runStream(seq, chatId, onDelta => ChatTauri.resendMessage(chatId, messageId, onDelta))
-    })
+  resendMessage: async function (chatId, messageId) {
+    await runStream(chatId, onDelta => ChatTauri.resendMessage(chatId, messageId, onDelta))
   },
-  // a stored translation shows itself; an empty one generates once
-  translateMessage: function (chatId, messageId) {
-    return catchError(ERRORS.translate, async () => {
-      const seq = ++translateSeq
-      store.dispatch(chatTranslateStart({ seq, messageId }))
-      try {
-        await ChatTauri.translateMessage(chatId, messageId, chunk => {
-          if (seq === translateSeq && chunk.kind === 'text') {
-            store.dispatch(chatTranslateAppend({ seq, messageId, text: chunk.text }))
-          }
-        })
-      } finally {
-        if (seq === translateSeq) {
-          store.dispatch(chatTranslateFinal(seq))
-        }
-      }
-    })
+  translateMessage: async function (chatId, messageId) {
+    await runTranslate(messageId, onDelta => ChatTauri.translateMessage(chatId, messageId, onDelta))
   },
-  compressMessage: function (chatId, useTaskModel) {
-    return catchError(ERRORS.compress, async () => {
-      const seq = ++streamSeq
-      store.dispatch(chatStreamStart({ seq, chatId }))
-      await runStream(seq, chatId, onDelta =>
-        ChatTauri.compressMessage(chatId, useTaskModel, onDelta)
-      )
-    })
-  },
-  cleanError: function (key) {
-    store.dispatch(key ? errorsClean(key) : errorsCleanAll())
+  compressMessage: async function (chatId, useTaskModel) {
+    await runStream(chatId, onDelta => ChatTauri.compressMessage(chatId, useTaskModel, onDelta))
   },
 }

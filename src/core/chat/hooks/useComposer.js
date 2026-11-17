@@ -7,7 +7,6 @@
 import { useSelector } from 'react-redux'
 
 export function useComposer() {
-  // the copy read: the composer content, no mount load of its own
   const draft = useSelector(s => s.chat.draft)
   const chatAttachments = useSelector(s => s.chat.chatAttachments)
 

@@ -7,3 +7,4 @@
 export { settingsEvents } from './events'
 export { SettingsMethod } from './method'
 export { useSettings } from './hooks/useSettings'
+export { useTheme } from './hooks/useTheme'

@@ -5,13 +5,13 @@
  * INFO: UI writes: pure front-end flags without a Rust round trip.
  */
 import store from '../store'
-import { formSuccessClear, formSuccessSet } from './store'
+import { formStateClear, formStateSet } from './store'
 
 export const UiMethod = {
-  setFormSuccess: function (value) {
-    store.dispatch(formSuccessSet(value))
+  setFormState: function (value) {
+    store.dispatch(formStateSet(value))
   },
-  clearFormSuccess: function () {
-    store.dispatch(formSuccessClear())
+  clearFormState: function () {
+    store.dispatch(formStateClear())
   },
 }

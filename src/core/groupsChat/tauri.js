@@ -40,7 +40,7 @@ export const GroupsChatTauri = {
     })
   },
   selectGroupChat: async function (groupChatId, chatId) {
-    return invoke('select_group_chat', { groupChatId, chatId: chatId ?? null })
+    return invoke('select_group_chat', { groupChatId, chatId })
   },
   chatRegenerateName: async function (chatId) {
     return invoke('chat_regenerate_name', { chatId })

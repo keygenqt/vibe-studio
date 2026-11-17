@@ -4,31 +4,35 @@
  * TAGS: ['hooks', 'states']
  * INFO: Provider read: the routed provider row load and the copy for render.
  */
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { ERRORS, errorsSet, providerSet } from '../store'
+import { providerSet } from '../store'
 import { ProvidersTauri } from '../tauri'
 
 export function useProvider(id) {
-  // the copy read: the row paints for the routed provider only
   const provider = useSelector(s => s.providers.provider[id] ?? null)
-  const errors = useSelector(s => s.providers.errors)
+  const [error, setError] = useState(null)
 
-  // the mount load: the routed provider row
   useEffectSingle({
     keys: [id],
     enabled: Boolean(id) && !provider,
-    callback: () =>
-      ProvidersTauri.getProvider(id)
-        .then(value => store.dispatch(providerSet(value)))
-        .catch(error => store.dispatch(errorsSet({ [ERRORS.provider]: String(error) }))),
+    callback: async () => {
+      setError(null)
+      try {
+        const value = await ProvidersTauri.getProvider(id)
+        store.dispatch(providerSet(value))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
   return {
     provider,
-    errors,
+    error,
     ready: id ? provider !== null : true,
   }
 }

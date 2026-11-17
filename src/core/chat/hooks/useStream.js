@@ -7,7 +7,6 @@
 import { useSelector } from 'react-redux'
 
 export function useStream(chatId) {
-  // the copy read: the stream paints for the routed chat only
   const stream = useSelector(s => (s.chat.stream?.chatId === chatId ? s.chat.stream : null))
 
   return {

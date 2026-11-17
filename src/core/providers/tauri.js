@@ -24,15 +24,10 @@ export const ProvidersTauri = {
     return invoke('delete_provider', { id })
   },
   getProviderModelsByType: async function (provider) {
-    return invoke('get_provider_models_by_type', {
-      kind: provider.provider,
-      host: provider.host,
-      apiKey: provider.api_key ?? null,
-      project: provider.project ?? null,
-    })
+    return invoke('get_provider_models_by_type', { provider })
   },
   getProviderModels: async function (providerId) {
-    return invoke('get_provider_models', { providerId: providerId ?? null })
+    return invoke('get_provider_models', { providerId })
   },
   getProviderModel: async function (id) {
     return invoke('get_provider_model', { id })

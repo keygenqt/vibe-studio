@@ -4,30 +4,34 @@
  * TAGS: ['hooks', 'states']
  * INFO: Providers read: the collection load and the copy for render.
  */
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { ERRORS, errorsSet, providersSet } from '../store'
+import { providersSet } from '../store'
 import { ProvidersTauri } from '../tauri'
 
 export function useProviders() {
-  // the copy read: the providers collection
   const providers = useSelector(s => s.providers.providers)
-  const errors = useSelector(s => s.providers.errors)
+  const [error, setError] = useState(null)
 
-  // the mount load: the providers collection
   useEffectSingle({
     enabled: providers === null,
-    callback: () =>
-      ProvidersTauri.getProviders()
-        .then(value => store.dispatch(providersSet(value)))
-        .catch(error => store.dispatch(errorsSet({ [ERRORS.providers]: String(error) }))),
+    callback: async () => {
+      setError(null)
+      try {
+        const value = await ProvidersTauri.getProviders()
+        store.dispatch(providersSet(value))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
   return {
     providers,
-    errors,
+    error,
     ready: providers !== null,
   }
 }

@@ -6,50 +6,23 @@
  */
 import { createSlice } from '@reduxjs/toolkit'
 
-export const ERRORS = {
-  history: 'history',
-  send: 'send',
-  cancel: 'cancel',
-  showType: 'showType',
-  deleteMessage: 'deleteMessage',
-  collapsed: 'collapsed',
-  resend: 'resend',
-  translate: 'translate',
-  compress: 'compress',
-}
-
 const chatSlice = createSlice({
   name: 'chat',
   initialState: {
     draft: '',
-    errors: {},
-    // the composer attachments: {kind: 'file', path} | {kind: 'image', png}
     chatAttachments: [],
     chat: null,
     history: null,
     historyChatId: null,
     stats: null,
-    // the growing answer of the active stream: {seq, chatId, thinking, text}
     stream: null,
-    // the growing translation of one message: {seq, messageId, text}
     translateStream: null,
   },
   reducers: {
-    errorsSet: (state, action) => {
-      state.errors = { ...state.errors, ...action.payload }
-    },
-    errorsClean: (state, action) => {
-      delete state.errors[action.payload]
-    },
-    errorsCleanAll: state => {
-      state.errors = {}
-    },
     chatDraftSet: (state, action) => {
       state.draft = action.payload
     },
     chatAttachmentsAdd: (state, action) => {
-      // the same file or image joins the draft once — duplicates
-      // are dropped silently, in the batch and against the draft
       const known = new Set(
         state.chatAttachments.map(item =>
           item.kind === 'file' ? `file:${item.path}` : `image:${item.png}`
@@ -69,19 +42,25 @@ const chatSlice = createSlice({
     chatAttachmentsClear: state => {
       state.chatAttachments = []
     },
-    // the whole block snapshot from one payload: event answers and loads alike
     chatStateSet: (state, action) => {
       state.chat = action.payload.chat
       state.history = action.payload.history
       state.historyChatId = action.payload.chat?.id ?? null
       state.stats = action.payload.stats
+      // a snapshot without an in-flight message closes the stream of this chat
+      if (
+        state.stream &&
+        state.stream.chatId === state.historyChatId &&
+        !state.history?.some(message => message.status === 'progress')
+      ) {
+        state.stream = null
+      }
     },
     chatHistorySet: (state, action) => {
       state.history = action.payload.history
       state.historyChatId = action.payload.chatId
     },
-    // the stream generations: `seq` marks the newest send — stale
-    // deltas and completions of a cancelled request change nothing
+    // seq marks the newest send: stale deltas and completions change nothing
     chatStreamStart: (state, action) => {
       state.stream = {
         seq: action.payload.seq,
@@ -90,7 +69,7 @@ const chatSlice = createSlice({
         text: '',
       }
     },
-    // both kinds are whole snapshots — the copy replaces, never accumulates
+    // each chunk is a whole snapshot: the copy replaces, never accumulates
     chatStreamAppend: (state, action) => {
       const { seq, chatId, kind, text } = action.payload
       if (state.stream && state.stream.seq > seq) return
@@ -104,8 +83,7 @@ const chatSlice = createSlice({
         state.stream = null
       }
     },
-    // the translation generations: `seq` marks the newest request —
-    // stale deltas and completions of a replaced request change nothing
+    // seq marks the newest translation: stale deltas and completions change nothing
     chatTranslateStart: (state, action) => {
       state.translateStream = {
         seq: action.payload.seq,
@@ -113,7 +91,7 @@ const chatSlice = createSlice({
         text: '',
       }
     },
-    // the whole balanced translation replaces the copy
+    // each chunk is a whole snapshot: the copy replaces, never accumulates
     chatTranslateAppend: (state, action) => {
       const { seq, messageId, text } = action.payload
       if (state.translateStream && state.translateStream.seq > seq) return
@@ -131,14 +109,11 @@ const chatSlice = createSlice({
 })
 
 export const {
-  errorsSet,
-  errorsClean,
-  errorsCleanAll,
   chatDraftSet,
-  chatStateSet,
   chatAttachmentsAdd,
   chatAttachmentsRemove,
   chatAttachmentsClear,
+  chatStateSet,
   chatHistorySet,
   chatStreamStart,
   chatStreamAppend,

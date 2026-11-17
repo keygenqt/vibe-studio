@@ -4,39 +4,31 @@
  * TAGS: ['facts']
  * INFO: App writes: user actions over the Tauri commands.
  */
-import store, { runMutation } from '../store'
-import { ERRORS, errorsClean, errorsCleanAll, errorsSet } from './store'
 import { AppTauri } from './tauri'
-
-// the shared envelope bound to the block error actions
-const catchError = (key, action) => runMutation({ errorsSet, errorsClean }, key, action)
 
 export const AppMethod = {
   clipboardWriteText: function (text) {
-    return catchError(ERRORS.writeText, () => AppTauri.clipboardWriteText(text))
+    return AppTauri.clipboardWriteText(text)
   },
   clipboardWriteImage: function (png) {
-    return catchError(ERRORS.writeImage, () => AppTauri.clipboardWriteImage(png))
+    return AppTauri.clipboardWriteImage(png)
   },
   clipboardWriteFiles: function (paths) {
-    return catchError(ERRORS.writeFiles, () => AppTauri.clipboardWriteFiles(paths))
+    return AppTauri.clipboardWriteFiles(paths)
   },
   clipboardClear: function () {
-    return catchError(ERRORS.clipboardClear, () => AppTauri.clipboardClear())
+    return AppTauri.clipboardClear()
   },
   clipboardRead: function () {
-    return catchError(ERRORS.clipboardRead, () => AppTauri.clipboardRead())
+    return AppTauri.clipboardRead()
   },
   dialogOpenFiles: function () {
-    return catchError(ERRORS.openFiles, () => AppTauri.dialogOpenFiles())
+    return AppTauri.dialogOpenFiles()
   },
   attachmentStat: function (path) {
-    return catchError(ERRORS.stat, () => AppTauri.attachmentStat(path))
+    return AppTauri.attachmentStat(path)
   },
   openInBrowser: function (url) {
-    return catchError(ERRORS.openBrowser, () => AppTauri.openInBrowser(url))
-  },
-  cleanError: function (key) {
-    store.dispatch(key ? errorsClean(key) : errorsCleanAll())
+    return AppTauri.openInBrowser(url)
   },
 }

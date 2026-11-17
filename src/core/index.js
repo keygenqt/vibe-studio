@@ -5,7 +5,7 @@
  * INFO: The core runtime wiring: the store and the Rust event binding.
  */
 import { chatEvents } from './chat'
-import { groupsChatEvents } from './groups_chat'
+import { groupsChatEvents } from './groupsChat'
 import { providersEvents } from './providers'
 import { settingsEvents } from './settings'
 import { workspaceEvents } from './workspace'

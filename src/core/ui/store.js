@@ -9,17 +9,17 @@ import { createSlice } from '@reduxjs/toolkit'
 const uiSlice = createSlice({
   name: 'ui',
   initialState: {
-    formSuccess: null,
+    formState: null,
   },
   reducers: {
-    formSuccessSet: (state, action) => {
-      state.formSuccess = action.payload
+    formStateSet: (state, action) => {
+      state.formState = action.payload
     },
-    formSuccessClear: state => {
-      state.formSuccess = null
+    formStateClear: state => {
+      state.formState = null
     },
   },
 })
 
-export const { formSuccessSet, formSuccessClear } = uiSlice.actions
+export const { formStateSet, formStateClear } = uiSlice.actions
 export default uiSlice.reducer

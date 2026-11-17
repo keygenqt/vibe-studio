@@ -4,36 +4,38 @@
  * TAGS: ['hooks', 'states']
  * INFO: Models read: the collection load, the copy and the optional provider filter.
  */
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { ERRORS, errorsSet, modelsSet } from '../store'
+import { modelsSet } from '../store'
 import { ProvidersTauri } from '../tauri'
 
 export function useModels(providerId) {
-  // the copy read: the whole model table, the provider slice filters on render
   const models = useSelector(s => s.providers.models)
-  const errors = useSelector(s => s.providers.errors)
+  const [error, setError] = useState(null)
 
-  // the mount load: the whole model table
   useEffectSingle({
     enabled: models === null,
-    callback: () =>
-      ProvidersTauri.getProviderModels(null)
-        .then(value => store.dispatch(modelsSet(value)))
-        .catch(error => store.dispatch(errorsSet({ [ERRORS.models]: String(error) }))),
+    callback: async () => {
+      setError(null)
+      try {
+        const value = await ProvidersTauri.getProviderModels(null)
+        store.dispatch(modelsSet(value))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
-  const providerModels = providerId
-    ? models
-      ? models.filter(model => model.provider_id === providerId)
-      : null
-    : models
-
   return {
-    models: providerModels,
-    errors,
+    models: providerId
+      ? models
+        ? models.filter(model => model.providerId === providerId)
+        : null
+      : models,
+    error,
     ready: models !== null,
   }
 }

@@ -6,11 +6,10 @@
  */
 import { useSelector } from 'react-redux'
 
-export function useUi() {
-  // the copy read: no mount load — the block has nothing to fetch
-  const formSuccess = useSelector(s => s.ui.formSuccess)
+export function useFormState() {
+  const formState = useSelector(s => s.ui.formState)
 
   return {
-    formSuccess,
+    formState,
   }
 }

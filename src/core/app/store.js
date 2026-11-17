@@ -6,36 +6,14 @@
  */
 import { createSlice } from '@reduxjs/toolkit'
 
-export const ERRORS = {
-  load: 'load',
-  writeText: 'writeText',
-  writeImage: 'writeImage',
-  writeFiles: 'writeFiles',
-  clipboardClear: 'clipboardClear',
-  clipboardRead: 'clipboardRead',
-  openFiles: 'openFiles',
-  stat: 'stat',
-  openBrowser: 'openBrowser',
-}
-
 const appSlice = createSlice({
   name: 'app',
   initialState: {
     version: null,
     isDebug: false,
     ready: false,
-    errors: {},
   },
   reducers: {
-    errorsSet: (state, action) => {
-      state.errors = { ...state.errors, ...action.payload }
-    },
-    errorsClean: (state, action) => {
-      delete state.errors[action.payload]
-    },
-    errorsCleanAll: state => {
-      state.errors = {}
-    },
     appSet: (state, action) => {
       state.version = action.payload.version
       state.isDebug = action.payload.isDebug
@@ -46,5 +24,5 @@ const appSlice = createSlice({
   },
 })
 
-export const { errorsSet, errorsClean, errorsCleanAll, appSet, appReadySet } = appSlice.actions
+export const { appSet, appReadySet } = appSlice.actions
 export default appSlice.reducer

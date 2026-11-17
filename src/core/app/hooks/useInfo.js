@@ -4,31 +4,35 @@
  * TAGS: ['hooks', 'facts']
  * INFO: App facts read: the mount load, the version and debug copy.
  */
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { ERRORS, appSet, errorsSet } from '../store'
+import { appSet } from '../store'
 import { AppTauri } from '../tauri'
 
 export function useInfo() {
-  // the copy read: the facts of the running app
   const version = useSelector(s => s.app.version)
   const isDebug = useSelector(s => s.app.isDebug)
-  const errors = useSelector(s => s.app.errors)
+  const [error, setError] = useState(null)
 
-  // the mount load: the facts copy is loaded once
   useEffectSingle({
     enabled: version === null,
-    callback: () =>
-      AppTauri.getAppInfo()
-        .then(value => store.dispatch(appSet(value)))
-        .catch(error => store.dispatch(errorsSet({ [ERRORS.load]: String(error) }))),
+    callback: async () => {
+      setError(null)
+      try {
+        const value = await AppTauri.getAppInfo()
+        store.dispatch(appSet(value))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
   return {
     version,
     isDebug,
-    errors,
+    error,
   }
 }

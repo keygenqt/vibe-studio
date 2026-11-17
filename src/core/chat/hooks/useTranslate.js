@@ -7,7 +7,6 @@
 import { useSelector } from 'react-redux'
 
 export function useTranslate() {
-  // the copy read: one translation at a time, the consumer matches by messageId
   const translateStream = useSelector(s => s.chat.translateStream)
 
   return {

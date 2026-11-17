@@ -4,30 +4,34 @@
  * TAGS: ['hooks', 'states']
  * INFO: Chats read: the collection load and the copy for render.
  */
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { ERRORS, chatsSet, errorsSet } from '../store'
+import { chatsSet } from '../store'
 import { GroupsChatTauri } from '../tauri'
 
 export function useChats() {
-  // the copy read: the chats collection
-  const chats = useSelector(s => s.groups_chat.chats)
-  const errors = useSelector(s => s.groups_chat.errors)
+  const chats = useSelector(s => s.groupsChat.chats)
+  const [error, setError] = useState(null)
 
-  // the mount load: the chats collection
   useEffectSingle({
     enabled: chats === null,
-    callback: () =>
-      GroupsChatTauri.getChats()
-        .then(value => store.dispatch(chatsSet(value)))
-        .catch(error => store.dispatch(errorsSet({ [ERRORS.chats]: String(error) }))),
+    callback: async () => {
+      setError(null)
+      try {
+        const value = await GroupsChatTauri.getChats()
+        store.dispatch(chatsSet(value))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
   return {
     chats,
-    errors,
+    error,
     ready: chats !== null,
   }
 }

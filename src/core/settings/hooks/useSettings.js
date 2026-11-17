@@ -4,28 +4,33 @@
  * TAGS: ['hooks', 'states']
  * INFO: Settings read: the mount load and the preferences copy.
  */
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { ERRORS, errorsSet, settingsSet } from '../store'
+import { settingsSet } from '../store'
 import { SettingsTauri } from '../tauri'
 
 export function useSettings() {
-  // the copy read: the whole preferences slice
   const settings = useSelector(s => s.settings)
+  const [error, setError] = useState(null)
 
-  // the mount load: the preferences copy
   useEffectSingle({
     enabled: true,
-    callback: () =>
-      SettingsTauri.get()
-        .then(value => store.dispatch(settingsSet(value)))
-        .catch(error => store.dispatch(errorsSet({ [ERRORS.load]: String(error) }))),
+    callback: async () => {
+      setError(null)
+      try {
+        const value = await SettingsTauri.get()
+        store.dispatch(settingsSet(value))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
   return {
-    errors: settings.errors,
     settings,
+    error,
   }
 }

@@ -4,30 +4,34 @@
  * TAGS: ['hooks', 'states']
  * INFO: Catalog read: the provider kinds load and the copy for the forms.
  */
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { ERRORS, catalogSet, errorsSet } from '../store'
+import { catalogSet } from '../store'
 import { ProvidersTauri } from '../tauri'
 
 export function useCatalog() {
-  // the copy read: the provider kinds catalog
   const catalog = useSelector(s => s.providers.catalog)
-  const errors = useSelector(s => s.providers.errors)
+  const [error, setError] = useState(null)
 
-  // the mount load: the provider kinds catalog
   useEffectSingle({
     enabled: catalog === null,
-    callback: () =>
-      ProvidersTauri.getProvidersCatalog()
-        .then(value => store.dispatch(catalogSet(value)))
-        .catch(error => store.dispatch(errorsSet({ [ERRORS.catalog]: String(error) }))),
+    callback: async () => {
+      setError(null)
+      try {
+        const value = await ProvidersTauri.getProvidersCatalog()
+        store.dispatch(catalogSet(value))
+      } catch (err) {
+        setError(String(err))
+      }
+    },
   })
 
   return {
     catalog,
-    errors,
+    error,
     ready: catalog !== null,
   }
 }
