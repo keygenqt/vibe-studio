@@ -14,7 +14,7 @@ import { alpha } from '@mui/material/styles'
 
 import { AttachmentChip } from '../../../components/views'
 import { ErrorSnackbar } from '../../../components/snackbars'
-import { Methods } from '../../../modules'
+import { AppMethod } from '../../../core'
 import { AppUtils } from '../../../utils'
 import { CHAT_COLLAPSE_HEIGHT } from '../../../constants'
 
@@ -30,7 +30,7 @@ export function UserMessageView(props) {
     try {
       await props.onShowType(
         props.message.id,
-        props.message.show_type === 'summary' ? 'text' : 'summary'
+        props.message.showType === 'summary' ? 'text' : 'summary'
       )
     } catch (err) {
       setError(t(String(err)))
@@ -48,13 +48,13 @@ export function UserMessageView(props) {
 
   // the copy takes the shown view: the summary or the text itself
   const shownText =
-    props.message.show_type === 'summary' ? props.message.summary : props.message.text
+    props.message.showType === 'summary' ? props.message.summary : props.message.text
 
   // resolves `true` on success for the copy accent; a failure
   // lands in the snackbar
   const onClickCopy = async () => {
     try {
-      await Methods.clipboard_write_text(shownText)
+      await AppMethod.clipboardWriteText(shownText)
       return true
     } catch (err) {
       setError(t(String(err)))
@@ -110,7 +110,7 @@ export function UserMessageView(props) {
               onClickSummary={
                 !props.message.collapsed && props.canSummarize ? onClickSummary : undefined
               }
-              summaryActive={props.message.show_type === 'summary'}
+              summaryActive={props.message.showType === 'summary'}
               onClickRefresh={props.onRefresh}
               onClickDelete={props.onDelete}
             />
@@ -135,7 +135,7 @@ export function UserMessageView(props) {
                 : undefined
             }
           >
-            {props.message.show_type === 'summary' ? (
+            {props.message.showType === 'summary' ? (
               <Typography
                 variant={'body2'}
                 color={'text.secondary'}
@@ -177,7 +177,7 @@ UserMessageView.propTypes = {
     author: PropTypes.string.isRequired,
     time: PropTypes.string.isRequired,
     // which artifact the bubble shows
-    show_type: PropTypes.oneOf(['text', 'translate', 'summary', 'thinking']).isRequired,
+    showType: PropTypes.oneOf(['text', 'translate', 'summary', 'thinking']).isRequired,
     text: PropTypes.string.isRequired,
     summary: PropTypes.string,
     collapsed: PropTypes.bool,

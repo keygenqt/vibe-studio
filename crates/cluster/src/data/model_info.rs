@@ -10,6 +10,7 @@ use vibe_cluster::ModelInfo;
 /// `vibe_cluster::ModelInfo`; fields the provider does not report
 /// stay `None`.
 #[derive(Debug, Clone, Default, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ModelInfoData {
     /// Model name as the provider addresses it (call/execute use it).
     pub name: String,

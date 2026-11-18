@@ -42,7 +42,7 @@ import { Box, IconButton, Stack, Typography } from '@mui/material'
 import { useTheme, alpha } from '@mui/material/styles'
 import ContentCopy from '@mui/icons-material/ContentCopy'
 
-import { Methods } from '../../modules'
+import { AppMethod } from '../../core/app'
 
 // the highlight registry: a language outside it falls back to the
 // plain code — the fallback works for the stream with a partial
@@ -138,7 +138,7 @@ function CodeBlockBase(props) {
   // resolves silently: a failed copy just skips the accent paint
   const onClickCopy = () => {
     if (copied) return
-    Methods.clipboard_write_text(props.code)
+    AppMethod.clipboardWriteText(props.code)
       .then(() => {
         setCopied(true)
         timer.current = setTimeout(() => setCopied(false), 2000)
@@ -216,7 +216,7 @@ function PlainCodeBlockBase(props) {
   // resolves silently: a failed copy just skips the accent paint
   const onClickCopy = () => {
     if (copied) return
-    Methods.clipboard_write_text(props.code)
+    AppMethod.clipboardWriteText(props.code)
       .then(() => {
         setCopied(true)
         timer.current = setTimeout(() => setCopied(false), 2000)
@@ -305,7 +305,7 @@ function MarkdownViewBase(props) {
             onClick={event => {
               event.preventDefault()
               if (href && /^https?:\/\//.test(href)) {
-                Methods.open_in_browser(href).catch(() => {})
+                AppMethod.openInBrowser(href).catch(console.error)
               }
             }}
             sx={{ color: 'primary.main' }}

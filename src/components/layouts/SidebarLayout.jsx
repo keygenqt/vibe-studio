@@ -7,23 +7,31 @@
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 
+import { useWorkspace, WorkspaceMethod } from '../../core'
+import { useDragResize } from '../../hooks'
 import { HandleView } from '../views'
 import { ScrollPanel } from './ScrollPanel'
 
 export function SidebarLayout(props) {
-  const { collapsed, width, dragging, onHandlePointerDown } = props.sidebar
+  const workspace = useWorkspace()
+  const drag = useDragResize({
+    axis: 'x',
+    getSize: () => workspace.sideBarSize,
+    onMove: size => WorkspaceMethod.save({ sideBarSize: size }),
+  })
+
   return (
     <>
       <Box
         sx={theme => ({
-          width: width,
+          width: workspace.sideBarSize,
           flexShrink: 0,
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
-          opacity: collapsed ? 0 : 1,
+          opacity: workspace.sideBarCollapsed ? 0 : 1,
           boxSizing: 'border-box',
-          transition: dragging
+          transition: drag.dragging
             ? 'none'
             : theme.transitions.create(['opacity'], {
                 duration: theme.transitions.duration.standard + 100,
@@ -54,7 +62,7 @@ export function SidebarLayout(props) {
       </Box>
       <HandleView
         orientation="vertical"
-        onPointerDown={collapsed ? undefined : onHandlePointerDown}
+        onPointerDown={workspace.sideBarCollapsed ? undefined : drag.onHandlePointerDown}
       />
       <Box
         sx={theme => ({
@@ -63,11 +71,13 @@ export function SidebarLayout(props) {
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
-          marginLeft: collapsed ? `calc(-1 * (${width}px + ${theme.spacing(2)} + 2px))` : 0,
+          marginLeft: workspace.sideBarCollapsed
+            ? `calc(-1 * (${workspace.sideBarSize}px + ${theme.spacing(2)} + 2px))`
+            : 0,
           position: 'relative',
           zIndex: 1,
           backgroundColor: 'background.default',
-          transition: dragging
+          transition: drag.dragging
             ? 'none'
             : theme.transitions.create(['margin'], {
                 duration: theme.transitions.duration.standard,
@@ -86,12 +96,6 @@ export function SidebarLayout(props) {
 }
 
 SidebarLayout.propTypes = {
-  sidebar: PropTypes.shape({
-    collapsed: PropTypes.bool.isRequired,
-    width: PropTypes.number.isRequired,
-    dragging: PropTypes.bool.isRequired,
-    onHandlePointerDown: PropTypes.func.isRequired,
-  }).isRequired,
   scrollPage: PropTypes.bool,
   scrollPageKey: PropTypes.string,
   scrollSidebar: PropTypes.bool,

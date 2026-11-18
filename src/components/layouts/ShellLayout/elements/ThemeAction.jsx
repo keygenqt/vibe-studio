@@ -10,19 +10,20 @@ import DarkMode from '@mui/icons-material/DarkMode'
 import DesktopWindows from '@mui/icons-material/DesktopWindows'
 import LightMode from '@mui/icons-material/LightMode'
 
-import { useCoreSettings } from '../../../../hooks'
+import { SettingsMethod, useSettings } from '../../../../core/settings'
 
 export function ThemeAction() {
   const { t } = useTranslation()
-  const { settings, setTheme } = useCoreSettings()
-  const theme = settings.appearance_theme
+  const { settings } = useSettings()
+  const theme = settings.appearanceTheme
+  // the cycle persists the choice; the resolved mode re-derives on the event
+  const onCycle = () => {
+    const next = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'
+    SettingsMethod.save({ appearanceTheme: next }).catch(console.error)
+  }
   return (
     <Tooltip title={t('main.t_theme')}>
-      <IconButton
-        size="small"
-        sx={{ p: '2px' }}
-        onClick={() => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')}
-      >
+      <IconButton size="small" sx={{ p: '2px' }} onClick={onCycle}>
         {theme === 'light' ? (
           <LightMode sx={{ fontSize: 16 }} />
         ) : theme === 'dark' ? (

@@ -9,11 +9,8 @@
 //!
 //! - `commands` — the `#[tauri::command]` functions of the block.
 //! - `events` — the block event binding.
-//! - `include` — `handler()`: the block's command list, the chain
-//!   entry of the invoke handler.
 //! - `data` — data types of the block served to the shell.
 
 pub(crate) mod commands;
 pub(crate) mod data;
 pub(crate) mod events;
-pub(crate) mod include;

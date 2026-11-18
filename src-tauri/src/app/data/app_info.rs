@@ -7,6 +7,7 @@ use serde::Serialize;
 
 /// App version and debug flag.
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AppInfoData {
     pub version: String,
     pub is_debug: bool,

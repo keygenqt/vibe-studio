@@ -6,7 +6,6 @@
  */
 import PropTypes from 'prop-types'
 import * as React from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
@@ -18,24 +17,22 @@ import { DeleteDialog } from '../../../components/views'
 import { ErrorAlert, SuccessAlert } from '../../../components/alerts'
 import { AppNav, AppUtils } from '../../../utils'
 import { AppRoutes } from '../../../constants'
-import { formSuccessClear, formSuccessSet } from '../../../store/impl/app'
-import { Methods } from '../../../modules'
+import { ProvidersMethod, UiMethod, useFormState } from '../../../core'
 
 export function ProviderForm(props) {
   const { t } = useTranslation()
   const { catalog } = props
-  const dispatch = useDispatch()
   const navigate = useNavigate()
-  const formSuccess = useSelector(state => state.app.formSuccess)
+  const { formState } = useFormState()
   const isEdit = Boolean(props.isEdit)
   const [openDelete, setOpenDelete] = React.useState(false)
   const [savedOpen, setSavedOpen] = React.useState(false)
   const current = catalog.find(info => info.provider === props.provider) ?? catalog[0]
 
   React.useEffect(() => {
-    if (formSuccess) {
+    if (formState) {
       setSavedOpen(true)
-      dispatch(formSuccessClear())
+      UiMethod.clearFormState()
     }
   }, [])
 
@@ -45,7 +42,7 @@ export function ProviderForm(props) {
       initialValues={{
         provider: current.provider,
         name: props.name ?? current.name,
-        host: props.host ?? current.default_host ?? '',
+        host: props.host ?? current.defaultHost ?? '',
         apiKey: props.apiKey ?? '',
         project: props.project ?? '',
       }}
@@ -59,12 +56,12 @@ export function ProviderForm(props) {
       })}
       onSubmit={async (values, { setErrors, setSubmitting }) => {
         const state = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
-          Methods.save_provider({
+          ProvidersMethod.saveProvider({
             id: props.id || null,
             name: values.name,
             provider: values.provider,
             host: values.host,
-            api_key: values.apiKey,
+            apiKey: values.apiKey,
             project: values.project || null,
           })
         )
@@ -95,7 +92,7 @@ export function ProviderForm(props) {
               text={t('provider.t_delete_text')}
               onCancel={() => setOpenDelete(false)}
               onConfirm={() => {
-                Methods.delete_provider(props.id)
+                ProvidersMethod.deleteProvider(props.id)
                   .then(() => AppNav.back(navigate))
                   .catch(error => {
                     setOpenDelete(false)
@@ -131,7 +128,7 @@ export function ProviderForm(props) {
                         setFieldValue(field, newDefault)
                       }
                     }
-                    prefill('host', prev?.default_host, next?.default_host ?? '')
+                    prefill('host', prev?.defaultHost, next?.defaultHost ?? '')
                     prefill('name', prev?.name, next?.name)
                     setFieldValue('project', '')
                     handleChange(e)

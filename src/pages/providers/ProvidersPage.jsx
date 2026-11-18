@@ -14,20 +14,19 @@ import { PageHeader } from '../../components/views'
 import { ErrorState, WaitState } from '../../components/states'
 import { AppRoutes } from '../../constants'
 import { AppNav } from '../../utils'
-import { useCoreProviders } from '../../hooks'
+import { useCatalog, useProviders } from '../../core'
 
 export function ProvidersPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { catalog, providers, error, ready } = useCoreProviders()
+  const { providers, ready: providersReady, error: providersError } = useProviders()
+  const { catalog, ready: catalogReady, error: catalogError } = useCatalog()
 
-  if (error) {
-    return (
-      <WaitState ready={ready}>
-        <ErrorState text={error.message ?? String(error)} />
-      </WaitState>
-    )
-  }
+  // any resource failed: the error paints over the loader
+  const failure = providersError ?? catalogError
+  if (failure) return <ErrorState text={failure} />
+
+  const ready = providersReady && catalogReady
 
   return (
     <WaitState ready={ready}>
@@ -36,11 +35,11 @@ export function ProvidersPage() {
         <DashedButton onClick={() => AppNav.open(navigate, AppRoutes.providerAdd())}>
           {t('providers.t_add')}
         </DashedButton>
-        {(providers ?? []).map(provider => (
+        {providers.map(provider => (
           <ProviderCard
             key={`provider-${provider.id}`}
             provider={provider}
-            color={catalog?.find(info => info.provider === provider.provider)?.color}
+            color={catalog.find(info => info.provider === provider.provider)?.color}
             onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
           />
         ))}

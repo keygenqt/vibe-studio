@@ -12,7 +12,7 @@ import UnfoldLess from '@mui/icons-material/UnfoldLess'
 import UnfoldMore from '@mui/icons-material/UnfoldMore'
 
 import { ErrorSnackbar } from '../../../components/snackbars'
-import { Methods } from '../../../modules'
+import { AppMethod } from '../../../core'
 import { AppUtils } from '../../../utils'
 import { CHAT_COLLAPSE_HEIGHT } from '../../../constants'
 
@@ -24,7 +24,7 @@ export function CompressMessageView(props) {
   const message = props.message
   // the attempt paints its growth, the final paints the base
   const isProgress = message.status === 'progress'
-  const showType = message.show_type
+  const showType = message.showType
   const [error, setError] = React.useState(null)
 
   // the caption is fixed: the base is the context, not a speaker
@@ -37,7 +37,7 @@ export function CompressMessageView(props) {
   // in the snackbar
   const onClickCopy = async () => {
     try {
-      await Methods.clipboard_write_text(shownText)
+      await AppMethod.clipboardWriteText(shownText)
       return true
     } catch (err) {
       setError(t(String(err)))
@@ -172,7 +172,7 @@ CompressMessageView.propTypes = {
     // the attempt paints its growth while running
     status: PropTypes.oneOf(['complete', 'progress', 'cancelled', 'error']).isRequired,
     // the attempt shows the thinking on the toggle
-    show_type: PropTypes.oneOf(['text', 'thinking']).isRequired,
+    showType: PropTypes.oneOf(['text', 'thinking']).isRequired,
     text: PropTypes.string.isRequired,
     thinking: PropTypes.string,
     // the collapse flag of the bubble

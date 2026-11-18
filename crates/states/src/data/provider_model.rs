@@ -13,6 +13,7 @@ use crate::Store;
 /// stored — SQLite owns the id. The config is filled at insert from
 /// the defaults catalog — the stored row always carries it.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProviderModelData {
     /// Row id; `None` = not stored yet.
     pub id: Option<i32>,

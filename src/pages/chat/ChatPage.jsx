@@ -13,8 +13,18 @@ import { AttachmentChip, DeleteDialog } from '../../components/views'
 import { ErrorSnackbar } from '../../components/snackbars'
 import { WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
-import { useCoreChat, useCoreGroupsChat, useCoreSettings, useCoreWorkspace } from '../../hooks'
-import { Methods } from '../../modules'
+import {
+  AppMethod,
+  ChatMethod,
+  GroupsChatMethod,
+  useChats,
+  useChat,
+  useComposer,
+  useGroupsChat,
+  useSettings,
+  useStream,
+  useTranslate,
+} from '../../core'
 import { AppUtils } from '../../utils'
 import { pauseFollow, scrollToBottom, watchBottom } from '../../init'
 
@@ -24,80 +34,78 @@ import { ContextLimitView } from './elements/ContextLimitView'
 import { CompressMessageView } from './elements/CompressMessageView'
 import { UserMessageView } from './elements/UserMessageView'
 import { ModelMessageView } from './elements/ModelMessageView'
-import { QuickActions } from './elements/QuickActions'
 import { InputView } from './elements/InputView'
 
 export function ChatPage() {
   const { chatId } = useParams()
   const { t, i18n } = useTranslation()
   const cid = Number(chatId)
-  const workspace = useCoreWorkspace()
-  const { chats, groupsChat, models, ready: groupsReady } = useCoreGroupsChat()
-  const {
-    draft,
-    chatAttachments,
-    addAttachments,
-    removeAttachment,
-    sendError,
-    setSendError,
-    setDraft,
-    send,
-    sending,
-    streaming,
-    stop,
-    remove,
-    resend,
-    history,
-    stream,
-    translateStream,
-    stats,
-    ready: chatReady,
-  } = useCoreChat({ chatId: cid })
-  const { settings } = useCoreSettings()
+  const { chats, ready: chatsReady } = useChats()
+  const { groupsChat, models, ready: groupsReady } = useGroupsChat()
+  const { settings } = useSettings()
+  const { chat, stats, history, ready: chatReady, error: chatError } = useChat({ chatId: cid })
+  const { draft, chatAttachments } = useComposer()
+  const { stream, streaming } = useStream(cid)
+  const { translateStream } = useTranslate()
+  const [sending, setSending] = React.useState(false)
+  const [sendError, setSendError] = React.useState(null)
   // the pending confirmation: {action: 'delete' | 'resend', messageId}
   const [confirm, setConfirm] = React.useState(null)
+  // the composer writes live in the block; the send is a page gesture
+  const setDraft = value => ChatMethod.setDraft(value)
+  const addAttachments = items => ChatMethod.addAttachments(items)
+  const removeAttachment = index => ChatMethod.removeAttachment(index)
+  const send = translate => {
+    setSending(true)
+    setSendError(null)
+    ChatMethod.sendMessage(cid, draft, translate, chatAttachments)
+      .catch(err => setSendError(String(err)))
+      .finally(() => setSending(false))
+  }
+  const stop = () => ChatMethod.cancelSend(cid)
+  const remove = messageId => ChatMethod.deleteMessage(cid, messageId)
+  const resend = messageId => ChatMethod.resendMessage(cid, messageId)
   // the translation view shows the stored one, an empty column
   // generates once — the errors surface in the view
-  const translate = messageId => Methods.chat_translate_message(cid, messageId)
+  const translate = messageId => ChatMethod.translateMessage(cid, messageId)
   // the picker answers with the selected paths or null on the cancel
   const onAttach = () =>
-    Methods.dialog_open_files()
+    AppMethod.dialogOpenFiles()
       .then(paths => paths && addAttachments(paths.map(path => ({ kind: 'file', path }))))
       .catch(console.error)
-  const chat = chats?.find(item => item.id === cid) ?? null
   // the group's model: the capability badges paint near the quick actions
-  const group = (groupsChat ?? []).find(item => item.id === chat?.group_chat_id) ?? null
-  const groupModel = (models ?? []).find(item => item.id === group?.model_id) ?? null
+  const group = (groupsChat ?? []).find(item => item.id === chat?.groupChatId) ?? null
+  const groupModel = (models ?? []).find(item => item.id === group?.modelId) ?? null
   // the message text size: the store resolves the untouched value
-  const fontSize = settings.appearance_chat_font_size
+  const fontSize = settings.appearanceChatFontSize
   // the translate actions live only with the translation model set
-  const canTranslate = settings.translation_model !== null
+  const canTranslate = settings.translationModel !== null
   // the summary view lives only with the light task model set: the
   // summary is its job
-  const canSummarize = settings.tasks_model_light !== null
+  const canSummarize = settings.tasksModelLight !== null
   const setShowType = (messageId, showType) => {
     pauseFollow('chat.history')
-    return Methods.chat_set_message_show_type(cid, messageId, showType)
+    return ChatMethod.setMessageShowType(cid, messageId, showType)
   }
   const setCollapsed = (messageId, collapsed) =>
-    Methods.chat_set_message_collapsed(cid, messageId, collapsed)
+    ChatMethod.setMessageCollapsed(cid, messageId, collapsed)
   // the newest progress row owns the live stream
   const progressRow = (history ?? []).findLast(item => item.status === 'progress') ?? null
   // the running compress: the history hides, the attempt paints alone
   const compressAttempt =
-    (history ?? []).find(item => item.message_type === 'compress' && item.status === 'progress') ??
+    (history ?? []).find(item => item.messageType === 'compress' && item.status === 'progress') ??
     null
 
   // the context limit plate: the measured input of each answer — the
   // plate paints after the first answer whose call crossed the limit
   const contextLimitId = React.useMemo(() => {
-    if (!history || !settings.chat_context_limit) return null
-    const limit = settings.chat_context_limit * 1000
+    if (!history || !settings.chatContextLimit) return null
+    const limit = settings.chatContextLimit * 1000
     const crossed = history.find(
-      message => message.message_type === 'assistant' && message.tokens_input > limit
+      message => message.messageType === 'assistant' && message.tokensInput > limit
     )
     return crossed?.id ?? null
-  }, [history, settings.chat_context_limit])
+  }, [history, settings.chatContextLimit])
 
   // the chat opens at the bottom: this many last messages render
   // markdown at once — the rest upgrade lazily on the scroll up
@@ -116,12 +124,12 @@ export function ChatPage() {
   const viewMessage = message => ({
     ...message,
     author: message.model ?? t('chat.t_you'),
-    time: AppUtils.formatTime(i18n.language, message.created_at),
+    time: AppUtils.formatTime(i18n.language, message.createdAt),
   })
 
   const renderMessage = (message, key, immediate = false) => {
     const view = viewMessage(message)
-    return message.message_type === 'compress' ? (
+    return message.messageType === 'compress' ? (
       <CompressMessageView
         key={key}
         message={{
@@ -141,7 +149,7 @@ export function ChatPage() {
         onShowType={setShowType}
         onSetCollapsed={setCollapsed}
       />
-    ) : message.message_type === 'user' ? (
+    ) : message.messageType === 'user' ? (
       <UserMessageView
         key={key}
         message={view}
@@ -174,18 +182,18 @@ export function ChatPage() {
   }
 
   return (
-    <WaitState ready={groupsReady}>
+    <WaitState ready={groupsReady && chatsReady}>
       {chat ? (
         <>
           <ChatTitleView
             name={t(chat.name)}
             canScrollDown={!atBottom}
             onScrollDown={() => scrollToBottom('chat.history')}
-            canRename={(history ?? []).length > 0 && settings.tasks_model_light !== null}
-            onRename={() => Methods.chat_regenerate_name(cid).catch(console.error)}
+            canRename={(history ?? []).length > 0 && settings.tasksModelLight !== null}
+            onRename={() => GroupsChatMethod.chatRegenerateName(cid).catch(console.error)}
             canCompress={(history ?? []).length > 0}
-            hasTaskModel={settings.tasks_model_heavy !== null}
-            onCompress={useTaskModel => Methods.chat_compress_message(cid, useTaskModel)}
+            hasTaskModel={settings.tasksModelHeavy !== null}
+            onCompress={useTaskModel => ChatMethod.compressMessage(cid, useTaskModel)}
           />
           <ScrollPanel
             scrollKey={'chat.history'}
@@ -211,7 +219,7 @@ export function ChatPage() {
                           index >= list.length - VISIBLE_TAIL
                         )}
                         {message.id === contextLimitId && (
-                          <ContextLimitView limit={settings.chat_context_limit} />
+                          <ContextLimitView limit={settings.chatContextLimit} />
                         )}
                       </React.Fragment>
                     ))}
@@ -220,14 +228,14 @@ export function ChatPage() {
                     renderMessage(
                       {
                         id: progressRow?.id ?? -1,
-                        message_type: 'assistant',
+                        messageType: 'assistant',
                         provider: progressRow?.provider ?? null,
                         model: progressRow?.model ?? null,
                         status: 'progress',
-                        show_type: progressRow?.show_type ?? 'text',
+                        showType: progressRow?.showType ?? 'text',
                         text: stream.text,
                         thinking: stream.thinking,
-                        created_at: progressRow?.created_at ?? Date.now(),
+                        createdAt: progressRow?.createdAt ?? Date.now(),
                       },
                       'message-stream',
                       true
@@ -247,15 +255,13 @@ export function ChatPage() {
             sending={sending}
             streaming={streaming}
             stop={stop}
-            chatInputSize={workspace.chatInputSize}
-            onHandlePointerDown={workspace.onComposerHandlePointerDown}
             onAttach={onAttach}
             addAttachments={addAttachments}
             chatAttachments={chatAttachments}
             canTranslate={canTranslate}
             groupModel={groupModel}
             stats={stats}
-            contextLimit={settings.chat_context_limit}
+            contextLimit={settings.chatContextLimit}
           />
 
           {chatAttachments.length > 0 && (
@@ -313,10 +319,7 @@ export function ChatPage() {
               setConfirm(null)
             }}
           />
-          <ErrorSnackbar
-            text={sendError ? t(String(sendError)) : null}
-            onClose={() => setSendError(null)}
-          />
+          <ErrorSnackbar text={sendError ?? chatError} onClose={() => setSendError(null)} />
         </>
       ) : (
         <ChatEmptyPage />

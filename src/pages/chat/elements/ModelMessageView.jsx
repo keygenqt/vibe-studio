@@ -13,7 +13,7 @@ import UnfoldMore from '@mui/icons-material/UnfoldMore'
 
 import { ErrorSnackbar } from '../../../components/snackbars'
 import { DeferredMarkdown } from './DeferredMarkdown'
-import { Methods } from '../../../modules'
+import { AppMethod } from '../../../core'
 import { AppUtils } from '../../../utils'
 import { CHAT_COLLAPSE_HEIGHT } from '../../../constants'
 
@@ -32,7 +32,7 @@ export function ModelMessageView(props) {
   const [error, setError] = React.useState(null)
   // error and cancelled answers always render as text — the broken
   // bubble keeps its raw content whatever the stored view is
-  const showType = isCancelled || isError ? 'text' : message.show_type
+  const showType = isCancelled || isError ? 'text' : message.showType
 
   // the copy takes the shown view: the active artifact, not the
   // original text
@@ -49,7 +49,7 @@ export function ModelMessageView(props) {
   // a failure lands in the snackbar
   const onClickCopy = async () => {
     try {
-      await Methods.clipboard_write_text(shownText)
+      await AppMethod.clipboardWriteText(shownText)
       return true
     } catch (err) {
       setError(t(String(err)))
@@ -255,7 +255,7 @@ ModelMessageView.propTypes = {
     time: PropTypes.string.isRequired,
     status: PropTypes.oneOf(['complete', 'progress', 'cancelled', 'error']).isRequired,
     // which artifact the bubble shows
-    show_type: PropTypes.oneOf(['text', 'translate', 'summary', 'thinking']).isRequired,
+    showType: PropTypes.oneOf(['text', 'translate', 'summary', 'thinking']).isRequired,
     text: PropTypes.string.isRequired,
     thinking: PropTypes.string,
     summary: PropTypes.string,

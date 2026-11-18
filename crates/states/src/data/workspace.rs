@@ -16,6 +16,7 @@ const DEFAULT_SIDE_BAR_COLLAPSED: bool = false;
 /// Shell environment: window and panel sizes.
 /// A single row (id = 1); a missing row falls back to `Default`.
 #[derive(Debug, Clone, PartialEq, Queryable, Identifiable, Selectable, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[diesel(table_name = workspace)]
 #[serde(default)]
 pub struct WorkspaceData {

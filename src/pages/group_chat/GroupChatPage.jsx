@@ -11,29 +11,22 @@ import { Stack } from '@mui/material'
 import { GroupChatForm } from './elements/GroupChatForm'
 import { PageHeader } from '../../components/views'
 import { ErrorState, WaitState } from '../../components/states'
-import { useCoreGroupsChat } from '../../hooks'
+import { useGroupChat, useModels, useProviders } from '../../core'
 
 export function GroupChatPage() {
   const { groupChatId } = useParams()
   const { t } = useTranslation()
   const isEdit = Boolean(groupChatId)
   const gid = Number(groupChatId)
-  const {
-    groupChat,
-    providers,
-    models,
-    error: readError,
-    ready,
-  } = useCoreGroupsChat(isEdit ? { groupChatId: gid } : {})
+  const { groupChat, ready: rowReady, error: rowError } = useGroupChat(isEdit ? gid : undefined)
+  const { providers, ready: providersReady, error: providersError } = useProviders()
+  const { models, ready: modelsReady, error: modelsError } = useModels()
 
-  const error = readError
-  if (error) {
-    return (
-      <WaitState ready={ready}>
-        <ErrorState text={error.message ?? String(error)} />
-      </WaitState>
-    )
-  }
+  // any resource failed: the error paints over the loader
+  const failure = rowError ?? providersError ?? modelsError
+  if (failure) return <ErrorState text={failure} />
+
+  const ready = rowReady && providersReady && modelsReady
 
   return (
     <WaitState ready={ready}>
@@ -48,8 +41,8 @@ export function GroupChatPage() {
             isEdit={isEdit}
             id={isEdit ? groupChat.id : 0}
             name={groupChat?.name}
-            systemPrompt={groupChat?.system_prompt}
-            modelId={groupChat?.model_id}
+            systemPrompt={groupChat?.systemPrompt}
+            modelId={groupChat?.modelId}
             providers={providers ?? []}
             models={models ?? []}
           />

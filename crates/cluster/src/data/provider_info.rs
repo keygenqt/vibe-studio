@@ -8,6 +8,7 @@ use super::ProviderTypeData;
 /// Static catalog row of a provider: kind id, display title, default
 /// host and brand color. Built in the provider catalog.
 #[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProviderInfoData {
     /// Kind id as stored in the provider state: "ollama", "deepseek", ...
     pub provider: &'static str,

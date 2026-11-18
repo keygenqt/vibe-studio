@@ -14,7 +14,7 @@ import {
   NOTIFICATIONS_DEFAULT,
   THEME_DEFAULT,
   TRANSLATE_LOCALE_DEFAULT,
-} from '../../../constants'
+} from '../../constants'
 
 const settingsSlice = createSlice({
   name: 'settings',

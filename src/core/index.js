@@ -12,6 +12,15 @@ import { WorkspaceTauri } from './workspace/tauri'
 
 export { default as store } from './store'
 
+// the block barrels: methods and read hooks for the shell
+export * from './app'
+export * from './chat'
+export * from './groupsChat'
+export * from './providers'
+export * from './settings'
+export * from './ui'
+export * from './workspace'
+
 // one call for the app lifetime; each block binds its own channels
 export function bindEvents() {
   return Promise.all([

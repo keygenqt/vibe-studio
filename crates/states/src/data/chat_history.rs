@@ -19,7 +19,7 @@ use crate::Store;
 /// stored value reads as `Error` — broken data must not pass for a
 /// normal message.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "camelCase")]
 pub enum ChatStatus {
     /// A user message, or a full answer of the model.
     Complete,
@@ -57,7 +57,7 @@ impl ChatStatus {
 /// stored value reads as `User` — broken data must not pass for a
 /// normal message.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "camelCase")]
 pub enum ChatMessageType {
     /// A message of the user.
     User,
@@ -91,7 +91,7 @@ impl ChatMessageType {
 /// Serialized lowercase; an unknown stored value reads as `Text` —
 /// broken data must not pass for a normal bubble.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "camelCase")]
 pub enum ChatShowType {
     /// The message text itself.
     Text,
@@ -132,6 +132,7 @@ impl ChatShowType {
 /// the provider did not report stays `NULL`.
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ChatHistoryData {
     /// Row id; `None` = not stored yet.
     pub id: Option<i32>,

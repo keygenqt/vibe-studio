@@ -9,10 +9,7 @@
 //! # Submodules
 //!
 //! - `commands` — the `#[tauri::command]` functions of the block.
-//! - `include` — `handler()`: the block's command list, the chain
-//!   entry of the invoke handler.
 //! - `data` — data types of the block served to the shell.
 
 pub(crate) mod commands;
 pub(crate) mod data;
-pub(crate) mod include;

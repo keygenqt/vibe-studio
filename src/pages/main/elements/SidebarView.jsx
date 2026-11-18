@@ -13,10 +13,11 @@ import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 
 import { DeleteDialog } from '../../../components/views'
+import { ErrorSnackbar } from '../../../components/snackbars'
 import { WaitState } from '../../../components/states'
 import { AppRoutes } from '../../../constants'
 import { AppNav } from '../../../utils'
-import { Methods } from '../../../modules'
+import { GroupsChatMethod } from '../../../core'
 
 import { ChatItem } from './ChatItem'
 import { GroupItem } from './GroupItem'
@@ -28,8 +29,9 @@ export function SidebarView(props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [chatToDelete, setChatToDelete] = React.useState(null)
+  const [error, setError] = React.useState(null)
   // per-group view flags live in the persisted history copy
-  const historyById = new Map((props.history ?? []).map(item => [item.group_chat_id, item]))
+  const historyById = new Map((props.history ?? []).map(item => [item.groupChatId, item]))
 
   if (props.groupsChat === null) {
     return <WaitState ready={false} />
@@ -55,27 +57,27 @@ export function SidebarView(props) {
     <>
       <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {props.groupsChat.map(group => {
-          const chats = (props.chats ?? []).filter(chat => chat.group_chat_id === group.id)
+          const chats = (props.chats ?? []).filter(chat => chat.groupChatId === group.id)
           const item = historyById.get(group.id)
-          const isCollapsed = Boolean(item?.current_collapsed_group)
-          const isExpanded = Boolean(item && !item.current_collapsed_chats)
+          const isCollapsed = Boolean(item?.currentCollapsedGroup)
+          const isExpanded = Boolean(item && !item.currentCollapsedChats)
           const visible = isExpanded ? chats : chats.slice(0, CHATS_PREVIEW_COUNT)
           return (
             <React.Fragment key={`group-${group.id}`}>
               <GroupItem
                 name={group.name}
-                model={props.models?.find(model => model.id === group.model_id)?.name ?? null}
+                model={props.models?.find(model => model.id === group.modelId)?.name ?? null}
                 active={props.activeId === group.id}
                 collapsed={isCollapsed}
                 onActivate={() => props.onActivate(group.id)}
                 onToggle={
                   chats.length > 0
                     ? () =>
-                        Methods.set_group_chat_view(
+                        GroupsChatMethod.setGroupChatView(
                           group.id,
                           !isCollapsed,
-                          Boolean(item?.current_collapsed_chats)
-                        ).catch(() => {})
+                          Boolean(item?.currentCollapsedChats)
+                        ).catch(err => setError(String(err)))
                     : undefined
                 }
               />
@@ -106,8 +108,8 @@ export function SidebarView(props) {
                     <ListItemButton
                       sx={{ borderRadius: 2, px: '8px', py: '4px', minHeight: 40 }}
                       onClick={() =>
-                        Methods.set_group_chat_view(group.id, isCollapsed, isExpanded).catch(
-                          () => {}
+                        GroupsChatMethod.setGroupChatView(group.id, isCollapsed, isExpanded).catch(
+                          err => setError(String(err))
                         )
                       }
                     >
@@ -139,25 +141,26 @@ export function SidebarView(props) {
         text={t('main.t_chat_delete_text')}
         onCancel={() => setChatToDelete(null)}
         onConfirm={() => {
-          Methods.delete_chat(chatToDelete.id)
+          GroupsChatMethod.deleteChat(chatToDelete.id)
             .then(state => {
               setChatToDelete(null)
-              const nextId = state.history.find(
-                item => item.current_is_active
-              )?.current_active_chat_id
+              const nextId = state.history.find(item => item.currentIsActive)?.currentActiveChatId
               if (nextId) {
                 AppNav.open(navigate, AppRoutes.chat(nextId))
               } else {
                 AppNav.open(navigate, AppRoutes.main())
               }
             })
-            .catch(() => setChatToDelete(null))
+            .catch(err => {
+              setError(String(err))
+              setChatToDelete(null)
+            })
         }}
       />
+      <ErrorSnackbar text={error} onClose={() => setError(null)} />
     </>
   )
 }
-
 SidebarView.propTypes = {
   groupsChat: PropTypes.array,
   chats: PropTypes.array,

@@ -30,6 +30,7 @@ const DEFAULT_COUNT_CHATS_CREATED: i32 = 0;
 /// group — one row per group, `group_chat_id` is the key.
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GroupChatHistoryData {
     /// Id of the group this history belongs to.
     pub group_chat_id: i32,

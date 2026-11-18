@@ -11,15 +11,20 @@ import { Stack } from '@mui/material'
 import { GroupChatCard } from './elements/GroupChatCard'
 import { DashedButton } from '../../components/buttons'
 import { PageHeader } from '../../components/views'
-import { WaitState } from '../../components/states'
+import { ErrorState, WaitState } from '../../components/states'
 import { AppRoutes } from '../../constants'
 import { AppNav } from '../../utils'
-import { useCoreGroupsChat } from '../../hooks'
+import { useGroupsChat, useModels } from '../../core'
 
 export function GroupsChatPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { groupsChat, models, ready } = useCoreGroupsChat()
+  const { groupsChat, ready, error } = useGroupsChat()
+  const { models } = useModels()
+
+  // the models failed: the cards would paint without their model line
+  const failure = error ?? models.error
+  if (failure) return <ErrorState text={failure} />
 
   return (
     <WaitState ready={ready}>
@@ -32,7 +37,7 @@ export function GroupsChatPage() {
           <GroupChatCard
             key={`group-chat-${group.id}`}
             groupChat={group}
-            model={models?.find(model => model.id === group.model_id)}
+            model={models?.find(model => model.id === group.modelId)}
             onConfigure={() => AppNav.open(navigate, AppRoutes.groupChat(group.id))}
           />
         ))}

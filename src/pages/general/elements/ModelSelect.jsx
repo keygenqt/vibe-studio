@@ -22,14 +22,14 @@ export function ModelSelect(props) {
       sx={{ width: 250 }}
     >
       {providers
-        .filter(provider => models.some(model => model.provider_id === provider.id))
+        .filter(provider => models.some(model => model.providerId === provider.id))
         .map(provider => [
           <ListSubheader key={`provider-${provider.id}`}>{provider.name}</ListSubheader>,
           ...models
-            .filter(model => model.provider_id === provider.id)
+            .filter(model => model.providerId === provider.id)
             .map(model => (
               <MenuItem key={`model-${model.id}`} value={model.id}>
-                {model.display_name ? `${model.display_name} (${model.name})` : model.name}
+                {model.displayName ? `${model.displayName} (${model.name})` : model.name}
               </MenuItem>
             )),
         ])}

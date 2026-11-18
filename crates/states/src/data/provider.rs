@@ -12,6 +12,7 @@ use crate::Store;
 /// A configured LLM provider connection. `id` is `None` until the
 /// row is stored — SQLite owns the id.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProviderData {
     /// Row id; `None` = not stored yet.
     pub id: Option<i32>,

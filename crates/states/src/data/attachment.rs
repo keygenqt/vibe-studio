@@ -13,6 +13,7 @@ use crate::Store;
 /// crate: the wire carries the metadata, the prompt reads the bytes
 /// through the blob access.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ChatAttachmentData {
     /// Row id; `None` = not stored yet.
     pub id: Option<i32>,

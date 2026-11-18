@@ -8,7 +8,7 @@ use serde::Serialize;
 /// The kind of the live answer chunk — both are whole snapshots the
 /// shell replaces its copy with.
 #[derive(Serialize, Clone)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "camelCase")]
 pub enum StreamChunkKind {
     /// The whole reasoning as it stands.
     Thinking,
@@ -20,6 +20,7 @@ pub enum StreamChunkKind {
 /// channel: whole snapshots — the shell replaces its copy, never
 /// accumulates.
 #[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct StreamChunk {
     pub kind: StreamChunkKind,
     pub text: String,

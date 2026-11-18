@@ -28,17 +28,17 @@ export function StatsView(props) {
   if (!stats) return null
   // only the measured facts paint: what the provider did not report
   // stays out of the view
-  const hasInput = stats.tokens_input > 0
-  const hasCached = stats.tokens_cached > 0
-  const hasAnswer = stats.tokens_output > 0
-  const hasThinking = stats.tokens_thinking > 0
-  const hasSpeed = stats.tokens_per_second != null
+  const hasInput = stats.tokensInput > 0
+  const hasCached = stats.tokensCached > 0
+  const hasAnswer = stats.tokensOutput > 0
+  const hasThinking = stats.tokensThinking > 0
+  const hasSpeed = stats.tokensPerSecond != null
   if (!hasInput && !hasAnswer) return null
 
   const limit = props.contextLimit != null ? props.contextLimit * 1000 : null
   // the footer sums the artifacts: summary, compress and translate
   const artifacts =
-    (stats.tokens_summary ?? 0) + (stats.tokens_compress ?? 0) + (stats.tokens_translate ?? 0)
+    (stats.tokensSummary ?? 0) + (stats.tokensCompress ?? 0) + (stats.tokensTranslate ?? 0)
 
   // the indented sub-row of a section
   const subRow = (key, label, value) => (
@@ -81,13 +81,13 @@ export function StatsView(props) {
                   {t('chat.t_stats_context')}
                 </Typography>
                 <Typography variant={'caption'} sx={{ ml: 'auto' }}>
-                  {AppUtils.human(stats.tokens_input)} / {AppUtils.human(limit)}
+                  {AppUtils.human(stats.tokensInput)} / {AppUtils.human(limit)}
                 </Typography>
               </Stack>
               <LinearProgress
                 variant={'determinate'}
-                color={stats.tokens_input > limit ? 'error' : 'primary'}
-                value={Math.min(100, (stats.tokens_input / limit) * 100)}
+                color={stats.tokensInput > limit ? 'error' : 'primary'}
+                value={Math.min(100, (stats.tokensInput / limit) * 100)}
                 sx={{ mt: 0.5, height: 4, borderRadius: 1 }}
               />
             </Box>
@@ -96,22 +96,22 @@ export function StatsView(props) {
             section(
               <ArrowDownward sx={ICON_SX} />,
               t('chat.t_stats_input'),
-              AppUtils.human(stats.tokens_input),
+              AppUtils.human(stats.tokensInput),
               hasCached
-                ? [subRow('cached', t('chat.t_stats_cached'), AppUtils.human(stats.tokens_cached))]
+                ? [subRow('cached', t('chat.t_stats_cached'), AppUtils.human(stats.tokensCached))]
                 : []
             )}
           {hasAnswer &&
             section(
               <ChatBubbleOutline sx={ICON_SX} />,
               t('chat.t_stats_answer'),
-              AppUtils.human(stats.tokens_output),
+              AppUtils.human(stats.tokensOutput),
               hasThinking
                 ? [
                     subRow(
                       'thinking',
                       t('chat.t_stats_thinking'),
-                      AppUtils.human(stats.tokens_thinking)
+                      AppUtils.human(stats.tokensThinking)
                     ),
                   ]
                 : []
@@ -123,7 +123,7 @@ export function StatsView(props) {
                 {t('chat.t_stats_speed')}
               </Typography>
               <Typography variant={'caption'} sx={{ ml: 'auto' }}>
-                {AppUtils.human(stats.tokens_per_second)} t/s
+                {AppUtils.human(stats.tokensPerSecond)} t/s
               </Typography>
             </Stack>
           )}
@@ -142,7 +142,7 @@ export function StatsView(props) {
               {t('chat.t_stats_attachments')}
             </Typography>
             <Typography variant={'caption'} sx={{ ml: 'auto' }}>
-              {AppUtils.humanBytes(stats.attachments_bytes)}
+              {AppUtils.humanBytes(stats.attachmentsBytes)}
             </Typography>
           </Stack>
           {artifacts > 0 && (
@@ -176,13 +176,13 @@ export function StatsView(props) {
         {hasInput && (
           <Box component={'span'} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
             <ArrowDownward sx={COMPACT_ICON_SX} />
-            {AppUtils.human(stats.tokens_input)}
+            {AppUtils.human(stats.tokensInput)}
           </Box>
         )}
         {hasAnswer && (
           <Box component={'span'} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
             <ArrowUpward sx={COMPACT_ICON_SX} />
-            {AppUtils.human(stats.tokens_output)}
+            {AppUtils.human(stats.tokensOutput)}
           </Box>
         )}
       </Typography>
@@ -193,16 +193,16 @@ export function StatsView(props) {
 StatsView.propTypes = {
   // the chat usage stats from Rust: the breakdown and the speed
   stats: PropTypes.shape({
-    tokens_output: PropTypes.number,
-    tokens_thinking: PropTypes.number,
-    tokens_translate: PropTypes.number,
-    tokens_summary: PropTypes.number,
-    tokens_compress: PropTypes.number,
-    tokens_input: PropTypes.number,
-    tokens_cached: PropTypes.number,
-    tokens_per_second: PropTypes.number,
+    tokensOutput: PropTypes.number,
+    tokensThinking: PropTypes.number,
+    tokensTranslate: PropTypes.number,
+    tokensSummary: PropTypes.number,
+    tokensCompress: PropTypes.number,
+    tokensInput: PropTypes.number,
+    tokensCached: PropTypes.number,
+    tokensPerSecond: PropTypes.number,
     messages: PropTypes.number,
-    attachments_bytes: PropTypes.number,
+    attachmentsBytes: PropTypes.number,
   }),
   // the context limit in thousands of tokens, from the settings
   contextLimit: PropTypes.number,

@@ -19,24 +19,6 @@ mod settings;
 mod utils;
 mod workspace;
 
-/// Chains the block handlers: the first block that knows the
-/// command answers it; the rest see no command at all.
-macro_rules! handlers {
-    ($($handler:path),* $(,)?) => {
-        move |invoke: tauri::ipc::Invoke| {
-            let mut invoke = Some(invoke);
-            $(
-                if let Some(inner) = invoke.take() {
-                    if $handler()(inner) {
-                        return true;
-                    }
-                }
-            )*
-            false
-        }
-    };
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -83,13 +65,57 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(handlers![
-            app::include::handler,
-            workspace::include::handler,
-            settings::include::handler,
-            providers::include::handler,
-            groups_chat::include::handler,
-            chat::include::handler,
+        .invoke_handler(tauri::generate_handler![
+            // app: shell actions and facts
+            app::commands::init,
+            app::commands::get_app_info,
+            app::commands::clipboard_write_text,
+            app::commands::clipboard_write_image,
+            app::commands::clipboard_write_files,
+            app::commands::clipboard_clear,
+            app::commands::clipboard_read,
+            app::commands::open_in_browser,
+            app::commands::attachment_stat,
+            // workspace: the shell environment
+            workspace::commands::get_workspace,
+            workspace::commands::save_workspace,
+            // settings: the user preferences and the OS theme
+            settings::commands::get_settings,
+            settings::commands::save_settings,
+            settings::commands::get_system_theme,
+            // providers: providers, their models and defaults
+            providers::commands::get_providers_catalog,
+            providers::commands::get_providers,
+            providers::commands::get_provider,
+            providers::commands::save_provider,
+            providers::commands::delete_provider,
+            providers::commands::get_provider_models,
+            providers::commands::get_provider_model,
+            providers::commands::get_model_defaults,
+            providers::commands::save_provider_model,
+            providers::commands::save_provider_models,
+            // groups chat: groups, chats and their view state
+            groups_chat::commands::get_groups_chat,
+            groups_chat::commands::get_group_chat,
+            groups_chat::commands::save_group_chat,
+            groups_chat::commands::delete_group_chat,
+            groups_chat::commands::get_chats,
+            groups_chat::commands::save_chat,
+            groups_chat::commands::delete_chat,
+            groups_chat::commands::get_group_chat_histories,
+            groups_chat::commands::set_group_chat_view,
+            groups_chat::commands::select_group_chat,
+            groups_chat::commands::chat_regenerate_name,
+            // chat: history, streams and message mutations
+            chat::commands::chat_get_history,
+            chat::commands::chat_send_message,
+            chat::commands::chat_cancel_send,
+            chat::commands::chat_set_message_show_type,
+            chat::commands::chat_set_message_collapsed,
+            chat::commands::chat_delete_message,
+            chat::commands::chat_resend_message,
+            chat::commands::chat_translate_message,
+            chat::commands::chat_compress_message,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

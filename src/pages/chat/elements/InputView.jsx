@@ -18,7 +18,8 @@ import Stop from '@mui/icons-material/Stop'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
 
 import { HandleView, ModelCapability, StatsView } from '../../../components/views'
-import { Methods } from '../../../modules'
+import { AppMethod, useWorkspace, WorkspaceMethod } from '../../../core'
+import { useDragResize } from '../../../hooks'
 import { CHAT_INPUT_SIZE_MIN, AppRoutes, COMPACT_PAGE_WIDTH } from '../../../constants'
 import { AppNav } from '../../../utils'
 
@@ -34,7 +35,6 @@ export function InputView(props) {
     sending,
     streaming,
     stop,
-    chatInputSize,
     onAttach,
     addAttachments,
     chatAttachments,
@@ -44,6 +44,14 @@ export function InputView(props) {
     contextLimit,
   } = props
   const inputRef = React.useRef(null)
+  // the composer owns its drag: the size rides the workspace slice
+  const workspace = useWorkspace()
+  const chatInputSize = workspace.chatInputSize
+  const drag = useDragResize({
+    axis: 'y',
+    getSize: () => workspace.chatInputSize,
+    onMove: size => WorkspaceMethod.save({ chatInputSize: size }),
+  })
   // the mode toggles of the composer: the translate flag rides the send
   const [quick, setQuick] = React.useState([])
   // the webview drag hover over the composer: paints the overlay
@@ -59,7 +67,7 @@ export function InputView(props) {
   // goes to the draft at the cursor, files and images to the attachments
   const onPaste = event => {
     event.preventDefault()
-    Methods.clipboard_read()
+    AppMethod.clipboardRead()
       .then(content => {
         if (!content) return
         if (content.kind === 'text') {
@@ -110,7 +118,7 @@ export function InputView(props) {
         if (inside)
           Promise.all(
             payload.paths.map(async path => {
-              const stat = await Methods.attachment_stat(path)
+              const stat = await AppMethod.attachmentStat(path)
               return stat.dir
                 ? { kind: 'file', path, dir: true }
                 : { kind: 'file', path, mime: stat.mime, size: stat.size }
@@ -130,7 +138,7 @@ export function InputView(props) {
   return (
     <>
       {/* horizontal mirror of the sidebar handle: dragging up grows the composer */}
-      <HandleView orientation="horizontal" onPointerDown={props.onHandlePointerDown} />
+      <HandleView orientation="horizontal" onPointerDown={drag.onHandlePointerDown} />
       <Box
         ref={composerRef}
         sx={{
@@ -326,10 +334,6 @@ InputView.propTypes = {
   sending: PropTypes.bool.isRequired,
   streaming: PropTypes.bool.isRequired,
   stop: PropTypes.func.isRequired,
-  // the user-dragged base height of the composer
-  chatInputSize: PropTypes.number.isRequired,
-  // starts the composer height drag
-  onHandlePointerDown: PropTypes.func.isRequired,
   // opens the file picker; the selected paths land in the draft
   onAttach: PropTypes.func.isRequired,
   addAttachments: PropTypes.func.isRequired,

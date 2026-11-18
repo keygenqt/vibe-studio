@@ -12,19 +12,28 @@ import { Box, Button, InputAdornment, Stack, Switch, TextField, Typography } fro
 
 import { SaveButton } from '../../components/buttons'
 import { ModelCard, PageHeader } from '../../components/views'
-import { ErrorAlert, SuccessAlert } from '../../components/alerts'
+import { SuccessAlert } from '../../components/alerts'
+import { ErrorSnackbar } from '../../components/snackbars'
 import { ErrorState, WaitState } from '../../components/states'
-import { Methods } from '../../modules'
-import { useCoreProviders } from '../../hooks'
+import {
+  ProvidersMethod,
+  useCatalog,
+  useModels,
+  useProviderModelsByType,
+  useProviders,
+} from '../../core'
 
 export function ModelsPage() {
   const { t } = useTranslation()
   const { providerId } = useParams()
   const id = Number(providerId)
 
-  const { catalog, providers, models, error: readError } = useCoreProviders({ providerId: id })
+  const { catalog } = useCatalog()
+  const { providers } = useProviders()
+  const { models } = useModels(id)
   const provider = (providers ?? []).find(item => item.id === id) ?? null
-  const [liveModels, setLiveModels] = React.useState(null)
+  // the live catalog of the provider host: the query hook owns the fetch
+  const { models: liveModels, error: liveError } = useProviderModelsByType(provider)
   const [error, setError] = React.useState(null)
   const [submitError, setSubmitError] = React.useState(null)
   const [savedOpen, setSavedOpen] = React.useState(false)
@@ -35,45 +44,26 @@ export function ModelsPage() {
 
   React.useEffect(() => {
     if (providers !== null && !provider) {
-      setError(new Error(t('error.t_text')))
+      setError(t('error.t_text'))
     }
   }, [providers, provider, t])
 
-  // the fetch keys on the provider id, not the object: every block
-  // re-read replaces the store objects — identity would refetch
-  const providerKey = provider?.id ?? null
-  React.useEffect(() => {
-    if (!provider) return undefined
-    let active = true
-    Methods.get_provider_models_by_type(provider)
-      .then(list => {
-        if (active) setLiveModels(list)
-      })
-      .catch(err => {
-        if (active) setError(err)
-      })
-    return () => {
-      active = false
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [providerKey])
-
   // the commit: persist the selection against the live catalog;
-  // a failed sync shows a banner — the page keeps its state
+  // a failed sync shows a snackbar — the page keeps its state
   const onSave = () => {
     setIsSubmitting(true)
     setSubmitError(null)
-    Methods.save_provider_models(id, selected)
+    ProvidersMethod.saveProviderModels(id, selected)
       .then(() => {
         setPicked(null)
         setSavedOpen(true)
       })
-      .catch(err => setSubmitError(err.message ?? String(err)))
+      .catch(err => setSubmitError(String(err)))
       .finally(() => setIsSubmitting(false))
   }
 
   // readiness: loaded or failed — the loader never covers an error
-  const failure = error ?? readError
+  const failure = error ?? liveError
   const pageReady = failure !== null || (Boolean(provider) && liveModels !== null)
 
   // accent color of this provider's type from the static catalog
@@ -111,7 +101,7 @@ export function ModelsPage() {
   return (
     <WaitState ready={pageReady}>
       {failure ? (
-        <ErrorState text={failure.message ?? String(failure)} />
+        <ErrorState text={failure} />
       ) : (
         <Stack>
           <PageHeader title={provider.name} subtitle={t('models.t_subtitle')} />
@@ -121,11 +111,7 @@ export function ModelsPage() {
             text={t('models.t_saved')}
             onClose={() => setSavedOpen(false)}
           />
-          <ErrorAlert
-            open={Boolean(submitError)}
-            text={submitError ?? ''}
-            onClose={() => setSubmitError(null)}
-          />
+          <ErrorSnackbar text={submitError} onClose={() => setSubmitError(null)} />
           <Stack spacing={2}>
             <TextField
               hiddenLabel
@@ -173,7 +159,7 @@ export function ModelsPage() {
                     title={model.name}
                     description={model.params ?? undefined}
                     capabilities={model.capabilities}
-                    context={model.context_length ?? undefined}
+                    context={model.contextLength ?? undefined}
                     color={color}
                     action={
                       <Switch

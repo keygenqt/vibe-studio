@@ -22,6 +22,7 @@ const DEFAULT_CHAT_CONTEXT_LIMIT: i32 = 100;
 /// `Option` — `None` = the user has not touched it; a kernel-owned
 /// default resolves on read, the rest the UI applies.
 #[derive(Debug, Clone, PartialEq, Queryable, Identifiable, Selectable, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[diesel(table_name = settings)]
 #[serde(default)]
 pub struct SettingsData {

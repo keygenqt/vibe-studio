@@ -10,9 +10,6 @@
 //!
 //! - `commands` — the `#[tauri::command]` functions of the block.
 //! - `events` — the block event bindings: state and theme payloads.
-//! - `include` — `handler()`: the block's command list, the chain
-//!   entry of the invoke handler.
 
 pub(crate) mod commands;
 pub(crate) mod events;
-pub(crate) mod include;

@@ -12,6 +12,7 @@ use studio_core::ChatMessageType;
 /// Every figure is a provider-reported fact; what the provider did
 /// not report stays out.
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ChatStatsData {
     /// Provider-reported output tokens of the answers together
     /// (thinking included for Ollama).

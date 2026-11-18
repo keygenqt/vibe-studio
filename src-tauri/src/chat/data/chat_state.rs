@@ -13,6 +13,7 @@ use super::chat_stats::ChatStatsData;
 /// The fresh state of the chat block, returned by every mutation of
 /// the block: Rust assembles it, JS renders it.
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ChatStateData {
     pub chat: Option<ChatData>,
     pub stats: ChatStatsData,

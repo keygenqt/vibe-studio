@@ -9,11 +9,10 @@ import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 
 import './localization'
-import store from './store'
 import './assets/css/index.css'
 import App from './App.jsx'
 import { initScrollArea } from './init'
-import { bindEvents } from './modules'
+import { bindEvents, store } from './core'
 
 // App init: not tied to any component lifetime, runs once, never cleans up
 initScrollArea()

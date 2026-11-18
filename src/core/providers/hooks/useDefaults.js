@@ -19,7 +19,7 @@ export function useDefaults(model, provider) {
     callback: async () => {
       setError(null)
       try {
-        setDefaults(await ProvidersTauri.getModelDefaults(provider, model.name))
+        setDefaults(await ProvidersTauri.getModelDefaults(provider.provider, model.name))
       } catch (err) {
         setError(String(err))
       }

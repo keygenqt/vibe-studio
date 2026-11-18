@@ -17,7 +17,21 @@ function App() {
   const isFocus = useEffectFocus()
   const { ready } = useAppReady()
   // the startup gate: the loader holds the window until the startup loads land
-  if (!ready) return <LoaderView />
+  if (!ready)
+    return (
+      <Box
+        height={1}
+        data-tauri-drag-region
+        sx={{
+          backgroundColor: 'background.default',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <LoaderView />
+      </Box>
+    )
   return <ThemedShell isFocus={isFocus} />
 }
 

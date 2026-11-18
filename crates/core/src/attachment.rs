@@ -48,6 +48,7 @@ pub enum ChatAttachmentInput {
 /// The draft facts of a dropped path: the directory flag, the image
 /// MIME sniffed from the header, the byte size — the chip paints by them.
 #[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AttachmentStatData {
     /// `true` = a directory, expands into its files at the send.
     pub dir: bool,

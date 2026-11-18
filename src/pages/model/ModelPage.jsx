@@ -1,47 +1,33 @@
 /*
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
- * TAGS: ['components', 'hooks']
+ * TAGS: ['components']
  * INFO: Model settings page over the providers block.
  */
-import * as React from 'react'
 import { useParams } from 'react-router'
 import { Stack } from '@mui/material'
 
 import { PageHeader } from '../../components/views'
 import { ErrorState, WaitState } from '../../components/states'
-import { useCoreProviders } from '../../hooks'
-import { Methods } from '../../modules'
+import { useDefaults, useModel, useProviders } from '../../core'
 
 import { ModelForm } from './elements/ModelForm'
 
 export function ModelPage() {
   const { modelId } = useParams()
   const id = Number(modelId)
-  const { providers, model, error, ready } = useCoreProviders({ modelId: id })
-  const provider = (providers ?? []).find(item => item.id === model?.provider_id) ?? null
-  // the parameter spec of the routed model; a failure leaves the form without bounds
-  const [defaults, setDefaults] = React.useState(null)
+  const { model, ready: modelReady, error: modelError } = useModel(id)
+  const { providers } = useProviders()
+  const provider = (providers ?? []).find(item => item.id === model?.providerId) ?? null
+  // the parameter spec of the routed model; the query hook owns the fetch
+  const { defaults, error: defaultsError } = useDefaults(model, provider)
 
-  React.useEffect(() => {
-    setDefaults(null)
-    if (model && provider) {
-      Methods.get_model_defaults(provider.provider, model.name)
-        .then(setDefaults)
-        .catch(console.error)
-    }
-  }, [model?.name, provider?.id])
-
-  if (error) {
-    return (
-      <WaitState ready={ready}>
-        <ErrorState text={error.message ?? String(error)} />
-      </WaitState>
-    )
-  }
+  // the spec failed: the form would run without bounds — the error paints instead
+  const failure = modelError ?? defaultsError
+  if (failure) return <ErrorState text={failure} />
 
   return (
-    <WaitState ready={ready}>
+    <WaitState ready={modelReady}>
       {model && (
         <Stack spacing={2}>
           <PageHeader

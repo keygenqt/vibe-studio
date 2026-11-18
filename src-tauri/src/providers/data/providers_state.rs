@@ -13,6 +13,7 @@ use studio_core::Store;
 /// The fresh state of the providers block, returned by every
 /// mutation of the block: Rust assembles it, JS renders it.
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProvidersData {
     pub catalog: Vec<ProviderInfoData>,
     pub providers: Vec<ProviderData>,

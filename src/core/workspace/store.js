@@ -6,7 +6,7 @@
  */
 import { createSlice } from '@reduxjs/toolkit'
 
-import { CHAT_INPUT_SIZE_DEFAULT, SIDE_BAR_SIZE_DEFAULT } from '../../../constants'
+import { CHAT_INPUT_SIZE_DEFAULT, SIDE_BAR_SIZE_DEFAULT } from '../../constants'
 
 const workspaceSlice = createSlice({
   name: 'workspace',
