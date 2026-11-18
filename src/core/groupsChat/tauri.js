@@ -7,6 +7,9 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
+import store from '../store'
+import { groupsChatStateSet } from './store'
+
 export const GroupsChatTauri = {
   getGroupsChat: async function () {
     return invoke('get_groups_chat', {})
@@ -45,9 +48,12 @@ export const GroupsChatTauri = {
   chatRegenerateName: async function (chatId) {
     return invoke('chat_regenerate_name', { chatId })
   },
-  onState: function (callback) {
+  onState: async function () {
     return listen('event-groups-chat', event => {
-      callback(event.payload.value)
+      // the fresh block state assembled by Rust: groups, chats, history
+      if (event.payload.key === 'groups-chat-update') {
+        store.dispatch(groupsChatStateSet(event.payload.value))
+      }
     })
   },
 }

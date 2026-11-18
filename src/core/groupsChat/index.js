@@ -4,7 +4,6 @@
  * TAGS: ['states']
  * INFO: The groups chat block barrel: writes, collections and rows.
  */
-export { groupsChatEvents } from './events'
 export { GroupsChatMethod } from './method'
 export { useChats } from './hooks/useChats'
 export { useGroupChat } from './hooks/useGroupChat'

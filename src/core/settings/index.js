@@ -4,7 +4,6 @@
  * TAGS: ['states']
  * INFO: The settings block barrel: writes and the preferences copy.
  */
-export { settingsEvents } from './events'
 export { SettingsMethod } from './method'
 export { useSettings } from './hooks/useSettings'
 export { useTheme } from './hooks/useTheme'

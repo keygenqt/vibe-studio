@@ -7,6 +7,9 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
+import store from '../store'
+import { workspaceSet } from './store'
+
 export const WorkspaceTauri = {
   get: async function () {
     return invoke('get_workspace', {})
@@ -14,9 +17,12 @@ export const WorkspaceTauri = {
   save: async function (workspace) {
     return invoke('save_workspace', { workspace })
   },
-  onState: function (callback) {
+  onState: async function () {
     return listen('event-workspace', event => {
-      callback(event.payload.value)
+      // the key guards the payload: only the block's own event lands in the copy
+      if (event.payload.key === 'workspace-update') {
+        store.dispatch(workspaceSet(event.payload.value))
+      }
     })
   },
 }

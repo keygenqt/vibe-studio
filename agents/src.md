@@ -24,8 +24,8 @@ copies only for rendering.
 `core/` is the JS-Rust layer, assembled from blocks. A block is a
 `<block>/` directory carrying files by role: the role defines the
 file, not a fixed set. The public surface of a block is its
-`index.js` barrel (method, hooks, events); pages import from the
-block barrels directly. `core/index.js` is the runtime wiring only:
+`index.js` barrel (method, hooks); pages import from the block
+barrels directly. `core/index.js` is the runtime wiring only:
 the `store` and `bindEvents` (the Rust channels of all blocks in
 one call).
 
@@ -35,11 +35,10 @@ one call).
 - `store` — **the copy only**: the block slice and the whole-payload
   `xxxStateSet` reducers. No request logic and no knowledge of
   Tauri.
-- `tauri` — **the connection only**: invoke wrappers and channels.
-  No dispatch into the copy.
-- `events` — **the only writer of the copy from Rust**: the event
-  payload → dispatch, uniform per block. Collection mutations leave
-  the answer undispatched — the event carries the fresh block state.
+- `tauri` — **the connection and the only writer of the copy from
+  Rust**: invoke wrappers and channels; the state listen routes the
+  payload key to dispatch. Collection mutations leave the answer
+  undispatched — the event carries the fresh block state.
 - `method` — **mutations only**. No `get*`, no requests whose result
   the page needs to show — those belong to the hook. A merged save
   (`save`) merges the patch into the copy, dispatches it (instant
@@ -69,8 +68,8 @@ one call).
 - **Pure UI state** — the `ui` block: one per app, it gathers the
   state that lives only in the frontend and has no owner in the Rust
   store or the database (interface flags like `formSuccess`). Such a
-  block carries only `store`, `method` and hooks — no `tauri` and no
-  `events`; new pure UI state lands here, not in the data blocks.
+  block carries only `store`, `method` and hooks — no `tauri`; new
+  pure UI state lands here, not in the data blocks.
 
 ## Hooks
 

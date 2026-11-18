@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// TAGS: ['facts']
+// TAGS: ['states']
 // INFO: The fresh state of the providers block, assembled by Rust for JS.
 
 use serde::Serialize;
@@ -17,7 +17,6 @@ pub struct ProvidersData {
     pub catalog: Vec<ProviderInfoData>,
     pub providers: Vec<ProviderData>,
     pub models: Vec<ProviderModelData>,
-    pub provider: Option<ProviderData>,
 }
 
 impl ProvidersData {
@@ -27,7 +26,6 @@ impl ProvidersData {
             catalog: studio_core::get_providers_catalog(),
             providers: studio_core::get_providers(store),
             models: studio_core::get_provider_models(store, None),
-            provider: None,
         }
     }
 }

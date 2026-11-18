@@ -14,6 +14,7 @@ import { SettingsTauri } from '../tauri'
 
 export function useSettings() {
   const settings = useSelector(s => s.settings)
+  const [ready, setReady] = useState(false)
   const [error, setError] = useState(null)
 
   useEffectSingle({
@@ -23,6 +24,7 @@ export function useSettings() {
       try {
         const value = await SettingsTauri.get()
         store.dispatch(settingsSet(value))
+        setReady(true)
       } catch (err) {
         setError(String(err))
       }
@@ -31,6 +33,7 @@ export function useSettings() {
 
   return {
     settings,
+    ready,
     error,
   }
 }

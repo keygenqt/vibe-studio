@@ -7,6 +7,9 @@
 import { Channel, invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
+import store from '../store'
+import { chatStateSet } from './store'
+
 const streamChannel = callback => {
   const channel = new Channel()
   channel.onmessage = callback
@@ -59,9 +62,12 @@ export const ChatTauri = {
       onDelta: streamChannel(onDelta),
     })
   },
-  onState: function (callback) {
+  onState: async function () {
     return listen('event-chat', event => {
-      callback(event.payload.value)
+      // the fresh block state assembled by Rust: the chat row, stats and history
+      if (event.payload.key === 'chat-update') {
+        store.dispatch(chatStateSet(event.payload.value))
+      }
     })
   },
 }

@@ -4,21 +4,21 @@
  * TAGS: ['states']
  * INFO: The core runtime wiring: the store and the Rust event binding.
  */
-import { chatEvents } from './chat'
-import { groupsChatEvents } from './groupsChat'
-import { providersEvents } from './providers'
-import { settingsEvents } from './settings'
-import { workspaceEvents } from './workspace'
+import { ChatTauri } from './chat/tauri'
+import { GroupsChatTauri } from './groupsChat/tauri'
+import { ProvidersTauri } from './providers/tauri'
+import { SettingsTauri } from './settings/tauri'
+import { WorkspaceTauri } from './workspace/tauri'
 
 export { default as store } from './store'
 
-// one call for the app lifetime; each block contributes its own channels
+// one call for the app lifetime; each block binds its own channels
 export function bindEvents() {
   return Promise.all([
-    ...chatEvents(),
-    ...providersEvents(),
-    ...groupsChatEvents(),
-    ...settingsEvents(),
-    ...workspaceEvents(),
+    ChatTauri.onState(),
+    ProvidersTauri.onState(),
+    GroupsChatTauri.onState(),
+    SettingsTauri.onEvent(),
+    WorkspaceTauri.onState(),
   ])
 }

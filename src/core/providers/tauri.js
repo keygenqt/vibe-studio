@@ -7,6 +7,9 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
+import store from '../store'
+import { providersStateSet } from './store'
+
 export const ProvidersTauri = {
   getProvidersCatalog: async function () {
     return invoke('get_providers_catalog', {})
@@ -41,9 +44,12 @@ export const ProvidersTauri = {
   saveProviderModels: async function (providerId, checked) {
     return invoke('save_provider_models', { providerId, checked })
   },
-  onState: function (callback) {
+  onState: async function () {
     return listen('event-providers', event => {
-      callback(event.payload.value)
+      // the fresh block state assembled by Rust: catalog, providers, models
+      if (event.payload.key === 'providers-update') {
+        store.dispatch(providersStateSet(event.payload.value))
+      }
     })
   },
 }

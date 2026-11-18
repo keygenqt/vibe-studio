@@ -10,32 +10,23 @@ import { AppRoute } from './AppRoute'
 import { THEMES } from './theme'
 import { useEffectFocus } from './hooks'
 import { LoaderView } from './components/views'
-import { useAppReady, useSettings, useTheme, useWorkspace } from './core'
+import { useAppReady, useTheme } from './core'
 import { ACCENT_DEFAULT, DURATION_DEFAULT } from './constants'
 
 function App() {
   const isFocus = useEffectFocus()
   const { ready } = useAppReady()
-
-  // the startup gate: the loader holds the window until init lands
+  // the startup gate: the loader holds the window until the startup loads land
   if (!ready) return <LoaderView />
-
   return <ThemedShell isFocus={isFocus} />
 }
 
 // the workspace and settings models plus the OS theme: the
 // persisted choice with `system` resolved to the detected OS theme
 function ThemedShell(props) {
-  const workspace = useWorkspace()
-  const { settings } = useSettings()
-  const { systemTheme } = useTheme()
-
-  const mode = settings.appearance_theme === 'system' ? systemTheme : settings.appearance_theme
+  const { mode, accent } = useTheme()
   // the accent picks the theme pair; an unknown or untouched name falls back to the default
-  const theme = (THEMES[settings.appearance_accent] ?? THEMES[ACCENT_DEFAULT])[mode]
-
-  // every block owns its readiness; the shell paints when all landed
-  if (!workspace.ready || !settings.ready) return null
+  const theme = (THEMES[accent] ?? THEMES[ACCENT_DEFAULT])[mode]
 
   return (
     <ThemeProvider theme={theme}>

@@ -14,6 +14,7 @@ import { WorkspaceTauri } from '../tauri'
 
 export function useWorkspace() {
   const raw = useSelector(s => s.workspace)
+  const [ready, setReady] = useState(false)
   const [error, setError] = useState(null)
 
   useEffectSingle({
@@ -23,6 +24,7 @@ export function useWorkspace() {
       try {
         const value = await WorkspaceTauri.get()
         store.dispatch(workspaceSet(value))
+        setReady(true)
       } catch (err) {
         setError(String(err))
       }
@@ -31,6 +33,7 @@ export function useWorkspace() {
 
   return {
     ...raw,
+    ready,
     error,
   }
 }

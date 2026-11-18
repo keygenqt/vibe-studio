@@ -4,7 +4,6 @@
  * TAGS: ['states']
  * INFO: The providers block barrel: catalog, collections, rows and defaults.
  */
-export { providersEvents } from './events'
 export { ProvidersMethod } from './method'
 export { useCatalog } from './hooks/useCatalog'
 export { useDefaults } from './hooks/useDefaults'

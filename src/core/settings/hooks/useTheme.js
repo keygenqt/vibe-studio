@@ -9,12 +9,11 @@ import { useSelector } from 'react-redux'
 
 import { useEffectSingle } from '../../../hooks'
 import store from '../../store'
-import { useSettings } from './useSettings'
 import { systemThemeSet } from '../store'
 import { SettingsTauri } from '../tauri'
 
 export function useTheme() {
-  const settings = useSettings()
+  const settings = useSelector(s => s.settings)
   const systemTheme = useSelector(s => s.settings.systemTheme)
   const [error, setError] = useState(null)
 
@@ -32,11 +31,10 @@ export function useTheme() {
   })
 
   return {
-    mode:
-      settings.settings.appearanceTheme === 'system'
-        ? systemTheme
-        : settings.settings.appearanceTheme,
-    accent: settings.settings.appearanceAccent,
+    mode: settings.appearanceTheme === 'system' ? systemTheme : settings.appearanceTheme,
+    accent: settings.appearanceAccent,
+    // resolved: the OS theme is here, or the choice does not need it
+    ready: settings.appearanceTheme !== 'system' || systemTheme !== null,
     error,
   }
 }

@@ -4,6 +4,5 @@
  * TAGS: ['states']
  * INFO: The workspace block barrel: the shell copy and the save.
  */
-export { workspaceEvents } from './events'
 export { WorkspaceMethod } from './method'
 export { useWorkspace } from './hooks/useWorkspace'
