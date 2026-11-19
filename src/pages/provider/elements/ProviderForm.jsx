@@ -65,9 +65,12 @@ export function ProviderForm(props) {
             project: values.project || null,
           })
         )
-        const saved = state?.provider
+        // the fresh insert holds the highest id among its kind+name matches
+        const saved = (state?.providers ?? [])
+          .filter(item => item.provider === values.provider && item.name === values.name)
+          .at(-1)
         if (saved && !isEdit) {
-          dispatch(formSuccessSet(saved))
+          UiMethod.setFormState(saved)
           AppNav.openWithReplace(navigate, AppRoutes.provider(saved.id))
         }
       }}

@@ -11,7 +11,7 @@ import { Box, Stack } from '@mui/material'
 
 import { AttachmentChip, DeleteDialog } from '../../components/views'
 import { ErrorSnackbar } from '../../components/snackbars'
-import { WaitState } from '../../components/states'
+import { ErrorState, WaitState } from '../../components/states'
 import { ScrollPanel } from '../../components/layouts'
 import {
   AppMethod,
@@ -183,14 +183,16 @@ export function ChatPage() {
 
   return (
     <WaitState ready={groupsReady && chatsReady}>
-      {chat ? (
+      {chatError && !chatReady ? (
+        <ErrorState text={chatError} />
+      ) : chat ? (
         <>
           <ChatTitleView
             name={t(chat.name)}
             canScrollDown={!atBottom}
             onScrollDown={() => scrollToBottom('chat.history')}
             canRename={(history ?? []).length > 0 && settings.tasksModelLight !== null}
-            onRename={() => GroupsChatMethod.chatRegenerateName(cid).catch(console.error)}
+            onRename={() => GroupsChatMethod.chatRegenerateName(cid)}
             canCompress={(history ?? []).length > 0}
             hasTaskModel={settings.tasksModelHeavy !== null}
             onCompress={useTaskModel => ChatMethod.compressMessage(cid, useTaskModel)}
@@ -319,7 +321,7 @@ export function ChatPage() {
               setConfirm(null)
             }}
           />
-          <ErrorSnackbar text={sendError ?? chatError} onClose={() => setSendError(null)} />
+          <ErrorSnackbar text={sendError} onClose={() => setSendError(null)} />
         </>
       ) : (
         <ChatEmptyPage />

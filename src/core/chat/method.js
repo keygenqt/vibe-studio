@@ -73,6 +73,10 @@ export const ChatMethod = {
     store.dispatch(chatHistorySet({ chatId: null, history: null }))
   },
   sendMessage: async function (chatId, text, translate, attachments) {
+    // the composer copy clears at the send gesture — instant UI; the
+    // block event confirms the stored message
+    store.dispatch(chatDraftSet(''))
+    store.dispatch(chatAttachmentsClear())
     await runStream(chatId, onDelta =>
       ChatTauri.sendMessage(chatId, text, translate, attachments, onDelta)
     )

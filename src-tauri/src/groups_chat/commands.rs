@@ -12,6 +12,7 @@ use super::data::chat_data::ChatData;
 use super::data::group_chat_data::GroupChatData;
 use super::data::group_chat_history_data::GroupChatHistoryData;
 use super::data::groups_chat_state::GroupsChatData;
+use crate::chat::data::chat_state::ChatStateData;
 use crate::events::OkEmit;
 
 /// All chat groups.
@@ -112,8 +113,9 @@ pub fn select_group_chat(
     OkEmit(&window, GroupsChatData::new(&store))
 }
 
-/// Renames the chat with a model-generated name; emits and returns
-/// the fresh state of the groups chat block.
+/// Renames the chat with a model-generated name; the chat row feeds
+/// two blocks — the groups chat copy and the chat page header — both
+/// get the fresh state. Returns the groups chat block state.
 #[tauri::command]
 pub async fn chat_regenerate_name(
     window: WebviewWindow,
@@ -123,5 +125,6 @@ pub async fn chat_regenerate_name(
     studio_core::chat_regenerate_name(&store, chat_id)
         .await
         .map_err(|e| e.to_string())?;
+    OkEmit(&window, ChatStateData::new(&store, chat_id))?;
     OkEmit(&window, GroupsChatData::new(&store))
 }

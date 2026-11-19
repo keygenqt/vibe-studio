@@ -71,7 +71,7 @@ export function ModelForm(props) {
         think: Yup.string(),
       })}
       onSubmit={async (values, { setErrors, setSubmitting }) => {
-        const saved = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
+        await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
           ProvidersMethod.saveProviderModel(props.model, {
             displayName: values.name,
             systemPrompt: values.systemPrompt,
@@ -97,7 +97,6 @@ export function ModelForm(props) {
                 : null,
           })
         )
-        if (saved) props.onSaved?.(saved)
       }}
     >
       {({
@@ -392,5 +391,4 @@ ModelForm.propTypes = {
       values: PropTypes.arrayOf(PropTypes.string).isRequired,
     }),
   }),
-  onSaved: PropTypes.func,
 }

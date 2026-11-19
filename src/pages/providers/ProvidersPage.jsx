@@ -27,23 +27,24 @@ export function ProvidersPage() {
   if (failure) return <ErrorState text={failure} />
 
   const ready = providersReady && catalogReady
+  // the gate is an early return: the copy expressions evaluate at
+  // the parent render — WaitState cannot guard them
+  if (!ready) return <WaitState ready={false} />
 
   return (
-    <WaitState ready={ready}>
-      <Stack spacing={2}>
-        <PageHeader title={t('settings.t_providers')} subtitle={t('providers.t_subtitle')} />
-        <DashedButton onClick={() => AppNav.open(navigate, AppRoutes.providerAdd())}>
-          {t('providers.t_add')}
-        </DashedButton>
-        {providers.map(provider => (
-          <ProviderCard
-            key={`provider-${provider.id}`}
-            provider={provider}
-            color={catalog.find(info => info.provider === provider.provider)?.color}
-            onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
-          />
-        ))}
-      </Stack>
-    </WaitState>
+    <Stack spacing={2}>
+      <PageHeader title={t('settings.t_providers')} subtitle={t('providers.t_subtitle')} />
+      <DashedButton onClick={() => AppNav.open(navigate, AppRoutes.providerAdd())}>
+        {t('providers.t_add')}
+      </DashedButton>
+      {providers.map(provider => (
+        <ProviderCard
+          key={`provider-${provider.id}`}
+          provider={provider}
+          color={catalog.find(info => info.provider === provider.provider)?.color}
+          onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
+        />
+      ))}
+    </Stack>
   )
 }

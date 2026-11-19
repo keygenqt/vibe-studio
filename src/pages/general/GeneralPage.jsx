@@ -61,15 +61,15 @@ function Autosave(props) {
 export function GeneralPage() {
   const { t } = useTranslation()
   const settings = useSettings()
-  const providers = useProviders()
-  const models = useModels()
+  const { providers, ready: providersReady, error: providersError } = useProviders()
+  const { models, ready: modelsReady, error: modelsError } = useModels()
 
   // any resource failed: the error paints over the loader
-  const failure = settings.error ?? providers.error ?? models.error
+  const failure = settings.error ?? providersError ?? modelsError
   if (failure) return <ErrorState text={failure} />
 
   // settings come with the startup gate; providers and models load here
-  const ready = settings.ready && providers.ready && models.ready
+  const ready = settings.ready && providersReady && modelsReady
   if (!ready) return <WaitState ready={false} />
 
   return (
@@ -103,15 +103,15 @@ export function GeneralPage() {
             <TasksSection
               values={values}
               onChange={setFieldValue}
-              providers={providers}
-              models={models}
+              providers={providers ?? []}
+              models={models ?? []}
             />
             <ChatSection values={values} onChange={setFieldValue} />
             <TranslationSection
               values={values}
               onChange={setFieldValue}
-              providers={providers}
-              models={models}
+              providers={providers ?? []}
+              models={models ?? []}
             />
             <NotificationsSection values={values} onChange={setFieldValue} />
           </Stack>

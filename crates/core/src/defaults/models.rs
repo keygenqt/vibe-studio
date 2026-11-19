@@ -100,6 +100,7 @@ struct Overrides {
 #[derive(serde::Deserialize)]
 struct Entry {
     name: String,
+    #[serde(flatten)]
     overrides: Overrides,
 }
 
