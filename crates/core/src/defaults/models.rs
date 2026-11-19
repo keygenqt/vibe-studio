@@ -16,8 +16,7 @@ use studio_cluster::CallParamsData;
 use studio_cluster::ProviderTypeData;
 
 /// One parameter: the insert-time default and the save bounds.
-#[derive(Debug, Clone, Copy, serde::Deserialize, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Copy, serde::Deserialize)]
 pub struct ModelParamSpec {
     pub default: f64,
     pub min: Option<f64>,
@@ -26,8 +25,7 @@ pub struct ModelParamSpec {
 
 /// The reasoning effort spec: the born value and the steps the UI
 /// select offers; the save validation checks the value against them.
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct EffortSpec {
     pub default: String,
     pub values: Vec<String>,
@@ -36,8 +34,7 @@ pub struct EffortSpec {
 /// The parameter set of one model: the family base merged with the
 /// override; a parameter the section does not list stays `None`.
 /// The effort spec holds a `Vec` — the set is `Clone`, not `Copy`.
-#[derive(Debug, Clone, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone)]
 pub struct ModelDefaultsData {
     pub temperature: Option<ModelParamSpec>,
     pub seed: Option<ModelParamSpec>,
@@ -66,7 +63,6 @@ struct Catalog {
 #[derive(serde::Deserialize)]
 struct Family {
     base: Base,
-    #[serde(default)]
     models: Vec<Entry>,
 }
 
@@ -104,7 +100,6 @@ struct Overrides {
 #[derive(serde::Deserialize)]
 struct Entry {
     name: String,
-    #[serde(flatten)]
     overrides: Overrides,
 }
 

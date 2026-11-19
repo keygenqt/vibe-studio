@@ -3,7 +3,7 @@
 // TAGS: ['states']
 // INFO: The workspace block event binding.
 
-use studio_core::WorkspaceData;
+use super::data::workspace_data::WorkspaceData;
 
 use crate::events::EventKey;
 use crate::events::EventPayload;

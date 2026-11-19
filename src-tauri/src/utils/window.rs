@@ -11,6 +11,9 @@ use studio_core::Store;
 use studio_core::get_workspace;
 use studio_core::save_workspace;
 
+use crate::events::OkEmit;
+use crate::workspace::data::workspace_data::WorkspaceData;
+
 /// Applies the saved window size, clamped to the window minimum.
 pub fn restore(window: &WebviewWindow, store: &Store) {
     let workspace = get_workspace(store);
@@ -34,7 +37,10 @@ pub fn save(window: &WebviewWindow, store: &Store) -> Result<(), String> {
     let mut workspace = get_workspace(store);
     workspace.window_width = Some(width as i32);
     workspace.window_height = Some(height as i32);
-    save_workspace(store, &workspace).map(|_| ()).map_err(|e| e.to_string())
+    save_workspace(store, &workspace).map_err(|e| e.to_string())?;
+    // every mutation ends with the block event; spawned emit — safe on the main thread
+    let _ = OkEmit(window, WorkspaceData::from(get_workspace(store)));
+    Ok(())
 }
 
 /// Clamps the logical size to the window minimum — the single

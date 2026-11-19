@@ -9,7 +9,6 @@ use vibe_cluster::Capabilities;
 /// abilities, as the host reports them or the rules resolve them.
 /// Fields the source does not define stay `None`.
 #[derive(Debug, Clone, Default, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ModeCapabilityData {
     /// Accepts text prompts.
     pub input_text: Option<bool>,

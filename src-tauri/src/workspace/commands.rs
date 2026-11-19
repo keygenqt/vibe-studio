@@ -7,14 +7,14 @@ use tauri::State;
 use tauri::WebviewWindow;
 
 use studio_core::Store;
-use studio_core::WorkspaceData;
 
+use super::data::workspace_data::WorkspaceData;
 use crate::events::OkEmit;
 
 /// Loads the shell environment.
 #[tauri::command]
 pub fn get_workspace(store: State<Store>) -> WorkspaceData {
-    studio_core::get_workspace(&store)
+    studio_core::get_workspace(&store).into()
 }
 
 /// Persists the shell environment; every mutation ends with the emit.
@@ -24,6 +24,6 @@ pub fn save_workspace(
     store: State<Store>,
     workspace: WorkspaceData,
 ) -> Result<WorkspaceData, String> {
-    studio_core::save_workspace(&store, &workspace).map_err(|e| e.to_string())?;
-    OkEmit(&window, studio_core::get_workspace(&store))
+    studio_core::save_workspace(&store, &studio_core::WorkspaceData::from(&workspace)).map_err(|e| e.to_string())?;
+    OkEmit(&window, studio_core::get_workspace(&store).into())
 }

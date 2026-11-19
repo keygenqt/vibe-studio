@@ -3,8 +3,8 @@
 // TAGS: ['states']
 // INFO: The settings block event bindings: state and theme payloads.
 
-use studio_core::SettingsData;
-use studio_core::ThemeChoice;
+use super::data::settings_data::SettingsData;
+use super::data::theme_choice::ThemeChoice;
 
 use crate::events::EventKey;
 use crate::events::EventPayload;

@@ -9,6 +9,8 @@ use tauri::State;
 use studio_core::Store;
 
 use crate::app::data::app_info::AppInfoData;
+use crate::app::data::attachment_stat::AttachmentStatData;
+use crate::app::data::clipboard_read::ClipboardRead;
 
 /// The startup order: a killed process leaves `Progress` rows behind,
 /// no stream can be alive on a fresh start — they read as cancelled.
@@ -54,8 +56,8 @@ pub fn clipboard_clear() -> Result<(), String> {
 /// The clipboard content by priority: text → files → image; `null`
 /// when the clipboard is empty or unsupported.
 #[tauri::command]
-pub fn clipboard_read() -> Option<studio_core::ClipboardRead> {
-    studio_core::clipboard_read()
+pub fn clipboard_read() -> Option<ClipboardRead> {
+    studio_core::clipboard_read().map(ClipboardRead::from)
 }
 
 /// Opens the link in the default browser; only `http` and `https`.
@@ -67,6 +69,6 @@ pub fn open_in_browser(url: String) -> Result<(), String> {
 /// The draft facts of a dropped path: the directory flag, the image
 /// MIME sniffed from the header, the byte size.
 #[tauri::command]
-pub fn attachment_stat(path: String) -> Result<studio_core::AttachmentStatData, String> {
-    Ok(studio_core::attachment_stat(&path))
+pub fn attachment_stat(path: String) -> Result<AttachmentStatData, String> {
+    Ok(AttachmentStatData::from(studio_core::attachment_stat(&path)))
 }

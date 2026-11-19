@@ -12,8 +12,7 @@ use crate::Store;
 /// A chat group: a named group of chats with its model and system
 /// prompt. `id` is `None` until the row is stored — SQLite owns
 /// the id.
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GroupChatData {
     /// Row id; `None` = not stored yet.
     pub id: Option<i32>,

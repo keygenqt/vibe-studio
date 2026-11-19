@@ -9,7 +9,9 @@
 //! # Submodules
 //!
 //! - `commands` — the `#[tauri::command]` functions of the block.
+//! - `data` — data types of the block served to the shell.
 //! - `events` — the block event bindings: state and theme payloads.
 
 pub(crate) mod commands;
+pub(crate) mod data;
 pub(crate) mod events;

@@ -12,8 +12,7 @@ use crate::Store;
 /// A model of a provider catalog. `id` is `None` until the row is
 /// stored — SQLite owns the id. The config is filled at insert from
 /// the defaults catalog — the stored row always carries it.
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ProviderModelData {
     /// Row id; `None` = not stored yet.
     pub id: Option<i32>,

@@ -21,13 +21,10 @@ const DEFAULT_CHAT_CONTEXT_LIMIT: i32 = 100;
 /// missing row falls back to `Default`. Preference fields are
 /// `Option` — `None` = the user has not touched it; a kernel-owned
 /// default resolves on read, the rest the UI applies.
-#[derive(Debug, Clone, PartialEq, Queryable, Identifiable, Selectable, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Queryable, Identifiable, Selectable)]
 #[diesel(table_name = settings)]
-#[serde(default)]
 pub struct SettingsData {
     /// Row id — the single row is 1, JS never sees it.
-    #[serde(skip)]
     pub id: i32,
     /// Theme id: `"system"` tracks the OS, `"light"` / `"dark"` are explicit.
     pub appearance_theme: String,

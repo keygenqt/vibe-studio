@@ -12,8 +12,7 @@ use crate::Store;
 /// A file attached to a user message. The bytes never leave the
 /// crate: the wire carries the metadata, the prompt reads the bytes
 /// through the blob access.
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ChatAttachmentData {
     /// Row id; `None` = not stored yet.
     pub id: Option<i32>,

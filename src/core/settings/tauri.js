@@ -20,7 +20,7 @@ export const SettingsTauri = {
   getSystemTheme: async function () {
     return invoke('get_system_theme', {})
   },
-  onEvent: async function () {
+  onState: async function () {
     return listen('event-settings', event => {
       // the fresh preferences state saved by a mutation
       if (event.payload.key === 'settings-update') {

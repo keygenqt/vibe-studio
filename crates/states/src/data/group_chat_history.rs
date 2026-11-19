@@ -7,8 +7,6 @@ use anyhow::Result;
 use chrono::DateTime;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use serde_with::TimestampMilliSeconds;
-use serde_with::serde_as;
 
 use crate::Store;
 
@@ -28,19 +26,15 @@ const DEFAULT_COUNT_CHATS_CREATED: i32 = 0;
 /// The life record of a group: the current view state and the
 /// app-wide selection, plus the accumulated counters. Born with the
 /// group — one row per group, `group_chat_id` is the key.
-#[serde_as]
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GroupChatHistoryData {
     /// Id of the group this history belongs to.
     pub group_chat_id: i32,
 
     /// Store-owned: when the row was born; JS gets unix millis.
-    #[serde_as(as = "TimestampMilliSeconds<i64>")]
     pub created_at: NaiveDateTime,
 
     /// Store-owned: the last write to the row; JS gets unix millis.
-    #[serde_as(as = "TimestampMilliSeconds<i64>")]
     pub updated_at: NaiveDateTime,
 
     /// The group block is collapsed — the chat list is hidden.

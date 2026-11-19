@@ -9,16 +9,18 @@ use tauri::State;
 use tauri::WebviewWindow;
 use tauri::ipc::Channel;
 
-use studio_core::ChatAttachmentInput;
-use studio_core::ChatShowType;
 use studio_core::ChatStreamEvent;
 use studio_core::Store;
 
+use super::data::chat_attachment_input::ChatAttachmentInput;
+use super::data::chat_history_data::ChatHistoryData;
+use super::data::chat_show_type::ChatShowType;
 use super::data::chat_state::ChatStateData;
 use super::data::chat_stats::ChatStatsData;
 use super::data::stream_chunk::StreamChunk;
 use super::data::stream_chunk::StreamChunkKind;
 use crate::events::OkEmit;
+use crate::groups_chat::data::chat_data::ChatData;
 
 /// The fresh state of the chat block: the chat row, its usage stats
 /// and the message history, oldest first.
@@ -38,9 +40,9 @@ fn chat_stream_forwarder(
         ChatStreamEvent::UserStored { chat, history } => {
             // the state is in the event's hands: emit it, no re-read
             let state = ChatStateData {
-                chat,
+                chat: chat.map(ChatData::from),
                 stats: ChatStatsData::of(&history),
-                history,
+                history: history.into_iter().map(ChatHistoryData::from).collect(),
             };
             let _ = OkEmit(&window, state);
         }
@@ -74,6 +76,10 @@ pub async fn chat_send_message(
     attachments: Vec<ChatAttachmentInput>,
     on_delta: Channel<StreamChunk>,
 ) -> Result<ChatStateData, String> {
+    let attachments: Vec<studio_core::ChatAttachmentInput> = attachments
+        .into_iter()
+        .map(studio_core::ChatAttachmentInput::from)
+        .collect();
     studio_core::chat_send_message(
         &store,
         chat_id,
@@ -108,7 +114,8 @@ pub fn chat_set_message_show_type(
     message_id: i32,
     show_type: ChatShowType,
 ) -> Result<ChatStateData, String> {
-    studio_core::chat_set_message_show_type(&store, chat_id, message_id, show_type).map_err(|e| e.to_string())?;
+    studio_core::chat_set_message_show_type(&store, chat_id, message_id, studio_core::ChatShowType::from(show_type))
+        .map_err(|e| e.to_string())?;
     // the summarization runs detached: the switch answers at once,
     // the summary arrives later through the block event
     if show_type == ChatShowType::Summary && studio_core::get_settings(&store).tasks_model_light.is_some() {
@@ -116,6 +123,10 @@ pub fn chat_set_message_show_type(
         let window = window.clone();
         tauri::async_runtime::spawn(async move {
             let store = handle.state::<Store>();
+            if let Err(error) = studio_core::chat_summarize_message(&store, chat_id, message_id).await {
+                log::warn!("chat_summarize_message: {error}");
+                return;
+            }
             let _ = OkEmit(&window, ChatStateData::new(&store, chat_id));
         });
     }

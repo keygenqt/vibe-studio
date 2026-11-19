@@ -6,8 +6,6 @@
 use anyhow::Result;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use serde_with::TimestampMilliSeconds;
-use serde_with::serde_as;
 
 use std::collections::HashMap;
 
@@ -18,8 +16,7 @@ use crate::Store;
 /// The outcome status of a message. Serialized lowercase; an unknown
 /// stored value reads as `Error` — broken data must not pass for a
 /// normal message.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChatStatus {
     /// A user message, or a full answer of the model.
     Complete,
@@ -56,8 +53,7 @@ impl ChatStatus {
 /// The sender kind of a message. Serialized lowercase; an unknown
 /// stored value reads as `User` — broken data must not pass for a
 /// normal message.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChatMessageType {
     /// A message of the user.
     User,
@@ -90,8 +86,7 @@ impl ChatMessageType {
 /// The message bubble view: which artifact the bubble shows.
 /// Serialized lowercase; an unknown stored value reads as `Text` —
 /// broken data must not pass for a normal bubble.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChatShowType {
     /// The message text itself.
     Text,
@@ -130,9 +125,7 @@ impl ChatShowType {
 /// `id` is `None` until the row is stored — SQLite owns the id.
 /// Token columns carry only the provider-measured facts; a column
 /// the provider did not report stays `NULL`.
-#[serde_as]
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ChatHistoryData {
     /// Row id; `None` = not stored yet.
     pub id: Option<i32>,
@@ -186,7 +179,6 @@ pub struct ChatHistoryData {
     /// for user messages and failed answers.
     pub tokens_gen_ms: Option<i32>,
     /// Store-owned: when the row was born; JS gets unix millis.
-    #[serde_as(as = "TimestampMilliSeconds<i64>")]
     pub created_at: NaiveDateTime,
     /// The collapsed view flag of the bubble; the height clamp is
     /// the shell's business.

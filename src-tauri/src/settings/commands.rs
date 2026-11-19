@@ -6,16 +6,16 @@
 use tauri::State;
 use tauri::WebviewWindow;
 
-use studio_core::SettingsData;
 use studio_core::Store;
 
+use super::data::settings_data::SettingsData;
 use crate::events::OkEmit;
 
 /// Loads the user preferences; model references come resolved —
 /// a gone model reads as `null`.
 #[tauri::command]
 pub fn get_settings(store: State<Store>) -> SettingsData {
-    studio_core::get_settings(&store)
+    studio_core::get_settings(&store).into()
 }
 
 /// Persists the user preferences; every mutation ends with the emit.
@@ -25,8 +25,8 @@ pub fn save_settings(
     store: State<Store>,
     settings: SettingsData,
 ) -> Result<SettingsData, String> {
-    studio_core::save_settings(&store, &settings).map_err(|e| e.to_string())?;
-    OkEmit(&window, studio_core::get_settings(&store))
+    studio_core::save_settings(&store, &studio_core::SettingsData::from(&settings)).map_err(|e| e.to_string())?;
+    OkEmit(&window, studio_core::get_settings(&store).into())
 }
 
 /// The current OS theme — the startup value for the shell.

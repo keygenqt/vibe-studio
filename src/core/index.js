@@ -27,7 +27,7 @@ export function bindEvents() {
     ChatTauri.onState(),
     ProvidersTauri.onState(),
     GroupsChatTauri.onState(),
-    SettingsTauri.onEvent(),
+    SettingsTauri.onState(),
     WorkspaceTauri.onState(),
   ])
 }

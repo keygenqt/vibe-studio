@@ -5,10 +5,11 @@
 
 use serde::Serialize;
 
-use studio_core::ChatData;
 use studio_core::Store;
 
+use super::chat_history_data::ChatHistoryData;
 use super::chat_stats::ChatStatsData;
+use crate::groups_chat::data::chat_data::ChatData;
 
 /// The fresh state of the chat block, returned by every mutation of
 /// the block: Rust assembles it, JS renders it.
@@ -17,7 +18,7 @@ use super::chat_stats::ChatStatsData;
 pub struct ChatStateData {
     pub chat: Option<ChatData>,
     pub stats: ChatStatsData,
-    pub history: Vec<studio_core::ChatHistoryData>,
+    pub history: Vec<ChatHistoryData>,
 }
 
 impl ChatStateData {
@@ -25,9 +26,9 @@ impl ChatStateData {
     pub(crate) fn new(store: &Store, chat_id: i32) -> Self {
         let history = studio_core::chat_get_history(store, chat_id).unwrap_or_default();
         Self {
-            chat: studio_core::get_chat(store, chat_id).ok(),
+            chat: ChatData::row(store, chat_id),
             stats: ChatStatsData::of(&history),
-            history,
+            history: history.into_iter().map(ChatHistoryData::from).collect(),
         }
     }
 }

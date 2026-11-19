@@ -5,9 +5,6 @@ copies only for rendering.
 
 ## Rules
 
-- The wire format is camelCase end to end: Rust renames on the
-  boundary (serde `rename_all`), JS holds and sends camelCase as is —
-  no translation in the frontend.
 - `constants/` holds the UI defaults: the copy resolves untouched
   null values on landing; the database stores only what the user
   chose.
@@ -25,25 +22,23 @@ copies only for rendering.
 `<block>/` directory carrying files by role: the role defines the
 file, not a fixed set. The public surface of a block is its
 `index.js` barrel (method, hooks); pages import from the block
-barrels directly. `core/index.js` is the runtime wiring only:
-the `store` and `bindEvents` (the Rust channels of all blocks in
-one call).
+barrels directly.
 
-- The wire format is camelCase end to end: Rust renames on the
-  boundary (serde `rename_all`), JS holds and sends camelCase as is —
-  no translation in the frontend.
 - `store` — **the copy only**: the block slice and the whole-payload
   `xxxStateSet` reducers. No request logic and no knowledge of
   Tauri.
 - `tauri` — **the connection and the only writer of the copy from
   Rust**: invoke wrappers and channels; the state listen routes the
-  payload key to dispatch. Collection mutations leave the answer
+  payload key to dispatch. The event keys are mirrored in the
+  block's own `tauri.js` from the owner block's `events.rs` — no
+  shared registry is kept. Collection mutations leave the answer
   undispatched — the event carries the fresh block state.
 - `method` — **mutations only**. No `get*`, no requests whose result
   the page needs to show — those belong to the hook. A merged save
   (`save`) merges the patch into the copy, dispatches it (instant
-  UI) and sends it whole; the event confirms. Errors are rethrown to
-  the caller.
+  UI) and sends it whole; the event confirms. A save sends the copy
+  as resolved — untouched fields land with their UI defaults.
+  Errors are rethrown to the caller.
 - `use*` — **all reading**, lives in the block's `hooks/`. One hook —
   one meaning: a collection, a routed row, a choice; the block's
   mount loads live here, the page gets its render data only from the
@@ -93,6 +88,10 @@ one call).
   (`components/states`): readiness is the block hook's `ready`.
 - A block error is shown by `!ready && error`: the hook's local
   error; a fresh load cleans it.
+- **Errors have two surfaces**: page-scoped errors — failed loads and
+  mutations — surface as `ErrorSnackbar` (`components/snackbars`);
+  form errors — a failed commit — surface as `ErrorAlert`
+  (`components/alerts`) inside the form.
 - One row — one command: a page fetches its item by id, never
   derives it from the collection list; the read-through row maps are
   invalidated by a block mutation and refetched on the next open.

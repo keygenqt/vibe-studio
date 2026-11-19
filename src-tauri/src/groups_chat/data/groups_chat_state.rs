@@ -5,10 +5,11 @@
 
 use serde::Serialize;
 
-use studio_core::ChatData;
-use studio_core::GroupChatData;
-use studio_core::GroupChatHistoryData;
 use studio_core::Store;
+
+use super::chat_data::ChatData;
+use super::group_chat_data::GroupChatData;
+use super::group_chat_history_data::GroupChatHistoryData;
 
 /// The fresh state of the groups chat block, returned by every
 /// mutation of the block: Rust assembles it, JS renders it.
@@ -24,9 +25,15 @@ impl GroupsChatData {
     /// Assembles the fresh state of the groups chat block.
     pub(crate) fn new(store: &Store) -> Self {
         Self {
-            groups_chat: studio_core::get_groups_chat(store),
-            chats: studio_core::get_chats(store),
-            history: studio_core::get_group_chat_histories(store),
+            groups_chat: studio_core::get_groups_chat(store)
+                .into_iter()
+                .map(GroupChatData::from)
+                .collect(),
+            chats: studio_core::get_chats(store).into_iter().map(ChatData::from).collect(),
+            history: studio_core::get_group_chat_histories(store)
+                .into_iter()
+                .map(GroupChatHistoryData::from)
+                .collect(),
         }
     }
 }

@@ -6,11 +6,11 @@
 use tauri::State;
 use tauri::WebviewWindow;
 
-use studio_core::ChatData;
-use studio_core::GroupChatData;
-use studio_core::GroupChatHistoryData;
 use studio_core::Store;
 
+use super::data::chat_data::ChatData;
+use super::data::group_chat_data::GroupChatData;
+use super::data::group_chat_history_data::GroupChatHistoryData;
 use super::data::groups_chat_state::GroupsChatData;
 use crate::events::OkEmit;
 
@@ -18,12 +18,17 @@ use crate::events::OkEmit;
 #[tauri::command]
 pub fn get_groups_chat(store: State<Store>) -> Vec<GroupChatData> {
     studio_core::get_groups_chat(&store)
+        .into_iter()
+        .map(GroupChatData::from)
+        .collect()
 }
 
 /// Loads one group by id.
 #[tauri::command]
 pub fn get_group_chat(store: State<Store>, id: i32) -> Result<GroupChatData, String> {
-    studio_core::get_group_chat(&store, id).map_err(|e| e.to_string())
+    studio_core::get_group_chat(&store, id)
+        .map(GroupChatData::from)
+        .map_err(|e| e.to_string())
 }
 
 /// Validates and persists; `id: null` inserts, otherwise updates.
@@ -34,7 +39,7 @@ pub fn save_group_chat(
     store: State<Store>,
     group_chat: GroupChatData,
 ) -> Result<GroupsChatData, String> {
-    studio_core::save_group_chat(&store, &group_chat).map_err(|e| e.to_string())?;
+    studio_core::save_group_chat(&store, &studio_core::GroupChatData::from(&group_chat)).map_err(|e| e.to_string())?;
     OkEmit(&window, GroupsChatData::new(&store))
 }
 
@@ -49,7 +54,7 @@ pub fn delete_group_chat(window: WebviewWindow, store: State<Store>, id: i32) ->
 /// All chats.
 #[tauri::command]
 pub fn get_chats(store: State<Store>) -> Vec<ChatData> {
-    studio_core::get_chats(&store)
+    studio_core::get_chats(&store).into_iter().map(ChatData::from).collect()
 }
 
 /// Validates and persists; `id: null` inserts with a random pool
@@ -57,7 +62,7 @@ pub fn get_chats(store: State<Store>) -> Vec<ChatData> {
 /// the groups chat block.
 #[tauri::command]
 pub fn save_chat(window: WebviewWindow, store: State<Store>, chat: ChatData) -> Result<GroupsChatData, String> {
-    studio_core::save_chat(&store, &chat).map_err(|e| e.to_string())?;
+    studio_core::save_chat(&store, &studio_core::ChatData::from(&chat)).map_err(|e| e.to_string())?;
     OkEmit(&window, GroupsChatData::new(&store))
 }
 
@@ -73,6 +78,9 @@ pub fn delete_chat(window: WebviewWindow, store: State<Store>, id: i32) -> Resul
 #[tauri::command]
 pub fn get_group_chat_histories(store: State<Store>) -> Vec<GroupChatHistoryData> {
     studio_core::get_group_chat_histories(&store)
+        .into_iter()
+        .map(GroupChatHistoryData::from)
+        .collect()
 }
 
 /// Persists the view flags of a group; emits and returns the fresh

@@ -31,7 +31,7 @@ const SNIFF_WINDOW: usize = 8 * 1024;
 /// One attached file as the shell sends it: a disk path, or a
 /// clipboard image as base64 PNG.
 #[derive(Debug, Clone, serde::Deserialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
+#[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ChatAttachmentInput {
     /// A file on disk.
     File {
@@ -47,8 +47,7 @@ pub enum ChatAttachmentInput {
 
 /// The draft facts of a dropped path: the directory flag, the image
 /// MIME sniffed from the header, the byte size — the chip paints by them.
-#[derive(Debug, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 pub struct AttachmentStatData {
     /// `true` = a directory, expands into its files at the send.
     pub dir: bool,

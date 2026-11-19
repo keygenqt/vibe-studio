@@ -13,8 +13,8 @@ import { chatStateSet } from '../store'
 import { ChatTauri } from '../tauri'
 
 export function useChat({ chatId } = {}) {
-  const chat = useSelector(s => s.chat.chat)
-  const stats = useSelector(s => s.chat.stats)
+  const chat = useSelector(s => (s.chat.historyChatId === chatId ? s.chat.chat : null))
+  const stats = useSelector(s => (s.chat.historyChatId === chatId ? s.chat.stats : null))
   const historyChatId = useSelector(s => s.chat.historyChatId)
   const history = useSelector(s => (s.chat.historyChatId === chatId ? s.chat.history : null))
   const [error, setError] = useState(null)

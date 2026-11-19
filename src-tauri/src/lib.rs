@@ -8,6 +8,8 @@ use tauri::Manager;
 use studio_core::Store;
 use studio_core::listen_system_theme;
 
+use settings::data::theme_choice::ThemeChoice;
+
 use crate::events::OkEmit;
 
 mod app;
@@ -51,7 +53,7 @@ pub fn run() {
             // persisted choice itself.
             let theme_window = window.clone();
             listen_system_theme(move |theme| {
-                let _ = OkEmit(&theme_window, theme);
+                let _ = OkEmit(&theme_window, ThemeChoice::from(theme));
             })?;
 
             // Window closed — persist its size.
@@ -89,6 +91,7 @@ pub fn run() {
             providers::commands::get_provider,
             providers::commands::save_provider,
             providers::commands::delete_provider,
+            providers::commands::get_provider_models_by_type,
             providers::commands::get_provider_models,
             providers::commands::get_provider_model,
             providers::commands::get_model_defaults,

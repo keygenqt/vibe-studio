@@ -24,11 +24,11 @@ let streamSeq = 0
 let translateSeq = 0
 
 // the newest generation wins: stale streams paint and reset nothing
-const runStream = (chatId, invoke) => {
+const runStream = async (chatId, invoke) => {
   const seq = ++streamSeq
   store.dispatch(chatStreamStart({ seq, chatId }))
   try {
-    return invoke(chunk => {
+    await invoke(chunk => {
       if (seq !== streamSeq) return
       store.dispatch(chatStreamAppend({ seq, chatId, kind: chunk.kind, text: chunk.text }))
     })
@@ -40,11 +40,11 @@ const runStream = (chatId, invoke) => {
 }
 
 // the translation generation: only text chunks land in its own slice
-const runTranslate = (messageId, invoke) => {
+const runTranslate = async (messageId, invoke) => {
   const seq = ++translateSeq
   store.dispatch(chatTranslateStart({ seq, messageId }))
   try {
-    return invoke(chunk => {
+    await invoke(chunk => {
       if (seq === translateSeq && chunk.kind === 'text') {
         store.dispatch(chatTranslateAppend({ seq, messageId, text: chunk.text }))
       }

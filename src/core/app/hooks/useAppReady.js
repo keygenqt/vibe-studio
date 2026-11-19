@@ -21,8 +21,6 @@ export function useAppReady() {
   const workspace = useWorkspace()
   const [error, setError] = useState(null)
 
-  console.log(settings)
-
   useEffectSingle({
     enabled: true,
     callback: async () => {

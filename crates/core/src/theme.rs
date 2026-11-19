@@ -7,8 +7,7 @@ use anyhow::Result;
 
 /// User's theme choice. Lives here — a platform fact, mirrored into
 /// `workspace.theme` as its lowercase string form.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ThemeChoice {
     Light,
     Dark,
