@@ -21,7 +21,12 @@ export function BaseLayout(props) {
       <Box
         height={1}
         boxSizing={'border-box'}
-        sx={{ p: `0 10px 10px`, backgroundColor: 'background.default' }}
+        sx={theme => ({
+          p: `0 10px 10px`,
+          backgroundColor: 'background.default',
+          // the native widgets (spin buttons, scrollbars) follow the theme scheme
+          colorScheme: theme.palette.mode,
+        })}
       >
         <Box height={1} sx={{ display: 'flex', flexDirection: 'column' }}>
           <AppBar
