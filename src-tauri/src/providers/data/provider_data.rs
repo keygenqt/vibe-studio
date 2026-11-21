@@ -3,7 +3,8 @@
 // TAGS: ['states']
 // INFO: The provider connection wire type, mirrored from studio-core.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A configured provider connection served to the shell: the mirror
 /// of the core row without its diesel concerns.

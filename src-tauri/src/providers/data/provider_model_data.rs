@@ -3,7 +3,8 @@
 // TAGS: ['states']
 // INFO: The provider model wire type, mirrored from studio-core.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A model of a provider catalog served to the shell: the mirror of
 /// the core row. The capabilities ride the stored JSON document.

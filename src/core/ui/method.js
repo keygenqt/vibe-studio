@@ -5,7 +5,7 @@
  * INFO: UI writes: pure front-end flags without a Rust round trip.
  */
 import store from '../store'
-import { formStateClear, formStateSet } from './store'
+import { errorClear, errorSet, formStateClear, formStateSet } from './store'
 
 export const UiMethod = {
   setFormState: function (value) {
@@ -13,5 +13,11 @@ export const UiMethod = {
   },
   clearFormState: function () {
     store.dispatch(formStateClear())
+  },
+  showError: function (value) {
+    store.dispatch(errorSet(value))
+  },
+  clearError: function () {
+    store.dispatch(errorClear())
   },
 }

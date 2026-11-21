@@ -4,16 +4,13 @@
  * TAGS: ['components']
  * INFO: The compress bubble: the base message with thinking, copy and delete.
  */
-import * as React from 'react'
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { Box, IconButton, Stack, Typography } from '@mui/material'
 import UnfoldLess from '@mui/icons-material/UnfoldLess'
 import UnfoldMore from '@mui/icons-material/UnfoldMore'
 
-import { ErrorSnackbar } from '../../../components/snackbars'
-import { AppMethod } from '../../../core'
-import { AppUtils } from '../../../utils'
+import { AppMethod, UiMethod } from '../../../core'
 import { CHAT_COLLAPSE_HEIGHT } from '../../../constants'
 
 import { DeferredMarkdown } from './DeferredMarkdown'
@@ -25,7 +22,6 @@ export function CompressMessageView(props) {
   // the attempt paints its growth, the final paints the base
   const isProgress = message.status === 'progress'
   const showType = message.showType
-  const [error, setError] = React.useState(null)
 
   // the caption is fixed: the base is the context, not a speaker
   const caption = [t('chat.t_compress_author'), message.time].join(' · ')
@@ -40,7 +36,7 @@ export function CompressMessageView(props) {
       await AppMethod.clipboardWriteText(shownText)
       return true
     } catch (err) {
-      setError(t(String(err)))
+      UiMethod.showError(t(String(err)))
       return false
     }
   }
@@ -51,7 +47,7 @@ export function CompressMessageView(props) {
     try {
       await props.onShowType(message.id, showType === 'thinking' ? 'text' : 'thinking')
     } catch (err) {
-      setError(t(String(err)))
+      UiMethod.showError(t(String(err)))
     }
   }
 
@@ -60,109 +56,106 @@ export function CompressMessageView(props) {
     try {
       await props.onSetCollapsed(message.id, !message.collapsed)
     } catch (err) {
-      setError(t(String(err)))
+      UiMethod.showError(t(String(err)))
     }
   }
 
   return (
-    <>
-      <Stack spacing={1}>
-        <Box
-          sx={{
-            paddingX: 1.5,
-            paddingTop: 1,
-            paddingBottom: 1.5,
-            borderRadius: 2,
-            backgroundColor: 'panel.main',
-          }}
+    <Stack spacing={1}>
+      <Box
+        sx={{
+          paddingX: 1.5,
+          paddingTop: 1,
+          paddingBottom: 1.5,
+          borderRadius: 2,
+          backgroundColor: 'panel.main',
+        }}
+      >
+        <Stack
+          direction={'row'}
+          spacing={1}
+          alignItems={'center'}
+          justifyContent={'space-between'}
+          sx={{ pb: 1 }}
         >
-          <Stack
-            direction={'row'}
-            spacing={1}
-            alignItems={'center'}
-            justifyContent={'space-between'}
-            sx={{ pb: 1 }}
-          >
-            <Stack direction={'row'} alignItems={'center'}>
-              {!isProgress && props.onSetCollapsed && (
-                <IconButton
-                  size={'small'}
-                  onClick={onClickCollapse}
-                  sx={{ position: 'relative', left: '-4px' }}
-                >
-                  {message.collapsed ? (
-                    <UnfoldMore sx={{ fontSize: 17, color: 'text.secondary' }} />
-                  ) : (
-                    <UnfoldLess sx={{ fontSize: 17, color: 'text.secondary' }} />
-                  )}
-                </IconButton>
-              )}
-              <Typography
-                variant={'caption'}
-                noWrap
-                color={'text.secondary'}
-                sx={{ minWidth: 0, paddingY: '4px' }}
+          <Stack direction={'row'} alignItems={'center'}>
+            {!isProgress && props.onSetCollapsed && (
+              <IconButton
+                size={'small'}
+                onClick={onClickCollapse}
+                sx={{ position: 'relative', left: '-4px' }}
               >
-                {caption}
-              </Typography>
-            </Stack>
-            <MessageActions
-              onClickCopy={!isProgress && shownText ? onClickCopy : undefined}
-              onClickThinking={
-                !message.collapsed && message.thinking && props.onShowType
-                  ? onClickThinking
-                  : undefined
-              }
-              thinkingActive={showType === 'thinking'}
-              // the running attempt is not deletable: the Stop button
-              // in the composer cuts the run
-              onClickDelete={!isProgress ? props.onDelete : undefined}
-            />
+                {message.collapsed ? (
+                  <UnfoldMore sx={{ fontSize: 17, color: 'text.secondary' }} />
+                ) : (
+                  <UnfoldLess sx={{ fontSize: 17, color: 'text.secondary' }} />
+                )}
+              </IconButton>
+            )}
+            <Typography
+              variant={'caption'}
+              noWrap
+              color={'text.secondary'}
+              sx={{ minWidth: 0, paddingY: '4px' }}
+            >
+              {caption}
+            </Typography>
           </Stack>
-          <Box
-            onClick={message.collapsed ? onClickCollapse : undefined}
-            sx={theme =>
-              message.collapsed
-                ? {
-                    maxHeight: CHAT_COLLAPSE_HEIGHT,
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      inset: 0,
-                      pointerEvents: 'none',
-                      background: `linear-gradient(0deg, ${theme.palette.panel.main} 0%, rgba(0, 0, 0, 0) 100%)`,
-                    },
-                  }
+          <MessageActions
+            onClickCopy={!isProgress && shownText ? onClickCopy : undefined}
+            onClickThinking={
+              !message.collapsed && message.thinking && props.onShowType
+                ? onClickThinking
                 : undefined
             }
-          >
-            {showType === 'thinking' && !message.collapsed ? (
-              <Typography
-                variant={'body2'}
-                color={'text.secondary'}
-                sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-              >
-                {message.thinking}
-              </Typography>
-            ) : isProgress && !message.text ? (
-              <Typography variant={'body2'} color={'text.secondary'}>
-                {t('chat.t_compressing')}
-              </Typography>
-            ) : (
-              <DeferredMarkdown
-                text={message.text}
-                fontSize={props.fontSize}
-                immediate={props.immediate}
-              />
-            )}
-          </Box>
+            thinkingActive={showType === 'thinking'}
+            // the running attempt is not deletable: the Stop button
+            // in the composer cuts the run
+            onClickDelete={!isProgress ? props.onDelete : undefined}
+          />
+        </Stack>
+        <Box
+          onClick={message.collapsed ? onClickCollapse : undefined}
+          sx={theme =>
+            message.collapsed
+              ? {
+                  maxHeight: CHAT_COLLAPSE_HEIGHT,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: 'none',
+                    background: `linear-gradient(0deg, ${theme.palette.panel.main} 0%, rgba(0, 0, 0, 0) 100%)`,
+                  },
+                }
+              : undefined
+          }
+        >
+          {showType === 'thinking' && !message.collapsed ? (
+            <Typography
+              variant={'body2'}
+              color={'text.secondary'}
+              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+            >
+              {message.thinking}
+            </Typography>
+          ) : isProgress && !message.text ? (
+            <Typography variant={'body2'} color={'text.secondary'}>
+              {t('chat.t_compressing')}
+            </Typography>
+          ) : (
+            <DeferredMarkdown
+              text={message.text}
+              fontSize={props.fontSize}
+              immediate={props.immediate}
+            />
+          )}
         </Box>
-      </Stack>
-      <ErrorSnackbar text={error} onClose={() => setError(null)} />
-    </>
+      </Box>
+    </Stack>
   )
 }
 

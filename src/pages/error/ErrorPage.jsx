@@ -7,14 +7,14 @@
 import { useTranslation } from 'react-i18next'
 import { Box, Typography } from '@mui/material'
 
-import { ShellLayout } from '../../components/layouts'
+import { BaseLayout } from '../../components/layouts'
 import { BackIconButton } from '../../components/buttons'
 
 export function ErrorPage() {
   const { t } = useTranslation()
 
   return (
-    <ShellLayout railActions={<BackIconButton />}>
+    <BaseLayout railActions={<BackIconButton />}>
       <Box
         height={1}
         sx={{
@@ -30,6 +30,6 @@ export function ErrorPage() {
           {t('error.t_text')}
         </Typography>
       </Box>
-    </ShellLayout>
+    </BaseLayout>
   )
 }

@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
- * INFO: Sidebar-plus-content layout with a drag handle.
+ * INFO: The sidebar layout: the sidebar and content zones over the base frame.
  */
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
@@ -10,9 +10,10 @@ import { Box } from '@mui/material'
 import { useWorkspace, WorkspaceMethod } from '../../core'
 import { useDragResize } from '../../hooks'
 import { HandleView } from '../views'
-import { ScrollPanel } from './ScrollPanel'
+import { BaseLayout } from './BaseLayout/BaseLayout'
+import { ScrollLayout } from './ScrollLayout'
 
-export function SidebarLayout(props) {
+export function PanelLayout(props) {
   const workspace = useWorkspace()
   const drag = useDragResize({
     axis: 'x',
@@ -21,7 +22,7 @@ export function SidebarLayout(props) {
   })
 
   return (
-    <>
+    <BaseLayout railActions={props.railActions} railFooter={props.railFooter}>
       <Box
         sx={theme => ({
           width: workspace.sideBarSize,
@@ -57,7 +58,9 @@ export function SidebarLayout(props) {
         {props.scrollSidebar === false ? (
           props.sidebarView
         ) : (
-          <ScrollPanel scrollKey={props.scrollSidebarKey}>{props.sidebarView}</ScrollPanel>
+          <ScrollLayout scrollKey={props.scrollSidebarKey} ready={props.sidebarReady ?? true}>
+            {props.sidebarView}
+          </ScrollLayout>
         )}
       </Box>
       <HandleView
@@ -85,21 +88,27 @@ export function SidebarLayout(props) {
               }),
         })}
       >
-        {props.scrollPage === false ? (
+        {props.scrollContent === false ? (
           props.children
         ) : (
-          <ScrollPanel scrollKey={props.scrollPageKey}>{props.children}</ScrollPanel>
+          <ScrollLayout scrollKey={props.scrollPageKey}>{props.children}</ScrollLayout>
         )}
       </Box>
-    </>
+    </BaseLayout>
   )
 }
 
-SidebarLayout.propTypes = {
-  scrollPage: PropTypes.bool,
-  scrollPageKey: PropTypes.string,
+PanelLayout.propTypes = {
+  railActions: PropTypes.node,
+  railFooter: PropTypes.node,
+  sidebarTitle: PropTypes.node,
+  sidebarView: PropTypes.element.isRequired,
+  // the sidebar data readiness: the loader covers the zone until it lands
+  sidebarReady: PropTypes.bool,
   scrollSidebar: PropTypes.bool,
   scrollSidebarKey: PropTypes.string,
-  sidebarView: PropTypes.element.isRequired,
+  // the content scroll belongs to the layout; the chat owns its own
+  scrollContent: PropTypes.bool,
+  scrollPageKey: PropTypes.string,
   children: PropTypes.node,
 }

@@ -10,7 +10,7 @@ import { Stack } from '@mui/material'
 
 import { GroupChatForm } from './elements/GroupChatForm'
 import { PageHeader } from '../../components/views'
-import { ErrorState, WaitState } from '../../components/states'
+import { OutletLayout } from '../../components/layouts'
 import { useGroupChat, useModels, useProviders } from '../../core'
 
 export function GroupChatPage() {
@@ -24,12 +24,10 @@ export function GroupChatPage() {
 
   // any resource failed: the error paints over the loader
   const failure = rowError ?? providersError ?? modelsError
-  if (failure) return <ErrorState text={failure} />
-
   const ready = rowReady && providersReady && modelsReady
 
   return (
-    <WaitState ready={ready}>
+    <OutletLayout ready={ready} error={failure}>
       <Stack spacing={2}>
         <PageHeader
           title={isEdit ? (groupChat?.name ?? t('group_chat.t_title')) : t('groups_chat.t_add')}
@@ -48,6 +46,6 @@ export function GroupChatPage() {
           />
         ) : null}
       </Stack>
-    </WaitState>
+    </OutletLayout>
   )
 }

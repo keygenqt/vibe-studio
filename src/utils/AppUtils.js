@@ -75,6 +75,15 @@ export const AppUtils = {
     return `${value} B`
   },
 
+  // the relative luminance of a hex color: the WCAG formula, dark below the midpoint
+  isDark: function (color) {
+    const hex = color.replace('#', '')
+    const channel = shift => parseInt(hex.slice(shift, shift + 2), 16) / 255
+    const linear = value => (value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+    const [r, g, b] = [0, 2, 4].map(shift => linear(channel(shift)))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.5
+  },
+
   // the solid mix of a translucent top over a base: the tinted
   // bubble background as one opaque hex
   mix: function (top, base, ratio) {

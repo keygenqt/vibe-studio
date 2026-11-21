@@ -6,3 +6,4 @@
  */
 export { UiMethod } from './method'
 export { useFormState } from './hooks/useFormState'
+export { useError } from './hooks/useError'

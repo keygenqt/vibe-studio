@@ -5,7 +5,6 @@
  * INFO: The user message bubble: the tinted accent card with actions.
  */
 import PropTypes from 'prop-types'
-import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Box, IconButton, Stack, Typography } from '@mui/material'
 import UnfoldLess from '@mui/icons-material/UnfoldLess'
@@ -13,8 +12,7 @@ import UnfoldMore from '@mui/icons-material/UnfoldMore'
 import { alpha } from '@mui/material/styles'
 
 import { AttachmentChip } from '../../../components/views'
-import { ErrorSnackbar } from '../../../components/snackbars'
-import { AppMethod } from '../../../core'
+import { AppMethod, UiMethod } from '../../../core'
 import { AppUtils } from '../../../utils'
 import { CHAT_COLLAPSE_HEIGHT } from '../../../constants'
 
@@ -22,7 +20,6 @@ import { MessageActions } from './MessageActions'
 
 export function UserMessageView(props) {
   const { t } = useTranslation()
-  const [error, setError] = React.useState(null)
 
   // the view switch persists the show type; the summary of an empty
   // column is spawned by the command itself
@@ -33,7 +30,7 @@ export function UserMessageView(props) {
         props.message.showType === 'summary' ? 'text' : 'summary'
       )
     } catch (err) {
-      setError(t(String(err)))
+      UiMethod.showError(t(String(err)))
     }
   }
 
@@ -42,7 +39,7 @@ export function UserMessageView(props) {
     try {
       await props.onSetCollapsed(props.message.id, !props.message.collapsed)
     } catch (err) {
-      setError(t(String(err)))
+      UiMethod.showError(t(String(err)))
     }
   }
 
@@ -57,118 +54,115 @@ export function UserMessageView(props) {
       await AppMethod.clipboardWriteText(shownText)
       return true
     } catch (err) {
-      setError(t(String(err)))
+      UiMethod.showError(t(String(err)))
       return false
     }
   }
 
   return (
-    <>
-      <Stack spacing={1}>
-        <Box
-          sx={{
-            paddingX: 1.5,
-            paddingTop: 1,
-            paddingBottom: 1.5,
-            borderRadius: 2,
-            backgroundColor: theme =>
-              AppUtils.mix(theme.palette.primary.main, theme.palette.background.paper, 0.15),
-          }}
+    <Stack spacing={1}>
+      <Box
+        sx={{
+          paddingX: 1.5,
+          paddingTop: 1,
+          paddingBottom: 1.5,
+          borderRadius: 2,
+          backgroundColor: theme =>
+            AppUtils.mix(theme.palette.primary.main, theme.palette.background.paper, 0.15),
+        }}
+      >
+        <Stack
+          direction={'row'}
+          spacing={1}
+          alignItems={'center'}
+          justifyContent={'space-between'}
+          sx={{ pb: 1 }}
         >
-          <Stack
-            direction={'row'}
-            spacing={1}
-            alignItems={'center'}
-            justifyContent={'space-between'}
-            sx={{ pb: 1 }}
-          >
-            <Stack direction={'row'} alignItems={'center'}>
-              {props.onSetCollapsed && (
-                <IconButton
-                  size={'small'}
-                  onClick={onClickCollapse}
-                  sx={{ position: 'relative', left: '-4px' }}
-                >
-                  {props.message.collapsed ? (
-                    <UnfoldMore sx={{ fontSize: 17, color: 'text.secondary' }} />
-                  ) : (
-                    <UnfoldLess sx={{ fontSize: 17, color: 'text.secondary' }} />
-                  )}
-                </IconButton>
-              )}
-              <Typography
-                variant={'caption'}
-                noWrap
-                color={'text.secondary'}
-                sx={{ minWidth: 0, paddingY: '4px' }}
+          <Stack direction={'row'} alignItems={'center'}>
+            {props.onSetCollapsed && (
+              <IconButton
+                size={'small'}
+                onClick={onClickCollapse}
+                sx={{ position: 'relative', left: '-4px' }}
               >
-                {[props.message.author, props.message.time].join(' · ')}
-              </Typography>
-            </Stack>
-            <MessageActions
-              onClickCopy={shownText ? onClickCopy : undefined}
-              onClickSummary={
-                !props.message.collapsed && props.canSummarize ? onClickSummary : undefined
-              }
-              summaryActive={props.message.showType === 'summary'}
-              onClickRefresh={props.onRefresh}
-              onClickDelete={props.onDelete}
-            />
+                {props.message.collapsed ? (
+                  <UnfoldMore sx={{ fontSize: 17, color: 'text.secondary' }} />
+                ) : (
+                  <UnfoldLess sx={{ fontSize: 17, color: 'text.secondary' }} />
+                )}
+              </IconButton>
+            )}
+            <Typography
+              variant={'caption'}
+              noWrap
+              color={'text.secondary'}
+              sx={{ minWidth: 0, paddingY: '4px' }}
+            >
+              {[props.message.author, props.message.time].join(' · ')}
+            </Typography>
           </Stack>
-          <Box
-            onClick={props.message.collapsed ? onClickCollapse : undefined}
-            sx={theme =>
-              props.message.collapsed
-                ? {
-                    maxHeight: CHAT_COLLAPSE_HEIGHT,
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      inset: 0,
-                      pointerEvents: 'none',
-                      background: `linear-gradient(0deg, ${AppUtils.mix(theme.palette.primary.main, theme.palette.background.paper, 0.15)} 0%, rgba(0, 0, 0, 0) 100%)`,
-                    },
-                  }
-                : undefined
+          <MessageActions
+            onClickCopy={shownText ? onClickCopy : undefined}
+            onClickSummary={
+              !props.message.collapsed && props.canSummarize ? onClickSummary : undefined
             }
-          >
-            {props.message.showType === 'summary' ? (
-              <Typography
-                variant={'body2'}
-                color={'text.secondary'}
-                sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-              >
-                {props.message.summary ?? t('chat.t_summarizing')}
-              </Typography>
-            ) : (
-              <Typography
-                variant={'body2'}
-                color={'text.primary'}
-                sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
-              >
-                {props.message.text}
-              </Typography>
-            )}
-            {props.message.attachments?.length > 0 && (
-              <Stack
-                direction={'row'}
-                spacing={1}
-                useFlexGap
-                sx={{ flexWrap: 'wrap', pt: props.message.text ? 2 : 0 }}
-              >
-                {props.message.attachments.map(attachment => (
-                  <AttachmentChip key={attachment.id} attachment={attachment} />
-                ))}
-              </Stack>
-            )}
-          </Box>
+            summaryActive={props.message.showType === 'summary'}
+            onClickRefresh={props.onRefresh}
+            onClickDelete={props.onDelete}
+          />
+        </Stack>
+        <Box
+          onClick={props.message.collapsed ? onClickCollapse : undefined}
+          sx={theme =>
+            props.message.collapsed
+              ? {
+                  maxHeight: CHAT_COLLAPSE_HEIGHT,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: 'none',
+                    background: `linear-gradient(0deg, ${AppUtils.mix(theme.palette.primary.main, theme.palette.background.paper, 0.15)} 0%, rgba(0, 0, 0, 0) 100%)`,
+                  },
+                }
+              : undefined
+          }
+        >
+          {props.message.showType === 'summary' ? (
+            <Typography
+              variant={'body2'}
+              color={'text.secondary'}
+              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+            >
+              {props.message.summary ?? t('chat.t_summarizing')}
+            </Typography>
+          ) : (
+            <Typography
+              variant={'body2'}
+              color={'text.primary'}
+              sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
+            >
+              {props.message.text}
+            </Typography>
+          )}
+          {props.message.attachments?.length > 0 && (
+            <Stack
+              direction={'row'}
+              spacing={1}
+              useFlexGap
+              sx={{ flexWrap: 'wrap', pt: props.message.text ? 2 : 0 }}
+            >
+              {props.message.attachments.map(attachment => (
+                <AttachmentChip key={attachment.id} attachment={attachment} />
+              ))}
+            </Stack>
+          )}
         </Box>
-      </Stack>
-      <ErrorSnackbar text={error} onClose={() => setError(null)} />
-    </>
+      </Box>
+    </Stack>
   )
 }
 

@@ -4,6 +4,8 @@
  * TAGS: ['components']
  * INFO: The layouts zone barrel.
  */
-export * from './ShellLayout/ShellLayout'
-export * from './SidebarLayout'
-export * from './ScrollPanel'
+export * from './AppLayout'
+export * from './BaseLayout/BaseLayout'
+export * from './OutletLayout'
+export * from './PanelLayout'
+export * from './ScrollLayout'

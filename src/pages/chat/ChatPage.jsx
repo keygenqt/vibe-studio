@@ -10,13 +10,12 @@ import { useTranslation } from 'react-i18next'
 import { Box, Stack } from '@mui/material'
 
 import { AttachmentChip, DeleteDialog } from '../../components/views'
-import { ErrorSnackbar } from '../../components/snackbars'
-import { ErrorState, WaitState } from '../../components/states'
-import { ScrollPanel } from '../../components/layouts'
+import { OutletLayout, ScrollLayout } from '../../components/layouts'
 import {
   AppMethod,
   ChatMethod,
   GroupsChatMethod,
+  UiMethod,
   useChats,
   useChat,
   useComposer,
@@ -40,7 +39,7 @@ export function ChatPage() {
   const { chatId } = useParams()
   const { t, i18n } = useTranslation()
   const cid = Number(chatId)
-  const { chats, ready: chatsReady } = useChats()
+  const { ready: chatsReady } = useChats()
   const { groupsChat, models, ready: groupsReady } = useGroupsChat()
   const { settings } = useSettings()
   const { chat, stats, history, ready: chatReady, error: chatError } = useChat({ chatId: cid })
@@ -48,7 +47,6 @@ export function ChatPage() {
   const { stream, streaming } = useStream(cid)
   const { translateStream } = useTranslate()
   const [sending, setSending] = React.useState(false)
-  const [sendError, setSendError] = React.useState(null)
   // the pending confirmation: {action: 'delete' | 'resend', messageId}
   const [confirm, setConfirm] = React.useState(null)
   // the composer writes live in the block; the send is a page gesture
@@ -57,9 +55,8 @@ export function ChatPage() {
   const removeAttachment = index => ChatMethod.removeAttachment(index)
   const send = translate => {
     setSending(true)
-    setSendError(null)
     ChatMethod.sendMessage(cid, draft, translate, chatAttachments)
-      .catch(err => setSendError(String(err)))
+      .catch(err => UiMethod.showError(String(err)))
       .finally(() => setSending(false))
   }
   const stop = () => ChatMethod.cancelSend(cid)
@@ -182,10 +179,8 @@ export function ChatPage() {
   }
 
   return (
-    <WaitState ready={groupsReady && chatsReady}>
-      {chatError && !chatReady ? (
-        <ErrorState text={chatError} />
-      ) : chat ? (
+    <OutletLayout ready={groupsReady && chatsReady} error={chatReady ? null : chatError}>
+      {chat ? (
         <>
           <ChatTitleView
             name={t(chat.name)}
@@ -197,7 +192,7 @@ export function ChatPage() {
             hasTaskModel={settings.tasksModelHeavy !== null}
             onCompress={useTaskModel => ChatMethod.compressMessage(cid, useTaskModel)}
           />
-          <ScrollPanel
+          <ScrollLayout
             scrollKey={'chat.history'}
             follow
             ready={chatReady}
@@ -245,7 +240,7 @@ export function ChatPage() {
                 </>
               )}
             </Stack>
-          </ScrollPanel>
+          </ScrollLayout>
 
           <InputView
             draft={draft}
@@ -321,11 +316,10 @@ export function ChatPage() {
               setConfirm(null)
             }}
           />
-          <ErrorSnackbar text={sendError} onClose={() => setSendError(null)} />
         </>
       ) : (
         <ChatEmptyPage />
       )}
-    </WaitState>
+    </OutletLayout>
   )
 }

@@ -5,4 +5,5 @@
  * INFO: The utils zone barrel.
  */
 export * from './AppNav'
+export * from './AppStorage'
 export * from './AppUtils'

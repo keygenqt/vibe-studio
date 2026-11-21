@@ -2,17 +2,14 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components']
- * INFO: A paper panel wrapping its content in a scroll area.
+ * INFO: The scroll zone: a paper panel wrapping its content in a scroll area.
  */
 import PropTypes from 'prop-types'
-import { Box, Stack } from '@mui/material'
+import { Box } from '@mui/material'
 
-import { LoaderView } from '../views'
-import { LOADER_FADE_MS } from '../../constants'
+import { OutletLayout } from './OutletLayout'
 
-export function ScrollPanel(props) {
-  const ready = props.ready ?? true
-
+export function ScrollLayout(props) {
   return (
     <Box
       className={'ScrollFrame'}
@@ -40,24 +37,21 @@ export function ScrollPanel(props) {
             overflowAnchor: props.follow ? 'none' : undefined,
           }}
         >
-          {ready ? (
-            props.children
-          ) : (
-            <Stack height={1} sx={{ justifyContent: 'center', alignItems: 'center' }}>
-              <LoaderView delay={LOADER_FADE_MS} />
-            </Stack>
-          )}
+          <OutletLayout ready={props.ready ?? true} error={props.error}>
+            {props.children}
+          </OutletLayout>
         </Box>
       </Box>
     </Box>
   )
 }
 
-ScrollPanel.propTypes = {
+ScrollLayout.propTypes = {
   scrollKey: PropTypes.string,
   // the follow mode: pins to the bottom while the user sits at it
   follow: PropTypes.bool,
   sx: PropTypes.object,
   ready: PropTypes.bool,
+  error: PropTypes.string,
   children: PropTypes.node,
 }

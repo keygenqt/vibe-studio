@@ -13,6 +13,7 @@ import Settings from '@mui/icons-material/Settings'
 
 import {
   GroupsChatMethod,
+  UiMethod,
   useChats,
   useGroupsChat,
   useHistory,
@@ -21,9 +22,8 @@ import {
   WorkspaceMethod,
 } from '../../core'
 import { AppRoutes } from '../../constants'
-import { ShellLayout, SidebarLayout } from '../../components/layouts'
+import { PanelLayout } from '../../components/layouts'
 import { TooltipIconButton } from '../../components/buttons'
-import { ErrorSnackbar } from '../../components/snackbars'
 import { AppNav } from '../../utils'
 
 import { SidebarTitle } from './elements/SidebarTitle'
@@ -38,7 +38,6 @@ export function MainPage() {
   const { chats } = useChats()
   const { history } = useHistory()
   const { models } = useModels()
-  const [error, setError] = React.useState(null)
 
   // the sidebar highlight is the persisted selection, not the route:
   // it lands together with the chat it belongs to — one paint
@@ -65,93 +64,88 @@ export function MainPage() {
   }, [groupsChat, history, chats])
 
   return (
-    <>
-      <ErrorSnackbar text={error} onClose={() => setError(null)} />
-      <ShellLayout
-        railActions={
-          <>
-            <TooltipIconButton title={t('main.t_sidebar')} onClick={toggleSidebar}>
-              <ViewSidebar />
-            </TooltipIconButton>
-          </>
-        }
-        railFooter={
-          <TooltipIconButton
-            title={t('main.t_settings')}
-            onClick={() =>
-              AppNav.open(navigate, AppRoutes.settings(), {
-                viewTransition: true,
-              })
-            }
-          >
-            <Settings />
+    <PanelLayout
+      railActions={
+        <>
+          <TooltipIconButton title={t('main.t_sidebar')} onClick={toggleSidebar}>
+            <ViewSidebar />
           </TooltipIconButton>
-        }
-      >
-        <SidebarLayout
-          scrollSidebarKey={'main.nav'}
-          scrollPage={false}
-          sidebarTitle={
-            <SidebarTitle
-              canAdd={groupsChat !== null && groupsChat.length > 0}
-              onAdd={() => {
-                if (activeId === null) return
-                GroupsChatMethod.saveChat({ id: null, name: '', groupChatId: activeId })
-                  .then(state => {
-                    const savedId = state.history.find(
-                      item => item.currentIsActive
-                    )?.currentActiveChatId
-                    if (savedId) AppNav.open(navigate, AppRoutes.chat(savedId))
-                  })
-                  .catch(err => setError(String(err)))
-              }}
-            />
-          }
-          sidebarView={
-            <SidebarView
-              groupsChat={groupsChat}
-              chats={chats}
-              models={models}
-              history={history}
-              activeId={activeId}
-              onActivate={groupId =>
-                GroupsChatMethod.selectGroupChat(groupId, null)
-                  .then(state => {
-                    const selectedId = state.history.find(
-                      item => item.currentIsActive
-                    )?.currentActiveChatId
-                    if (selectedId) {
-                      AppNav.open(navigate, AppRoutes.chat(selectedId))
-                    } else {
-                      AppNav.open(navigate, AppRoutes.main())
-                    }
-                  })
-                  .catch(err => setError(String(err)))
-              }
-              activeChatId={activeChatId}
-              onActivateChat={(groupId, chatId) => {
-                GroupsChatMethod.selectGroupChat(groupId, chatId).catch(err =>
-                  setError(String(err))
-                )
-                AppNav.open(navigate, AppRoutes.chat(chatId))
-              }}
-            />
+        </>
+      }
+      railFooter={
+        <TooltipIconButton
+          title={t('main.t_settings')}
+          onClick={() =>
+            AppNav.open(navigate, AppRoutes.settings(), {
+              viewTransition: true,
+            })
           }
         >
-          <Box
-            sx={{
-              flexGrow: 1,
-              minWidth: 0,
-              minHeight: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}
-          >
-            <Outlet />
-          </Box>
-        </SidebarLayout>
-      </ShellLayout>
-    </>
+          <Settings />
+        </TooltipIconButton>
+      }
+      sidebarReady={groupsChat !== null}
+      scrollSidebarKey={'main.nav'}
+      scrollContent={false}
+      sidebarTitle={
+        <SidebarTitle
+          canAdd={groupsChat !== null && groupsChat.length > 0}
+          onAdd={() => {
+            if (activeId === null) return
+            GroupsChatMethod.saveChat({ id: null, name: '', groupChatId: activeId })
+              .then(state => {
+                const savedId = state.history.find(
+                  item => item.currentIsActive
+                )?.currentActiveChatId
+                if (savedId) AppNav.open(navigate, AppRoutes.chat(savedId))
+              })
+              .catch(err => UiMethod.showError(String(err)))
+          }}
+        />
+      }
+      sidebarView={
+        <SidebarView
+          groupsChat={groupsChat}
+          chats={chats}
+          models={models}
+          history={history}
+          activeId={activeId}
+          onActivate={groupId =>
+            GroupsChatMethod.selectGroupChat(groupId, null)
+              .then(state => {
+                const selectedId = state.history.find(
+                  item => item.currentIsActive
+                )?.currentActiveChatId
+                if (selectedId) {
+                  AppNav.open(navigate, AppRoutes.chat(selectedId))
+                } else {
+                  AppNav.open(navigate, AppRoutes.main())
+                }
+              })
+              .catch(err => UiMethod.showError(String(err)))
+          }
+          activeChatId={activeChatId}
+          onActivateChat={(groupId, chatId) => {
+            GroupsChatMethod.selectGroupChat(groupId, chatId).catch(err =>
+              UiMethod.showError(String(err))
+            )
+            AppNav.open(navigate, AppRoutes.chat(chatId))
+          }}
+        />
+      }
+    >
+      <Box
+        sx={{
+          flexGrow: 1,
+          minWidth: 0,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+        }}
+      >
+        <Outlet />
+      </Box>
+    </PanelLayout>
   )
 }

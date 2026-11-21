@@ -10,9 +10,8 @@ import { Formik } from 'formik'
 import { Stack } from '@mui/material'
 
 import { PageHeader } from '../../components/views'
-import { ErrorState, WaitState } from '../../components/states'
-import { ErrorSnackbar } from '../../components/snackbars'
-import { SettingsMethod, useModels, useProviders, useSettings } from '../../core'
+import { OutletLayout } from '../../components/layouts'
+import { SettingsMethod, UiMethod, useModels, useProviders, useSettings } from '../../core'
 import { AppUtils } from '../../utils'
 
 import { AppearanceSection } from './elements/AppearanceSection'
@@ -24,7 +23,6 @@ import { NotificationsSection } from './elements/NotificationsSection'
 // autosave: persists the form after a short debounce, skips the initial load
 function Autosave(props) {
   const { t } = useTranslation()
-  const [error, setError] = React.useState(null)
   const savedRef = React.useRef(null)
 
   React.useEffect(() => {
@@ -50,12 +48,12 @@ function Autosave(props) {
         translationAnswers: props.values.translateAnswers,
         notificationsReady: props.values.notifyReady,
         notificationsUpdates: props.values.notifyUpdates,
-      }).catch(err => setError(AppUtils.backendMessage(t, err)))
+      }).catch(err => UiMethod.showError(AppUtils.backendMessage(t, err)))
     }, 500)
     return () => clearTimeout(timer)
   }, [props.values, t])
 
-  return <ErrorSnackbar text={error} onClose={() => setError(null)} />
+  return null
 }
 
 export function GeneralPage() {
@@ -66,57 +64,56 @@ export function GeneralPage() {
 
   // any resource failed: the error paints over the loader
   const failure = settings.error ?? providersError ?? modelsError
-  if (failure) return <ErrorState text={failure} />
-
   // settings come with the startup gate; providers and models load here
   const ready = settings.ready && providersReady && modelsReady
-  if (!ready) return <WaitState ready={false} />
 
   return (
-    <Formik
-      enableReinitialize
-      initialValues={{
-        theme: settings.settings.appearanceTheme,
-        accent: settings.settings.appearanceAccent,
-        language: settings.settings.appearanceLocale,
-        fontSize: settings.settings.appearanceChatFontSize,
-        taskModelLight: settings.settings.tasksModelLight,
-        taskModelHeavy: settings.settings.tasksModelHeavy,
-        translateModel: settings.settings.translationModel,
-        translateMine: settings.settings.translationMine,
-        translateAnswers: settings.settings.translationAnswers,
-        streaming: settings.settings.chatStreaming,
-        contextLimit: settings.settings.chatContextLimit,
-        notifyReady: settings.settings.notificationsReady,
-        notifyUpdates: settings.settings.notificationsUpdates,
-      }}
-    >
-      {({ values, setFieldValue }) => (
-        <Stack spacing={2}>
-          <PageHeader
-            title={t('general.t_general')}
-            subtitle={t('general.t_general_description')}
-          />
-          <Autosave values={values} />
+    <OutletLayout ready={ready} error={failure}>
+      <Formik
+        enableReinitialize
+        initialValues={{
+          theme: settings.settings.appearanceTheme,
+          accent: settings.settings.appearanceAccent,
+          language: settings.settings.appearanceLocale,
+          fontSize: settings.settings.appearanceChatFontSize,
+          taskModelLight: settings.settings.tasksModelLight,
+          taskModelHeavy: settings.settings.tasksModelHeavy,
+          translateModel: settings.settings.translationModel,
+          translateMine: settings.settings.translationMine,
+          translateAnswers: settings.settings.translationAnswers,
+          streaming: settings.settings.chatStreaming,
+          contextLimit: settings.settings.chatContextLimit,
+          notifyReady: settings.settings.notificationsReady,
+          notifyUpdates: settings.settings.notificationsUpdates,
+        }}
+      >
+        {({ values, setFieldValue }) => (
           <Stack spacing={2}>
-            <AppearanceSection values={values} onChange={setFieldValue} />
-            <TasksSection
-              values={values}
-              onChange={setFieldValue}
-              providers={providers ?? []}
-              models={models ?? []}
+            <PageHeader
+              title={t('general.t_general')}
+              subtitle={t('general.t_general_description')}
             />
-            <ChatSection values={values} onChange={setFieldValue} />
-            <TranslationSection
-              values={values}
-              onChange={setFieldValue}
-              providers={providers ?? []}
-              models={models ?? []}
-            />
-            <NotificationsSection values={values} onChange={setFieldValue} />
+            <Autosave values={values} />
+            <Stack spacing={2}>
+              <AppearanceSection values={values} onChange={setFieldValue} />
+              <TasksSection
+                values={values}
+                onChange={setFieldValue}
+                providers={providers ?? []}
+                models={models ?? []}
+              />
+              <ChatSection values={values} onChange={setFieldValue} />
+              <TranslationSection
+                values={values}
+                onChange={setFieldValue}
+                providers={providers ?? []}
+                models={models ?? []}
+              />
+              <NotificationsSection values={values} onChange={setFieldValue} />
+            </Stack>
           </Stack>
-        </Stack>
-      )}
-    </Formik>
+        )}
+      </Formik>
+    </OutletLayout>
   )
 }

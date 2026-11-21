@@ -8,7 +8,7 @@ import { Outlet, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Box, Typography } from '@mui/material'
 
-import { ShellLayout, SidebarLayout } from '../../components/layouts'
+import { PanelLayout } from '../../components/layouts'
 import { BackIconButton } from '../../components/buttons'
 import { SidebarView } from './elements/SidebarView'
 
@@ -17,30 +17,29 @@ export function SettingsPage() {
   const { pathname } = useLocation()
 
   return (
-    <ShellLayout railActions={<BackIconButton />}>
-      <SidebarLayout
-        scrollPageKey={'settings.content'}
-        scrollSidebarKey={'settings.nav'}
-        sidebarTitle={
-          <Typography variant={'h5'} fontWeight={500} color={'text.primary'}>
-            {t('main.t_settings')}
-          </Typography>
-        }
-        sidebarView={<SidebarView />}
+    <PanelLayout
+      railActions={<BackIconButton />}
+      scrollPageKey={'settings.content'}
+      scrollSidebarKey={'settings.nav'}
+      sidebarTitle={
+        <Typography variant={'h5'} fontWeight={500} color={'text.primary'}>
+          {t('main.t_settings')}
+        </Typography>
+      }
+      sidebarView={<SidebarView />}
+    >
+      <Box
+        key={pathname}
+        className={'PageFade'}
+        sx={{
+          minHeight: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          '> *': { flexGrow: 1 },
+        }}
       >
-        <Box
-          key={pathname}
-          className={'PageFade'}
-          sx={{
-            minHeight: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            '> *': { flexGrow: 1 },
-          }}
-        >
-          <Outlet />
-        </Box>
-      </SidebarLayout>
-    </ShellLayout>
+        <Outlet />
+      </Box>
+    </PanelLayout>
   )
 }

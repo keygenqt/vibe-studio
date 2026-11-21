@@ -52,7 +52,7 @@ const VARIANTS = [
 ]
 
 export function LoaderView(props) {
-  const { delay = 0 } = props
+  const { delay = 0, textColor = 'text.secondary' } = props
   const { t } = useTranslation()
   // one phrase per mount: re-renders keep it stable
   const [variant] = React.useState(() => VARIANTS[Math.floor(Math.random() * VARIANTS.length)])
@@ -87,15 +87,15 @@ export function LoaderView(props) {
         },
       }}
     >
-      <Icon sx={{ fontSize: 36, color: 'text.secondary' }} />
+      <Icon sx={{ fontSize: 36, color: textColor }} />
       <Stack direction={'row'} spacing={0.7} alignItems={'flex-end'}>
-        <Typography variant={'body2'} color={'text.secondary'}>
+        <Typography variant={'body2'} color={textColor}>
           {t(variant.text)}
         </Typography>
         <Stack
           direction={'row'}
           spacing={0.25}
-          sx={{ color: 'text.secondary', position: 'relative', top: 3 }}
+          sx={{ color: textColor, position: 'relative', top: 3 }}
         >
           <Box component={'span'}>{'•'}</Box>
           <Box component={'span'} sx={{ animation: 'loader-dot-2 1.5s linear infinite' }}>
@@ -112,4 +112,5 @@ export function LoaderView(props) {
 
 LoaderView.propTypes = {
   delay: PropTypes.number,
+  textColor: PropTypes.string,
 }

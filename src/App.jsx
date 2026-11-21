@@ -4,60 +4,32 @@
  * TAGS: ['components', 'states', 'theme', 'hooks']
  * INFO: The app root: resolves the theme choice (system, dark, light) and hosts the route shell.
  */
-import { ThemeProvider, Box } from '@mui/material'
+import { ThemeProvider } from '@mui/material'
 
 import { AppRoute } from './AppRoute'
 import { THEMES } from './theme'
 import { useEffectFocus } from './hooks'
-import { LoaderView } from './components/views'
 import { useAppReady, useTheme } from './core'
-import { ACCENT_DEFAULT, DURATION_DEFAULT } from './constants'
+import { ACCENT_DEFAULT } from './constants'
+import { AppLayout } from './components/layouts'
 
 function App() {
   const isFocus = useEffectFocus()
   const { ready } = useAppReady()
-  // the startup gate: the loader holds the window until the startup loads land
-  if (!ready)
-    return (
-      <Box
-        height={1}
-        data-tauri-drag-region
-        sx={{
-          backgroundColor: 'background.default',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <LoaderView />
-      </Box>
-    )
-  return <ThemedShell isFocus={isFocus} />
-}
-
-// the workspace and settings models plus the OS theme: the
-// persisted choice with `system` resolved to the detected OS theme
-function ThemedShell(props) {
+  // the persisted choice with `system` resolved to the detected OS theme;
+  // the accent picks the theme pair, an unknown name falls back to the default
   const { mode, accent } = useTheme()
-  // the accent picks the theme pair; an unknown or untouched name falls back to the default
-  const theme = (THEMES[accent] ?? THEMES[ACCENT_DEFAULT])[mode]
+  // the theme resolves only when the startup loads land: the loader
+  // phase paints on the default accent pair until the settings come
+  const theme = ready
+    ? (THEMES[accent] ?? THEMES[ACCENT_DEFAULT])[mode]
+    : THEMES[ACCENT_DEFAULT].light
 
   return (
     <ThemeProvider theme={theme}>
-      <Box
-        height={1}
-        sx={theme => ({
-          backgroundColor: 'background.default',
-          // bridge for plain CSS: styles.css reads the theme through these vars
-          '--app-paper': theme.palette.background.paper,
-          '--duration-default': `${DURATION_DEFAULT}ms`,
-        })}
-      >
-        {/* the dim sits on the content: the window background stays solid */}
-        <Box className={props.isFocus ? 'WindowFocus' : 'WindowUnfocus'} height={1}>
-          <AppRoute />
-        </Box>
-      </Box>
+      <AppLayout ready={ready} isFocus={isFocus}>
+        <AppRoute />
+      </AppLayout>
     </ThemeProvider>
   )
 }

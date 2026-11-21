@@ -3,7 +3,8 @@
 // TAGS: ['states']
 // INFO: The chat group wire type, mirrored from studio-core.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A chat group served to the shell: the mirror of the core row.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

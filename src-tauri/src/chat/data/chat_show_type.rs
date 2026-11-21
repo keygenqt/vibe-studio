@@ -3,7 +3,8 @@
 // TAGS: ['states']
 // INFO: The bubble view wire type, mirrored from studio-core.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The message bubble view served to the shell: which artifact the
 /// bubble shows.

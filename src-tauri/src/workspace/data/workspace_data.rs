@@ -3,7 +3,8 @@
 // TAGS: ['states']
 // INFO: The shell environment wire type, mirrored from studio-core.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The shell environment served to the shell: the mirror of the core
 /// row without its id — the wire shape is owned by this layer.

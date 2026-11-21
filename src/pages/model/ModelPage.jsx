@@ -8,7 +8,7 @@ import { useParams } from 'react-router'
 import { Stack } from '@mui/material'
 
 import { PageHeader } from '../../components/views'
-import { ErrorState, WaitState } from '../../components/states'
+import { OutletLayout } from '../../components/layouts'
 import { useDefaults, useModel, useProviders } from '../../core'
 
 import { ModelForm } from './elements/ModelForm'
@@ -24,10 +24,9 @@ export function ModelPage() {
 
   // the spec failed: the form would run without bounds — the error paints instead
   const failure = modelError ?? defaultsError
-  if (failure) return <ErrorState text={failure} />
 
   return (
-    <WaitState ready={modelReady}>
+    <OutletLayout ready={modelReady} error={failure}>
       {model && (
         <Stack spacing={2}>
           <PageHeader
@@ -42,6 +41,6 @@ export function ModelPage() {
           />
         </Stack>
       )}
-    </WaitState>
+    </OutletLayout>
   )
 }

@@ -3,7 +3,8 @@
 // TAGS: ['states']
 // INFO: The user preferences wire type, mirrored from studio-core.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The user preferences served to the shell: the mirror of the core
 /// row without its id — untouched values stay `None`.

@@ -13,10 +13,10 @@ import { Box, Button, InputAdornment, Stack, Switch, TextField, Typography } fro
 import { SaveButton } from '../../components/buttons'
 import { ModelCard, PageHeader } from '../../components/views'
 import { SuccessAlert } from '../../components/alerts'
-import { ErrorSnackbar } from '../../components/snackbars'
-import { ErrorState, WaitState } from '../../components/states'
+import { OutletLayout } from '../../components/layouts'
 import {
   ProvidersMethod,
+  UiMethod,
   useCatalog,
   useModels,
   useProviderModelsByType,
@@ -34,19 +34,11 @@ export function ModelsPage() {
   const provider = (providers ?? []).find(item => item.id === id) ?? null
   // the live catalog of the provider host: the query hook owns the fetch
   const { models: liveModels, error: liveError } = useProviderModelsByType(provider)
-  const [error, setError] = React.useState(null)
-  const [submitError, setSubmitError] = React.useState(null)
   const [savedOpen, setSavedOpen] = React.useState(false)
   const [query, setQuery] = React.useState('')
   const [picked, setPicked] = React.useState(null)
   const selected = picked ?? (models ?? []).map(model => model.name)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-
-  React.useEffect(() => {
-    if (providers !== null && !provider) {
-      setError(t('error.t_text'))
-    }
-  }, [providers, provider, t])
 
   // the commit: persist the selection against the live catalog;
   // a failed sync shows a snackbar — the page keeps its state
@@ -58,12 +50,14 @@ export function ModelsPage() {
         setPicked(null)
         setSavedOpen(true)
       })
-      .catch(err => setSubmitError(String(err)))
+      .catch(err => UiMethod.showError(String(err)))
       .finally(() => setIsSubmitting(false))
   }
 
+  // the routed provider is missing: the load failed
+  const missing = providers !== null && !provider ? t('error.t_text') : null
   // readiness: loaded or failed — the loader never covers an error
-  const failure = error ?? liveError
+  const failure = missing ?? liveError
   const pageReady = failure !== null || (Boolean(provider) && liveModels !== null)
 
   // accent color of this provider's type from the static catalog
@@ -99,119 +93,110 @@ export function ModelsPage() {
   ].filter(Boolean)
 
   return (
-    <WaitState ready={pageReady}>
-      {failure ? (
-        <ErrorState text={failure} />
-      ) : (
-        <Stack>
-          <PageHeader title={provider.name} subtitle={t('models.t_subtitle')} />
-          <Box sx={{ pb: 2 }} />
-          <SuccessAlert
-            open={savedOpen}
-            text={t('models.t_saved')}
-            onClose={() => setSavedOpen(false)}
+    <OutletLayout ready={pageReady} error={failure}>
+      <Stack>
+        <PageHeader title={provider.name} subtitle={t('models.t_subtitle')} />
+        <Box sx={{ pb: 2 }} />
+        <SuccessAlert
+          open={savedOpen}
+          text={t('models.t_saved')}
+          onClose={() => setSavedOpen(false)}
+        />
+        <Stack spacing={2}>
+          <TextField
+            hiddenLabel
+            variant={'filled'}
+            disabled={Boolean(isSubmitting)}
+            placeholder={t('models.t_search')}
+            value={query}
+            onChange={event => {
+              setQuery(event.target.value.trim().toLowerCase())
+            }}
+            sx={{ flexGrow: 1 }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position={'start'}>
+                    <SearchIcon fontSize={'small'} />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
-          <ErrorSnackbar text={submitError} onClose={() => setSubmitError(null)} />
-          <Stack spacing={2}>
-            <TextField
-              hiddenLabel
-              variant={'filled'}
-              disabled={Boolean(isSubmitting)}
-              placeholder={t('models.t_search')}
-              value={query}
-              onChange={event => {
-                setQuery(event.target.value.trim().toLowerCase())
-              }}
-              sx={{ flexGrow: 1 }}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position={'start'}>
-                      <SearchIcon fontSize={'small'} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
-            {all.length === 0 && (
-              <Typography variant={'body2'} color={'text.secondary'}>
-                {t('common.t_not_found')}
-              </Typography>
-            )}
-            {sections.map(section => (
-              <React.Fragment key={section.title ?? 'models'}>
-                {section.title && (
-                  <Typography
-                    variant={'body2'}
-                    color={'text.secondary'}
-                    sx={{
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}
-                  >
-                    {section.title}
-                  </Typography>
-                )}
-                {section.models.map(model => (
-                  <ModelCard
-                    key={`model-${model.name}`}
-                    title={model.name}
-                    description={model.params ?? undefined}
-                    capabilities={model.capabilities}
-                    context={model.contextLength ?? undefined}
-                    color={color}
-                    action={
-                      <Switch
-                        checked={selected.includes(model.name)}
-                        disabled={all.length === 0 || Boolean(isSubmitting)}
-                        onChange={() =>
-                          setPicked(current =>
-                            selected.includes(model.name)
-                              ? selected.filter(item => item !== model.name)
-                              : [...selected, model.name]
-                          )
-                        }
-                        sx={{ flexShrink: 0 }}
-                      />
-                    }
-                  />
-                ))}
-                {section.title && section.models.length === 0 && (
-                  <Typography variant={'body2'} color={'text.secondary'}>
-                    {t('common.t_not_found')}
-                  </Typography>
-                )}
-              </React.Fragment>
-            ))}
-            <Stack direction={'row'} spacing={2} alignItems={'center'}>
-              {visible.length > 0 && (
-                <Button
-                  variant={'outlined'}
-                  size={'large'}
-                  disabled={Boolean(isSubmitting)}
-                  sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
-                  onClick={() =>
-                    setPicked(
-                      allVisibleSelected
-                        ? selected.filter(name => !visible.some(model => model.name === name))
-                        : [...new Set([...selected, ...visible.map(model => model.name)])]
-                    )
-                  }
+          {all.length === 0 && (
+            <Typography variant={'body2'} color={'text.secondary'}>
+              {t('common.t_not_found')}
+            </Typography>
+          )}
+          {sections.map(section => (
+            <React.Fragment key={section.title ?? 'models'}>
+              {section.title && (
+                <Typography
+                  variant={'body2'}
+                  color={'text.secondary'}
+                  sx={{
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                  }}
                 >
-                  {t(allVisibleSelected ? 'models.t_deselect_all' : 'models.t_select_all')}
-                </Button>
+                  {section.title}
+                </Typography>
               )}
-              <Box sx={{ flexGrow: 1 }} />
-              <SaveButton
-                isSubmitting={isSubmitting}
-                disabled={all.length === 0}
-                onClick={onSave}
-              />
-            </Stack>
+              {section.models.map(model => (
+                <ModelCard
+                  key={`model-${model.name}`}
+                  title={model.name}
+                  description={model.params ?? undefined}
+                  capabilities={model.capabilities}
+                  context={model.contextLength ?? undefined}
+                  color={color}
+                  action={
+                    <Switch
+                      checked={selected.includes(model.name)}
+                      disabled={all.length === 0 || Boolean(isSubmitting)}
+                      onChange={() =>
+                        setPicked(current =>
+                          selected.includes(model.name)
+                            ? selected.filter(item => item !== model.name)
+                            : [...selected, model.name]
+                        )
+                      }
+                      sx={{ flexShrink: 0 }}
+                    />
+                  }
+                />
+              ))}
+              {section.title && section.models.length === 0 && (
+                <Typography variant={'body2'} color={'text.secondary'}>
+                  {t('common.t_not_found')}
+                </Typography>
+              )}
+            </React.Fragment>
+          ))}
+          <Stack direction={'row'} spacing={2} alignItems={'center'}>
+            {visible.length > 0 && (
+              <Button
+                variant={'outlined'}
+                size={'large'}
+                disabled={Boolean(isSubmitting)}
+                sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+                onClick={() =>
+                  setPicked(
+                    allVisibleSelected
+                      ? selected.filter(name => !visible.some(model => model.name === name))
+                      : [...new Set([...selected, ...visible.map(model => model.name)])]
+                  )
+                }
+              >
+                {t(allVisibleSelected ? 'models.t_deselect_all' : 'models.t_select_all')}
+              </Button>
+            )}
+            <Box sx={{ flexGrow: 1 }} />
+            <SaveButton isSubmitting={isSubmitting} disabled={all.length === 0} onClick={onSave} />
           </Stack>
         </Stack>
-      )}
-    </WaitState>
+      </Stack>
+    </OutletLayout>
   )
 }

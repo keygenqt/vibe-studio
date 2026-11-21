@@ -13,11 +13,9 @@ import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 
 import { DeleteDialog } from '../../../components/views'
-import { ErrorSnackbar } from '../../../components/snackbars'
-import { WaitState } from '../../../components/states'
 import { AppRoutes } from '../../../constants'
 import { AppNav } from '../../../utils'
-import { GroupsChatMethod } from '../../../core'
+import { GroupsChatMethod, UiMethod } from '../../../core'
 
 import { ChatItem } from './ChatItem'
 import { GroupItem } from './GroupItem'
@@ -29,13 +27,8 @@ export function SidebarView(props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [chatToDelete, setChatToDelete] = React.useState(null)
-  const [error, setError] = React.useState(null)
   // per-group view flags live in the persisted history copy
   const historyById = new Map((props.history ?? []).map(item => [item.groupChatId, item]))
-
-  if (props.groupsChat === null) {
-    return <WaitState ready={false} />
-  }
 
   if (props.groupsChat.length === 0) {
     return (
@@ -56,7 +49,7 @@ export function SidebarView(props) {
   return (
     <>
       <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {props.groupsChat.map(group => {
+        {(props.groupsChat ?? []).map(group => {
           const chats = (props.chats ?? []).filter(chat => chat.groupChatId === group.id)
           const item = historyById.get(group.id)
           const isCollapsed = Boolean(item?.currentCollapsedGroup)
@@ -152,15 +145,15 @@ export function SidebarView(props) {
               }
             })
             .catch(err => {
-              setError(String(err))
+              UiMethod.showError(String(err))
               setChatToDelete(null)
             })
         }}
       />
-      <ErrorSnackbar text={error} onClose={() => setError(null)} />
     </>
   )
 }
+
 SidebarView.propTypes = {
   groupsChat: PropTypes.array,
   chats: PropTypes.array,

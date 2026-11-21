@@ -10,6 +10,7 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState: {
     formState: null,
+    error: null,
   },
   reducers: {
     formStateSet: (state, action) => {
@@ -18,8 +19,14 @@ const uiSlice = createSlice({
     formStateClear: state => {
       state.formState = null
     },
+    errorSet: (state, action) => {
+      state.error = action.payload
+    },
+    errorClear: state => {
+      state.error = null
+    },
   },
 })
 
-export const { formStateSet, formStateClear } = uiSlice.actions
+export const { formStateSet, formStateClear, errorSet, errorClear } = uiSlice.actions
 export default uiSlice.reducer

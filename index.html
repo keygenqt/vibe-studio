@@ -8,6 +8,9 @@
   <body>
     <script>
       window.isTauri = '__TAURI_INTERNALS__' in window
+      // the persisted background paints before the app loads (key from AppStorage.js)
+      const stored = localStorage.getItem('window.background')
+      if (stored) document.documentElement.style.backgroundColor = stored
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

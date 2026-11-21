@@ -3,7 +3,8 @@
 // TAGS: ['states']
 // INFO: The chat row wire type, mirrored from studio-core.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 use studio_core::Store;
 

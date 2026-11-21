@@ -13,7 +13,7 @@ import SyncOutlined from '@mui/icons-material/SyncOutlined'
 import { ProviderForm } from './elements/ProviderForm'
 import { DashedButton } from '../../components/buttons'
 import { ModelCard, PageHeader } from '../../components/views'
-import { ErrorState, WaitState } from '../../components/states'
+import { OutletLayout } from '../../components/layouts'
 import { AppRoutes } from '../../constants'
 import { AppNav } from '../../utils'
 import { useCatalog, useModels, useProvider } from '../../core'
@@ -34,17 +34,15 @@ export function ProviderPage() {
 
   // any resource failed: the error paints over the loader
   const failure = catalogError ?? providerError ?? modelsError
-  if (failure) return <ErrorState text={failure} />
-
   const ready = catalogReady && providerReady && modelsReady
 
   return (
-    <WaitState ready={ready}>
+    <OutletLayout ready={ready} error={failure}>
       <Stack spacing={2}>
         <PageHeader
           title={
             isEdit
-              ? (catalog.find(info => info.provider === provider?.provider)?.name ??
+              ? ((catalog ?? []).find(info => info.provider === provider?.provider)?.name ??
                 t('provider.t_title'))
               : t('providers.t_add')
           }
@@ -75,14 +73,14 @@ export function ProviderPage() {
             >
               {t('provider.t_sync_models')}
             </DashedButton>
-            {models.map(model => (
+            {(models ?? []).map(model => (
               <ModelCard
                 key={`model-${model.id}`}
                 title={model.displayName ? `${model.displayName} (${model.name})` : model.name}
                 description={model.params}
                 capabilities={model.capabilities ?? undefined}
                 context={model.contextLength ?? undefined}
-                color={catalog.find(info => info.provider === provider.provider)?.color}
+                color={(catalog ?? []).find(info => info.provider === provider.provider)?.color}
                 onClick={() => AppNav.open(navigate, AppRoutes.model(model.id))}
                 action={<ChevronRightOutlined color={'action'} />}
               />
@@ -90,6 +88,6 @@ export function ProviderPage() {
           </>
         )}
       </Stack>
-    </WaitState>
+    </OutletLayout>
   )
 }
