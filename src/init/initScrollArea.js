@@ -18,10 +18,14 @@ const watched = new Map()
 // the bottom watchers: key → the listener set of `watchBottom`
 const bottomWatchers = new Map()
 
-// the at-bottom flip: the listeners learn the fresh value
+// the at-bottom flip: the anchoring toggles with it, the listeners
+// learn the fresh value
 const setAtBottom = (state, value) => {
   if (state.atBottom === value) return
   state.atBottom = value
+  // the follow pin owns the position at the bottom: anchoring only
+  // guards the free scroll against the content growth above
+  if (state.follow) state.el.style.overflowAnchor = value ? 'none' : 'auto'
   const listeners = bottomWatchers.get(state.key)
   if (listeners) listeners.forEach(cb => cb(value))
 }
@@ -29,9 +33,10 @@ const setAtBottom = (state, value) => {
 // forces the follow area with the key to its bottom and re-arms the
 // follow — the smooth flag picks the flight or the instant jump
 export function scrollToBottom(key, smooth = true) {
+  // the pinned area keeps no position: the memory holds only the free scroll
+  positions.delete(key)
   watched.forEach(state => {
     if (state.key !== key) return
-    state.followPaused = false
     setAtBottom(state, true)
     if (smooth) {
       // the smooth flight: the flight state keeps the at-bottom flips
@@ -41,16 +46,6 @@ export function scrollToBottom(key, smooth = true) {
     } else {
       state.el.scrollTop = state.el.scrollHeight
     }
-  })
-}
-
-// pauses the follow pin without moving the area; scrollToBottom re-arms it
-export function pauseFollow(key) {
-  watched.forEach(state => {
-    if (state.key !== key) return
-    state.followPaused = true
-    state.flightUntil = 0
-    setAtBottom(state, false)
   })
 }
 
@@ -76,12 +71,17 @@ export function initScrollArea() {
     const padded = el.scrollHeight > el.clientHeight && el.dataset.scrollStatic === undefined
     el.classList.toggle('ScrollAreaPadded', padded)
     if (state.follow) {
-      // the follow mode: at-bottom areas pin before the paint — the
-      // smooth flight owns the position until it lands
-      if (state.followPaused) {
-        setAtBottom(state, el.scrollHeight - el.scrollTop - el.clientHeight <= 1)
+      // the saved offset waits for the real content: the loader has
+      // nothing to restore against
+      if (state.restore !== null) {
+        if (el.dataset.scrollReady === undefined) return
+        const offset = state.restore
+        state.restore = null
+        el.scrollTop = Math.max(el.scrollHeight - offset, 0)
         return
       }
+      // the follow mode: at-bottom areas pin before the paint — the
+      // smooth flight owns the position until it lands
       const flying = state.flightUntil > performance.now()
       if (!flying && state.atBottom) el.scrollTop = el.scrollHeight
       return
@@ -115,11 +115,22 @@ export function initScrollArea() {
       key: el.dataset.scrollKey,
       touched: false,
       follow: el.dataset.scrollFollow !== undefined,
-      followPaused: false,
       atBottom: true,
+      restore: null,
       lastScrollTop: el.scrollTop,
       flightUntil: 0,
     }
+    // the follow area restores its saved free-scroll offset; without
+    // one it opens pinned to the bottom
+    const saved = state.follow && state.key !== undefined ? positions.get(state.key) : undefined
+    if (saved !== undefined) {
+      state.restore = saved
+      state.atBottom = false
+    }
+    if (state.follow) el.style.overflowAnchor = state.atBottom ? 'none' : 'auto'
+    // the fresh area answers the registered bottom watchers at once
+    const listeners = bottomWatchers.get(state.key)
+    if (listeners) listeners.forEach(cb => cb(state.atBottom))
     // the user input cancels the smooth flight: the position is theirs
     state.cancelFlight = () => {
       state.flightUntil = 0
@@ -129,19 +140,34 @@ export function initScrollArea() {
       if (state.follow) {
         const previousTop = state.lastScrollTop
         state.lastScrollTop = el.scrollTop
-        const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 1
+        // a few px of clamp tolerance: a tiny shrink at the bottom is
+        // not a user scroll — the follow must survive it
+        const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 8
         // the flight: the intermediate positions change nothing, the
         // arrival clears it
         if (state.flightUntil > performance.now()) {
           if (atBottom) state.flightUntil = 0
           return
         }
-        // only a real upward move releases the follow: a delayed event
-        // can read the next content height after the programmatic pin
+        // the bottom offset is the memory of the free scroll: reaching
+        // the bottom drops it and re-arms the follow
         if (atBottom) {
+          if (state.key !== undefined) positions.delete(state.key)
           setAtBottom(state, true)
-        } else if (el.scrollTop < previousTop) {
-          setAtBottom(state, false)
+        } else {
+          // only a real upward move releases the follow: a delayed event
+          // can read the next content height after the programmatic pin
+          if (el.scrollTop < previousTop) setAtBottom(state, false)
+          // the memory exists only under the released follow: the gap
+          // of a pinned area is the content growth under the pin, not
+          // a user scroll — its saved offset poisons the restore
+          if (!state.atBottom) {
+            if (state.key !== undefined) {
+              positions.set(state.key, el.scrollHeight - el.scrollTop)
+            }
+          } else if (state.key !== undefined) {
+            positions.delete(state.key)
+          }
         }
       } else if (state.key !== undefined) {
         positions.set(state.key, el.scrollTop)
@@ -187,6 +213,8 @@ export function initScrollArea() {
     childList: true,
     subtree: true,
     characterData: true,
+    attributes: true,
+    attributeFilter: ['data-scroll-ready'],
   })
   find(document.body).forEach(watch)
 }

@@ -27,7 +27,7 @@ import {
 } from '../../core'
 import { CHAT_INPUT_SIZE_MIN } from '../../constants'
 import { AppUtils } from '../../utils'
-import { pauseFollow, scrollToBottom, watchBottom } from '../../init'
+import { scrollToBottom, watchBottom } from '../../init'
 
 import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
 import { ChatTitleView } from './elements/ChatTitleView'
@@ -83,10 +83,8 @@ export function ChatPage() {
   // the summary view lives only with the light task model set: the
   // summary is its job
   const canSummarize = settings.tasksModelLight !== null
-  const setShowType = (messageId, showType) => {
-    pauseFollow('chat.history')
-    return ChatMethod.setMessageShowType(cid, messageId, showType)
-  }
+  const setShowType = (messageId, showType) =>
+    ChatMethod.setMessageShowType(cid, messageId, showType)
   const setCollapsed = (messageId, collapsed) =>
     ChatMethod.setMessageCollapsed(cid, messageId, collapsed)
   // the newest progress row owns the live stream
@@ -111,15 +109,11 @@ export function ChatPage() {
   // markdown at once — the rest upgrade lazily on the scroll up
   const VISIBLE_TAIL = 4
 
+  // the per-chat scroll key: the follow state and the saved position
+  const scrollKey = `chat.history:${cid}`
   // the follow state of the history: the down button reads it
   const [atBottom, setAtBottom] = React.useState(true)
-  React.useEffect(() => watchBottom('chat.history', setAtBottom), [])
-
-  // the chat switch lands at the bottom and re-arms the follow; the
-  // content updates are the scroll area's own business
-  React.useEffect(() => {
-    scrollToBottom('chat.history')
-  }, [chatId])
+  React.useEffect(() => watchBottom(scrollKey, setAtBottom), [scrollKey])
 
   const viewMessage = message => ({
     ...message,
@@ -199,7 +193,7 @@ export function ChatPage() {
           <ChatTitleView
             name={t(chat.name)}
             canScrollDown={!atBottom}
-            onScrollDown={() => scrollToBottom('chat.history')}
+            onScrollDown={() => scrollToBottom(scrollKey)}
             canRename={(history ?? []).length > 0 && settings.tasksModelLight !== null}
             onRename={() => GroupsChatMethod.chatRegenerateName(cid)}
             canCompress={(history ?? []).length > 0}
@@ -207,7 +201,7 @@ export function ChatPage() {
             onCompress={useTaskModel => ChatMethod.compressMessage(cid, useTaskModel)}
           />
           <ScrollLayout
-            scrollKey={'chat.history'}
+            scrollKey={scrollKey}
             follow
             ready={chatReady}
             sx={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 0 }}

@@ -28,13 +28,13 @@ export function ScrollLayout(props) {
           className={'ScrollArea'}
           data-scroll-key={props.scrollKey}
           data-scroll-follow={props.follow || undefined}
+          // the restore waits for the gate: the loader has no content
+          // to restore against
+          data-scroll-ready={props.ready === false || props.error ? undefined : ''}
           sx={{
             height: 1,
             p: 1,
             boxSizing: 'border-box',
-            // the follow areas own their scroll — the browser anchoring
-            // adjusts against the follow pin and leaves the view above
-            overflowAnchor: props.follow ? 'none' : undefined,
           }}
         >
           <OutletLayout ready={props.ready ?? true} error={props.error}>
