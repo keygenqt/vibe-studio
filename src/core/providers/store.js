@@ -18,8 +18,12 @@ const providersSlice = createSlice({
   reducers: {
     providersStateSet: (state, action) => {
       Object.assign(state, action.payload)
-      state.provider = {}
-      state.model = {}
+      state.provider = Object.fromEntries(
+        (state.providers ?? []).filter(row => state.provider[row.id]).map(row => [row.id, row])
+      )
+      state.model = Object.fromEntries(
+        (state.models ?? []).filter(row => state.model[row.id]).map(row => [row.id, row])
+      )
     },
     catalogSet: (state, action) => {
       state.catalog = action.payload

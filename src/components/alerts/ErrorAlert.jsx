@@ -5,12 +5,26 @@
  * INFO: Collapsible error banner with a close action.
  */
 import PropTypes from 'prop-types'
+import * as React from 'react'
 import { Alert, Box, Collapse, Stack } from '@mui/material'
 import ErrorRounded from '@mui/icons-material/ErrorRounded'
 
 export function ErrorAlert(props) {
+  const ref = React.useRef(null)
+
+  // the plate lives at the top of the form: scroll the area to the top
+  React.useEffect(() => {
+    if (props.open) {
+      const scroller = ref.current?.closest('.ScrollArea')
+      const form = ref.current?.closest('form')
+      if (scroller && form) {
+        scroller.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+  }, [props.open])
+
   return (
-    <Box>
+    <Box ref={ref}>
       <Collapse in={props.open} unmountOnExit>
         <Stack spacing={2}>
           <Alert

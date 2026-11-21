@@ -11,6 +11,7 @@ import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded'
 
 export function SuccessAlert(props) {
   const theme = useTheme()
+  const ref = React.useRef(null)
 
   React.useEffect(() => {
     if (!props.open) return undefined
@@ -18,8 +19,19 @@ export function SuccessAlert(props) {
     return () => clearTimeout(timer)
   }, [props.open])
 
+  // the plate lives at the top of the form: scroll the area to the top
+  React.useEffect(() => {
+    if (props.open) {
+      const scroller = ref.current?.closest('.ScrollArea')
+      const form = ref.current?.closest('form')
+      if (scroller && form) {
+        scroller.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+  }, [props.open])
+
   return (
-    <Box>
+    <Box ref={ref}>
       <Collapse in={props.open} unmountOnExit>
         <Stack spacing={2}>
           <Alert

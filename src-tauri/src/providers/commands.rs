@@ -43,15 +43,18 @@ pub fn get_provider(store: State<Store>, id: i32) -> Result<ProviderData, String
 }
 
 /// Validates and persists; `id: null` inserts, otherwise updates.
-/// Emits and returns the fresh state of the providers block.
+/// Emits the fresh state of the providers block, returns the saved row.
 #[tauri::command]
 pub fn save_provider(
     window: WebviewWindow,
     store: State<Store>,
     provider: ProviderData,
-) -> Result<ProvidersData, String> {
-    studio_core::save_provider(&store, &studio_core::ProviderData::from(&provider)).map_err(|e| e.to_string())?;
-    OkEmit(&window, ProvidersData::new(&store))
+) -> Result<ProviderData, String> {
+    let saved = studio_core::save_provider(&store, &studio_core::ProviderData::from(&provider))
+        .map(ProviderData::from)
+        .map_err(|e| e.to_string())?;
+    OkEmit(&window, ProvidersData::new(&store))?;
+    Ok(saved)
 }
 
 /// Deletes the provider by id; emits and returns the fresh state of
@@ -103,30 +106,34 @@ pub fn get_model_defaults(provider: String, name: String) -> Result<ModelDefault
         .map_err(|e| e.to_string())
 }
 
-/// Validates and persists the model row. Emits and returns the
-/// fresh state of the providers block.
+/// Validates and persists the model row. Emits the fresh state of
+/// the providers block, returns the saved row.
 #[tauri::command]
 pub fn save_provider_model(
     window: WebviewWindow,
     store: State<Store>,
     model: ProviderModelData,
-) -> Result<ProvidersData, String> {
-    studio_core::save_provider_model(&store, &studio_core::ProviderModelData::from(&model))
+) -> Result<ProviderModelData, String> {
+    let saved = studio_core::save_provider_model(&store, &studio_core::ProviderModelData::from(&model))
+        .map(ProviderModelData::from)
         .map_err(|e| e.to_string())?;
-    OkEmit(&window, ProvidersData::new(&store))
+    OkEmit(&window, ProvidersData::new(&store))?;
+    Ok(saved)
 }
 
 /// Persists the selection of the provider's model catalog. Emits
-/// and returns the fresh state of the providers block.
+/// the fresh state of the providers block, returns the saved rows.
 #[tauri::command]
 pub async fn save_provider_models(
     window: WebviewWindow,
     store: State<'_, Store>,
     provider_id: i32,
     checked: Vec<String>,
-) -> Result<ProvidersData, String> {
-    studio_core::save_provider_models(&store, provider_id, checked)
+) -> Result<Vec<ProviderModelData>, String> {
+    let saved = studio_core::save_provider_models(&store, provider_id, checked)
         .await
+        .map(|rows| rows.into_iter().map(ProviderModelData::from).collect())
         .map_err(|e| e.to_string())?;
-    OkEmit(&window, ProvidersData::new(&store))
+    OkEmit(&window, ProvidersData::new(&store))?;
+    Ok(saved)
 }

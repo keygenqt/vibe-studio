@@ -93,11 +93,8 @@ export function MainPage() {
           onAdd={() => {
             if (activeId === null) return
             GroupsChatMethod.saveChat({ id: null, name: '', groupChatId: activeId })
-              .then(state => {
-                const savedId = state.history.find(
-                  item => item.currentIsActive
-                )?.currentActiveChatId
-                if (savedId) AppNav.open(navigate, AppRoutes.chat(savedId))
+              .then(chat => {
+                if (chat?.id) AppNav.open(navigate, AppRoutes.chat(chat.id))
               })
               .catch(err => UiMethod.showError(String(err)))
           }}

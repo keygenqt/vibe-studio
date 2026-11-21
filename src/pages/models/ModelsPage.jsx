@@ -44,7 +44,6 @@ export function ModelsPage() {
   // a failed sync shows a snackbar — the page keeps its state
   const onSave = () => {
     setIsSubmitting(true)
-    setSubmitError(null)
     ProvidersMethod.saveProviderModels(id, selected)
       .then(() => {
         setPicked(null)

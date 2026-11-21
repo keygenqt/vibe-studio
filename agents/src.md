@@ -93,8 +93,9 @@ barrels directly.
   form errors — a failed commit — surface as `ErrorAlert`
   (`components/alerts`) inside the form.
 - One row — one command: a page fetches its item by id, never
-  derives it from the collection list; the read-through row maps are
-  invalidated by a block mutation and refetched on the next open.
+  derives it from the collection list; the read-through row maps
+  are re-synced with the fresh collections on a block event, a row
+  missing from the table is refetched on the next open.
 
 ## Structure
 

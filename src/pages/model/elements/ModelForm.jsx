@@ -5,7 +5,6 @@
  * INFO: Model form: display name, system prompt, parameters.
  */
 import PropTypes from 'prop-types'
-import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
@@ -18,7 +17,6 @@ import { ProvidersMethod } from '../../../core'
 
 export function ModelForm(props) {
   const { t } = useTranslation()
-  const [savedOpen, setSavedOpen] = React.useState(false)
 
   // the bounds come from the model's spec: a missing bound adds no rule
   const bounded = (spec, base) => {
@@ -70,8 +68,8 @@ export function ModelForm(props) {
         reasoningMaxTokens: bounded(props.defaults?.reasoningMaxTokens, Yup.number().integer()),
         think: Yup.string(),
       })}
-      onSubmit={async (values, { setErrors, setSubmitting }) => {
-        await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
+      onSubmit={async (values, { setErrors, setSubmitting, setStatus }) => {
+        await AppUtils.submitForm(t, { setErrors, setSubmitting, setStatus }, () => {
           ProvidersMethod.saveProviderModel(props.model, {
             displayName: values.name,
             systemPrompt: values.systemPrompt,
@@ -96,7 +94,7 @@ export function ModelForm(props) {
                 ? values.think === 'true'
                 : null,
           })
-        )
+        })
       }}
     >
       {({
@@ -108,12 +106,14 @@ export function ModelForm(props) {
         handleChange,
         handleSubmit,
         setErrors,
+        status,
+        setStatus,
       }) => (
         <Box component={'form'} noValidate onSubmit={handleSubmit}>
           <SuccessAlert
-            open={savedOpen}
+            open={Boolean(status?.saved)}
             text={t('model.t_saved')}
-            onClose={() => setSavedOpen(false)}
+            onClose={() => setStatus(undefined)}
           />
           <ErrorAlert
             open={Boolean(errors.submit)}
@@ -139,7 +139,7 @@ export function ModelForm(props) {
               fullWidth
               multiline
               minRows={4}
-              label={t('model.t_systemPrompt')}
+              label={t('model.t_system_prompt')}
               name={'systemPrompt'}
               variant={'filled'}
               value={values.systemPrompt}
@@ -177,7 +177,7 @@ export function ModelForm(props) {
               {shown(props.defaults?.topP) && (
                 <TextField
                   type={'number'}
-                  label={t('model.t_topP')}
+                  label={t('model.t_top_p')}
                   name={'topP'}
                   variant={'filled'}
                   value={values.topP}
@@ -192,7 +192,7 @@ export function ModelForm(props) {
               {shown(props.defaults?.minP) && (
                 <TextField
                   type={'number'}
-                  label={t('model.t_minP')}
+                  label={t('model.t_min_p')}
                   name={'minP'}
                   variant={'filled'}
                   value={values.minP}
@@ -207,7 +207,7 @@ export function ModelForm(props) {
               {shown(props.defaults?.topK) && (
                 <TextField
                   type={'number'}
-                  label={t('model.t_topK')}
+                  label={t('model.t_top_k')}
                   name={'topK'}
                   variant={'filled'}
                   value={values.topK}
@@ -237,7 +237,7 @@ export function ModelForm(props) {
               {shown(props.defaults?.numCtx) && (
                 <TextField
                   type={'number'}
-                  label={t('model.t_numCtx')}
+                  label={t('model.t_num_ctx')}
                   name={'numCtx'}
                   variant={'filled'}
                   value={values.numCtx}
@@ -252,7 +252,7 @@ export function ModelForm(props) {
               {shown(props.defaults?.numPredict) && (
                 <TextField
                   type={'number'}
-                  label={t('model.t_numPredict')}
+                  label={t('model.t_num_predict')}
                   name={'numPredict'}
                   variant={'filled'}
                   value={values.numPredict}
@@ -319,7 +319,7 @@ export function ModelForm(props) {
               {shown(props.defaults?.reasoningMaxTokens) && (
                 <TextField
                   type={'number'}
-                  label={t('model.t_reasoningMaxTokens')}
+                  label={t('model.t_reasoning_max_tokens')}
                   name={'reasoningMaxTokens'}
                   variant={'filled'}
                   value={values.reasoningMaxTokens}

@@ -21,9 +21,10 @@ live here.
   assembles a foreign row through the owner block's assembly
   function (`ChatData::row`), never by reading its table directly.
 - Every mutation ends with `OkEmit`: the fresh state is assembled
-  by the caller, emitted as a whole — not a delta — and returned as
-  the command answer. Void emitters (the stream forwarder, the
-  theme watcher) drop the always-Ok answer.
+  by the caller and emitted as a whole — not a delta. A save returns
+  the saved entity as the command answer; the other mutations keep
+  the fresh state as the answer. Void emitters (the stream forwarder,
+  the theme watcher) drop the always-Ok answer.
 - A payload type carries its event: the `EventPayload` bindings
   live in the block's `events.rs`, the single sending function and
   the envelope live in the root. A command lives in the block

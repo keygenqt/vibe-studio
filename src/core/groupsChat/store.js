@@ -17,7 +17,9 @@ const groupsChatSlice = createSlice({
   reducers: {
     groupsChatStateSet: (state, action) => {
       Object.assign(state, action.payload)
-      state.groupChat = {}
+      state.groupChat = Object.fromEntries(
+        (state.groupsChat ?? []).filter(row => state.groupChat[row.id]).map(row => [row.id, row])
+      )
     },
     groupsChatSet: (state, action) => {
       state.groupsChat = action.payload

@@ -23,21 +23,22 @@ export function ProviderForm(props) {
   const { t } = useTranslation()
   const { catalog } = props
   const navigate = useNavigate()
+  const formikRef = React.useRef(null)
   const { formState } = useFormState()
   const isEdit = Boolean(props.isEdit)
   const [openDelete, setOpenDelete] = React.useState(false)
-  const [savedOpen, setSavedOpen] = React.useState(false)
   const current = catalog.find(info => info.provider === props.provider) ?? catalog[0]
 
   React.useEffect(() => {
     if (formState) {
-      setSavedOpen(true)
+      formikRef.current?.setStatus({ saved: true })
       UiMethod.clearFormState()
     }
   }, [])
 
   return (
     <Formik
+      innerRef={formikRef}
       enableReinitialize
       initialValues={{
         provider: current.provider,
@@ -54,8 +55,8 @@ export function ProviderForm(props) {
         apiKey: Yup.string().notRequired(),
         project: Yup.string().notRequired(),
       })}
-      onSubmit={async (values, { setErrors, setSubmitting }) => {
-        const state = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
+      onSubmit={async (values, { setErrors, setSubmitting, setStatus }) => {
+        const saved = await AppUtils.submitForm(t, { setErrors, setSubmitting, setStatus }, () =>
           ProvidersMethod.saveProvider({
             id: props.id || null,
             name: values.name,
@@ -65,11 +66,9 @@ export function ProviderForm(props) {
             project: values.project || null,
           })
         )
-        // the fresh insert holds the highest id among its kind+name matches
-        const saved = (state?.providers ?? [])
-          .filter(item => item.provider === values.provider && item.name === values.name)
-          .at(-1)
-        if (saved && !isEdit) {
+
+        // the fresh insert opens its edit page; the plate meets it there
+        if (!isEdit && saved) {
           UiMethod.setFormState(saved)
           AppNav.openWithReplace(navigate, AppRoutes.provider(saved.id))
         }
@@ -85,6 +84,8 @@ export function ProviderForm(props) {
         handleSubmit,
         setErrors,
         setFieldValue,
+        status,
+        setStatus,
       }) => {
         const infoOf = kind => catalog.find(info => info.provider === kind)
         return (
@@ -104,9 +105,9 @@ export function ProviderForm(props) {
               }}
             />
             <SuccessAlert
-              open={savedOpen}
+              open={Boolean(status?.saved)}
               text={t('provider.t_saved')}
-              onClose={() => setSavedOpen(false)}
+              onClose={() => setStatus(undefined)}
             />
             <ErrorAlert
               open={Boolean(errors.submit)}

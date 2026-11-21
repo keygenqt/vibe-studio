@@ -22,21 +22,22 @@ import { GroupsChatMethod, UiMethod, useFormState } from '../../../core'
 export function GroupChatForm(props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const formikRef = React.useRef(null)
   const { formState } = useFormState()
   const isEdit = Boolean(props.isEdit)
   const [openDelete, setOpenDelete] = React.useState(false)
-  const [savedOpen, setSavedOpen] = React.useState(false)
   const [noModelsOpen, setNoModelsOpen] = React.useState(true)
 
   React.useEffect(() => {
     if (formState) {
-      setSavedOpen(true)
+      formikRef.current?.setStatus({ saved: true })
       UiMethod.clearFormState()
     }
   }, [])
 
   return (
     <Formik
+      innerRef={formikRef}
       enableReinitialize
       initialValues={{
         name: props.name ?? '',
@@ -48,8 +49,8 @@ export function GroupChatForm(props) {
         modelId: Yup.number().required(t('group_chat.t_validation_required')),
         systemPrompt: Yup.string().notRequired(),
       })}
-      onSubmit={async (values, { setErrors, setSubmitting }) => {
-        const state = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
+      onSubmit={async (values, { setErrors, setSubmitting, setStatus }) => {
+        const saved = await AppUtils.submitForm(t, { setErrors, setSubmitting, setStatus }, () =>
           GroupsChatMethod.saveGroupChat({
             id: props.id || null,
             name: values.name,
@@ -57,10 +58,10 @@ export function GroupChatForm(props) {
             modelId: values.modelId,
           })
         )
-        const savedId = state?.history.find(item => item.currentIsActive)?.groupChatId
-        if (state && !isEdit && savedId) {
-          UiMethod.setFormState(state.groupsChat.find(group => group.id === savedId))
-          AppNav.openWithReplace(navigate, AppRoutes.groupChat(savedId))
+        // the fresh insert opens its edit page; the plate meets it there
+        if (!isEdit && saved) {
+          UiMethod.setFormState(saved)
+          AppNav.openWithReplace(navigate, AppRoutes.groupChat(saved.id))
         }
       }}
     >
@@ -73,6 +74,8 @@ export function GroupChatForm(props) {
         handleChange,
         handleSubmit,
         setErrors,
+        status,
+        setStatus,
       }) => {
         return (
           <Box component={'form'} noValidate onSubmit={handleSubmit}>
@@ -96,9 +99,9 @@ export function GroupChatForm(props) {
               onClose={() => setNoModelsOpen(false)}
             />
             <SuccessAlert
-              open={savedOpen}
+              open={Boolean(status?.saved)}
               text={t('group_chat.t_saved')}
-              onClose={() => setSavedOpen(false)}
+              onClose={() => setStatus(undefined)}
             />
             <ErrorAlert
               open={Boolean(errors.submit)}

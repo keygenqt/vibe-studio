@@ -33,15 +33,18 @@ pub fn get_group_chat(store: State<Store>, id: i32) -> Result<GroupChatData, Str
 }
 
 /// Validates and persists; `id: null` inserts, otherwise updates.
-/// Emits and returns the fresh state of the groups chat block.
+/// Emits the fresh state of the groups chat block, returns the saved row.
 #[tauri::command]
 pub fn save_group_chat(
     window: WebviewWindow,
     store: State<Store>,
     group_chat: GroupChatData,
-) -> Result<GroupsChatData, String> {
-    studio_core::save_group_chat(&store, &studio_core::GroupChatData::from(&group_chat)).map_err(|e| e.to_string())?;
-    OkEmit(&window, GroupsChatData::new(&store))
+) -> Result<GroupChatData, String> {
+    let saved = studio_core::save_group_chat(&store, &studio_core::GroupChatData::from(&group_chat))
+        .map(GroupChatData::from)
+        .map_err(|e| e.to_string())?;
+    OkEmit(&window, GroupsChatData::new(&store))?;
+    Ok(saved)
 }
 
 /// Deletes the group by id; emits and returns the fresh state of
@@ -59,12 +62,15 @@ pub fn get_chats(store: State<Store>) -> Vec<ChatData> {
 }
 
 /// Validates and persists; `id: null` inserts with a random pool
-/// name, otherwise updates. Emits and returns the fresh state of
-/// the groups chat block.
+/// name, otherwise updates. Emits the fresh state of the groups
+/// chat block, returns the saved row.
 #[tauri::command]
-pub fn save_chat(window: WebviewWindow, store: State<Store>, chat: ChatData) -> Result<GroupsChatData, String> {
-    studio_core::save_chat(&store, &studio_core::ChatData::from(&chat)).map_err(|e| e.to_string())?;
-    OkEmit(&window, GroupsChatData::new(&store))
+pub fn save_chat(window: WebviewWindow, store: State<Store>, chat: ChatData) -> Result<ChatData, String> {
+    let saved = studio_core::save_chat(&store, &studio_core::ChatData::from(&chat))
+        .map(ChatData::from)
+        .map_err(|e| e.to_string())?;
+    OkEmit(&window, GroupsChatData::new(&store))?;
+    Ok(saved)
 }
 
 /// Deletes the chat by id; emits and returns the fresh state of

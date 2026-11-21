@@ -70,7 +70,7 @@ export function SidebarView(props) {
                           group.id,
                           !isCollapsed,
                           Boolean(item?.currentCollapsedChats)
-                        ).catch(err => setError(String(err)))
+                        ).catch(err => UiMethod.showError(String(err)))
                     : undefined
                 }
               />
@@ -102,7 +102,7 @@ export function SidebarView(props) {
                       sx={{ borderRadius: 2, px: '8px', py: '4px', minHeight: 40 }}
                       onClick={() =>
                         GroupsChatMethod.setGroupChatView(group.id, isCollapsed, isExpanded).catch(
-                          err => setError(String(err))
+                          err => UiMethod.showError(String(err))
                         )
                       }
                     >

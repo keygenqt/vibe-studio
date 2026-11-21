@@ -15,15 +15,15 @@ export const AppUtils = {
   },
 
   // the form submit pipeline: clears the submit error, shows the saved
-  // alert, maps a backend error onto the submit field;
+  // status, maps a backend error onto the submit field;
   // resolves with the Rust answer on success, undefined on error
   submitForm: async function (t, helpers, save) {
-    const { setErrors, setSubmitting, setSavedOpen } = helpers
+    const { setErrors, setSubmitting, setStatus } = helpers
     setErrors({ submit: null })
-    setSavedOpen(false)
+    setStatus(undefined)
     try {
       const saved = await save()
-      setSavedOpen(true)
+      setStatus({ saved: true })
       return saved
     } catch (error) {
       setErrors({ submit: AppUtils.backendMessage(t, error) })
