@@ -12,6 +12,10 @@ export const CHAT_COLLAPSE_HEIGHT = 120
 export const CHAT_INPUT_SIZE_MIN = 132
 export const CHAT_INPUT_SIZE_DEFAULT = 132
 
+// The composer grows with its content: the overflow check raises the
+// height up to the cap, sending folds it back to the minimum.
+export const CHAT_INPUT_SIZE_AUTO_MAX = 400
+
 // Sidebar width: user-dragged, shared by chat and settings sidebars.
 export const SIDE_BAR_SIZE_MIN = 200
 export const SIDE_BAR_SIZE_MAX = 450

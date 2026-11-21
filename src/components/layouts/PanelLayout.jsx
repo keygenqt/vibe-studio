@@ -7,6 +7,7 @@
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 
+import { SIDE_BAR_SIZE_MAX, SIDE_BAR_SIZE_MIN } from '../../constants'
 import { useWorkspace, WorkspaceMethod } from '../../core'
 import { useDragResize } from '../../hooks'
 import { HandleView } from '../views'
@@ -18,7 +19,12 @@ export function PanelLayout(props) {
   const drag = useDragResize({
     axis: 'x',
     getSize: () => workspace.sideBarSize,
-    onMove: size => WorkspaceMethod.save({ sideBarSize: size }),
+    onMove: size => {
+      const next = Math.max(SIDE_BAR_SIZE_MIN, Math.min(Math.round(size), SIDE_BAR_SIZE_MAX))
+      if (next !== workspace.sideBarSize) {
+        WorkspaceMethod.save({ sideBarSize: next })
+      }
+    },
   })
 
   return (

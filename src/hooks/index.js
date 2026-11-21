@@ -6,6 +6,7 @@
  */
 export * from './useEffectFocus'
 export * from './useEffectSingle'
+export * from './useElementHeight'
 export * from './usePointerMove'
 export * from './usePointerUp'
 export * from './useDragResize'

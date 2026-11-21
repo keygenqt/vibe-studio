@@ -42,6 +42,20 @@ export function useDragResize({ axis = 'x', getSize, onMove, onEnd }) {
     },
   })
 
+  // a cancelled gesture (system interruption) ends the drag too:
+  // pointercancel retargets to the handle and bubbles to the window
+  React.useEffect(() => {
+    if (!dragging) return
+    const onCancel = () => {
+      if (!origin.current) return
+      setDragging(false)
+      origin.current = null
+      handlers.current.onEnd?.(null)
+    }
+    window.addEventListener('pointercancel', onCancel)
+    return () => window.removeEventListener('pointercancel', onCancel)
+  }, [dragging])
+
   const onHandlePointerDown = React.useCallback(
     event => {
       event.preventDefault()

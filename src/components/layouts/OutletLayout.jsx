@@ -4,14 +4,14 @@
  * TAGS: ['components']
  * INFO: The outlet gate: the load error paints over the loader, the ready one renders children.
  */
+import * as React from 'react'
 import PropTypes from 'prop-types'
-import { Stack } from '@mui/material'
-
+import { Box, Stack } from '@mui/material'
 import { ErrorState } from '../states'
 import { LoaderView } from '../views'
 import { LOADER_FADE_MS } from '../../constants'
 
-export function OutletLayout(props) {
+export const OutletLayout = React.forwardRef(function OutletLayout(props, ref) {
   // the error paints over the loader: a failed load is never hidden
   if (props.error) {
     return <ErrorState text={props.error} />
@@ -23,11 +23,17 @@ export function OutletLayout(props) {
       </Stack>
     )
   }
-  return props.children
-}
+  // the ready root: a neutral box carrying the caller's ref and styles
+  return (
+    <Box ref={ref} sx={props.sx}>
+      {props.children}
+    </Box>
+  )
+})
 
 OutletLayout.propTypes = {
   ready: PropTypes.bool.isRequired,
   error: PropTypes.string,
+  sx: PropTypes.object,
   children: PropTypes.node,
 }

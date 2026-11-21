@@ -19,8 +19,13 @@ import { getCurrentWebview } from '@tauri-apps/api/webview'
 
 import { HandleView, ModelCapability, StatsView } from '../../../components/views'
 import { AppMethod, useWorkspace, WorkspaceMethod } from '../../../core'
-import { useDragResize } from '../../../hooks'
-import { CHAT_INPUT_SIZE_MIN, AppRoutes, COMPACT_PAGE_WIDTH } from '../../../constants'
+import { useDragResize, useElementHeight } from '../../../hooks'
+import {
+  CHAT_INPUT_SIZE_MIN,
+  CHAT_INPUT_SIZE_AUTO_MAX,
+  AppRoutes,
+  COMPACT_PAGE_WIDTH,
+} from '../../../constants'
 import { AppNav } from '../../../utils'
 
 import { QuickActions } from './QuickActions'
@@ -44,19 +49,84 @@ export function InputView(props) {
     contextLimit,
   } = props
   const inputRef = React.useRef(null)
+
   // the composer owns its drag: the size rides the workspace slice
+  const composerRef = React.useRef(null)
+  const [composerMeasureRef, blockHeight] = useElementHeight()
   const workspace = useWorkspace()
   const chatInputSize = workspace.chatInputSize
+  // one element, two refs: the dragover bounds and the height watcher
+  const setComposerRef = React.useCallback(
+    node => {
+      composerRef.current = node
+      composerMeasureRef(node)
+    },
+    [composerMeasureRef]
+  )
+
   const drag = useDragResize({
     axis: 'y',
     getSize: () => workspace.chatInputSize,
-    onMove: size => WorkspaceMethod.save({ chatInputSize: size }),
+    onMove: size => {
+      WorkspaceMethod.save({ chatInputSize: Math.round(size) })
+    },
+    onEnd: () => {
+      // the release: the layout has settled — when the cap held the
+      // drag back, the stored size returns to the rendered one
+      if (blockHeight !== null && chatInputSize > blockHeight) {
+        WorkspaceMethod.save({ chatInputSize: Math.round(blockHeight) })
+      }
+    },
   })
+
+  // the last height the content growth asked for: while the layout
+  // holds the box below it, the reconcile must not drag the size down
+  const lastGrow = React.useRef(null)
+
+  React.useEffect(() => {
+    // the drag owns the size while active: onMove saves the wanted
+    // height and the onEnd clamp reconciles it with the rendered one
+    if (drag.dragging || blockHeight === null) return
+    // the content growth is held by the layout cap: the stored size
+    // is the wish, the reconcile must not drag it down
+    if (lastGrow.current !== null && blockHeight < lastGrow.current) return
+    // the observer lags the save by a frame: a fresh divergence may
+    // be the layout catching up — only a settled one is reconciled
+    if (blockHeight === chatInputSize) return
+    const timer = setTimeout(() => {
+      WorkspaceMethod.save({ chatInputSize: blockHeight })
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [blockHeight, chatInputSize])
+
+  // the content overflow grows the composer: the textarea fills the
+  // box, so its scroll delta adds straight to the height
+  React.useEffect(() => {
+    const el = inputRef.current
+    if (!el || blockHeight === null || drag.dragging) return
+    // the confirmed growth frees the hand: the cap is no longer held
+    if (lastGrow.current !== null && blockHeight >= lastGrow.current) {
+      lastGrow.current = null
+    }
+    const overflow = el.scrollHeight - el.clientHeight
+    if (overflow <= 0) {
+      lastGrow.current = null
+      return
+    }
+    // the layout holds the box below the asked height: growing is
+    // pointless until the window gives the room back
+    if (lastGrow.current !== null && blockHeight < lastGrow.current) return
+    const next = Math.min(chatInputSize + overflow, CHAT_INPUT_SIZE_AUTO_MAX)
+    if (next > chatInputSize) {
+      lastGrow.current = next
+      WorkspaceMethod.save({ chatInputSize: next })
+    }
+  }, [draft, blockHeight, chatInputSize])
+
   // the mode toggles of the composer: the translate flag rides the send
   const [quick, setQuick] = React.useState([])
   // the webview drag hover over the composer: paints the overlay
   const [dragOver, setDragOver] = React.useState(false)
-  const composerRef = React.useRef(null)
 
   // the disabled input cannot take focus, so refocus after sending ends
   React.useEffect(() => {
@@ -136,11 +206,20 @@ export function InputView(props) {
   }, [])
 
   return (
-    <>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        // the automatic minimum is the flex floor: without the reset
+        // the wrapper refuses to shrink below its content
+        minHeight: 0,
+      }}
+    >
       {/* horizontal mirror of the sidebar handle: dragging up grows the composer */}
       <HandleView orientation="horizontal" onPointerDown={drag.onHandlePointerDown} />
       <Box
-        ref={composerRef}
+        ref={setComposerRef}
         sx={{
           position: 'relative',
           // the user size yields to the column: the flex deficit
@@ -322,7 +401,7 @@ export function InputView(props) {
           </Box>
         )}
       </Box>
-    </>
+    </Box>
   )
 }
 

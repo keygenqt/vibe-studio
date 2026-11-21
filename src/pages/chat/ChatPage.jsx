@@ -23,7 +23,9 @@ import {
   useSettings,
   useStream,
   useTranslate,
+  WorkspaceMethod,
 } from '../../core'
+import { CHAT_INPUT_SIZE_MIN } from '../../constants'
 import { AppUtils } from '../../utils'
 import { pauseFollow, scrollToBottom, watchBottom } from '../../init'
 
@@ -55,6 +57,7 @@ export function ChatPage() {
   const removeAttachment = index => ChatMethod.removeAttachment(index)
   const send = translate => {
     setSending(true)
+    WorkspaceMethod.save({ chatInputSize: CHAT_INPUT_SIZE_MIN })
     ChatMethod.sendMessage(cid, draft, translate, chatAttachments)
       .catch(err => UiMethod.showError(String(err)))
       .finally(() => setSending(false))
@@ -179,7 +182,18 @@ export function ChatPage() {
   }
 
   return (
-    <OutletLayout ready={groupsReady && chatsReady} error={chatReady ? null : chatError}>
+    <OutletLayout
+      ready={groupsReady && chatsReady}
+      error={chatReady ? null : chatError}
+      sx={{
+        flexGrow: 1,
+        minWidth: 0,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+      }}
+    >
       {chat ? (
         <>
           <ChatTitleView
