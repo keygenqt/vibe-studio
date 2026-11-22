@@ -7,7 +7,7 @@
 import PropTypes from 'prop-types'
 import { Box, Stack } from '@mui/material'
 
-import { AppData } from '../../../../constants'
+import { AppData } from '../../../constants'
 
 export function RailView(props) {
   return (

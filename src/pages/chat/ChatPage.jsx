@@ -9,8 +9,9 @@ import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Box, Stack } from '@mui/material'
 
-import { AttachmentChip, DeleteDialog } from '../../components/views'
-import { OutletLayout, ScrollLayout } from '../../components/layouts'
+import { AttachmentChip } from './components'
+import { DeleteDialog } from '../components/dialogs'
+import { OutletLayout, ScrollLayout } from '../../layouts'
 import {
   AppMethod,
   ChatMethod,
@@ -32,9 +33,9 @@ import { scrollToBottom, watchBottom } from '../../init'
 import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
 import { ChatTitleView } from './elements/ChatTitleView'
 import { ContextLimitView } from './elements/ContextLimitView'
-import { CompressMessageView } from './elements/CompressMessageView'
-import { UserMessageView } from './elements/UserMessageView'
-import { ModelMessageView } from './elements/ModelMessageView'
+import { CompressBubble } from './elements/CompressBubble'
+import { UserBubble } from './elements/UserBubble'
+import { ModelBubble } from './elements/ModelBubble'
 import { InputView } from './elements/InputView'
 
 export function ChatPage() {
@@ -124,7 +125,7 @@ export function ChatPage() {
   const renderMessage = (message, key, immediate = false) => {
     const view = viewMessage(message)
     return message.messageType === 'compress' ? (
-      <CompressMessageView
+      <CompressBubble
         key={key}
         message={{
           ...view,
@@ -144,7 +145,7 @@ export function ChatPage() {
         onSetCollapsed={setCollapsed}
       />
     ) : message.messageType === 'user' ? (
-      <UserMessageView
+      <UserBubble
         key={key}
         message={view}
         fontSize={fontSize}
@@ -155,7 +156,7 @@ export function ChatPage() {
         onSetCollapsed={setCollapsed}
       />
     ) : (
-      <ModelMessageView
+      <ModelBubble
         key={key}
         message={view}
         fontSize={fontSize}
@@ -204,7 +205,7 @@ export function ChatPage() {
             scrollKey={scrollKey}
             follow
             ready={chatReady}
-            sx={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 0 }}
+            sx={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 150 }}
           >
             <Stack spacing={1.5}>
               {compressAttempt ? (

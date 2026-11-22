@@ -11,7 +11,7 @@ import ImageIcon from '@mui/icons-material/Image'
 import AttachFile from '@mui/icons-material/AttachFile'
 import FolderIcon from '@mui/icons-material/Folder'
 
-import { AppUtils } from '../../utils'
+import { AppUtils } from '../../../utils'
 
 export function AttachmentChip(props) {
   const { attachment, onDelete } = props

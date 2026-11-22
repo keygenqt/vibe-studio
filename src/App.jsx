@@ -11,7 +11,7 @@ import { THEMES } from './theme'
 import { useEffectFocus } from './hooks'
 import { useAppReady, useTheme } from './core'
 import { ACCENT_DEFAULT } from './constants'
-import { AppLayout } from './components/layouts'
+import { AppLayout } from './layouts'
 
 function App() {
   const isFocus = useEffectFocus()

@@ -14,7 +14,7 @@ import Forum from '@mui/icons-material/Forum'
 import Speed from '@mui/icons-material/Speed'
 import { useTranslation } from 'react-i18next'
 
-import { AppUtils } from '../../utils'
+import { AppUtils } from '../../../utils'
 import { TooltipView } from './TooltipView'
 
 // the stats icons sit on the themed tooltip bubble

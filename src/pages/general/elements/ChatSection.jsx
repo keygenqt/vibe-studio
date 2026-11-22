@@ -8,7 +8,7 @@ import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { Switch, TextField } from '@mui/material'
 
-import { GroupRow, GroupView } from '../../../components/views'
+import { GroupRow, GroupView } from '../components'
 
 export function ChatSection(props) {
   const { t } = useTranslation()

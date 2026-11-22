@@ -7,9 +7,8 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Box, Stack } from '@mui/material'
-import { ErrorState } from '../states'
-import { LoaderView } from '../views'
-import { LOADER_FADE_MS } from '../../constants'
+import { ErrorState, LoaderView } from './components'
+import { LOADER_FADE_MS } from '../constants'
 
 export const OutletLayout = React.forwardRef(function OutletLayout(props, ref) {
   // the error paints over the loader: a failed load is never hidden

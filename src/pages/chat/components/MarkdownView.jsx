@@ -42,7 +42,7 @@ import { Box, IconButton, Stack, Typography } from '@mui/material'
 import { useTheme, alpha } from '@mui/material/styles'
 import ContentCopy from '@mui/icons-material/ContentCopy'
 
-import { AppMethod } from '../../core/app'
+import { AppMethod } from '../../../core/app'
 
 // the highlight registry: a language outside it falls back to the
 // plain code — the fallback works for the stream with a partial

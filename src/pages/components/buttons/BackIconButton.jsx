@@ -9,7 +9,7 @@ import { IconButton } from '@mui/material'
 import ArrowBack from '@mui/icons-material/ArrowBack'
 import { useNavigate } from 'react-router'
 
-import { AppNav } from '../../utils'
+import { AppNav } from '../../../utils'
 
 export function BackIconButton(props) {
   const navigate = useNavigate()

@@ -10,10 +10,11 @@ import { useTranslation } from 'react-i18next'
 import SearchIcon from '@mui/icons-material/Search'
 import { Box, Button, InputAdornment, Stack, Switch, TextField, Typography } from '@mui/material'
 
-import { SaveButton } from '../../components/buttons'
-import { ModelCard, PageHeader } from '../../components/views'
-import { SuccessAlert } from '../../components/alerts'
-import { OutletLayout } from '../../components/layouts'
+import { SaveButton } from '../components/buttons'
+import { ModelCard } from '../components/model'
+import { PageHeader } from '../components/views'
+import { SuccessAlert } from '../components/alerts'
+import { OutletLayout } from '../../layouts'
 import {
   ProvidersMethod,
   UiMethod,

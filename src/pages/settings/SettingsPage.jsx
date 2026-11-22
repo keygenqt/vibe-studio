@@ -8,8 +8,8 @@ import { Outlet, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Box, Typography } from '@mui/material'
 
-import { PanelLayout } from '../../components/layouts'
-import { BackIconButton } from '../../components/buttons'
+import { PanelLayout } from '../../layouts'
+import { BackIconButton } from '../components/buttons'
 import { SidebarView } from './elements/SidebarView'
 
 export function SettingsPage() {

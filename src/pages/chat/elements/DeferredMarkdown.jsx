@@ -8,7 +8,7 @@ import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Box, Typography } from '@mui/material'
 
-import { MarkdownView } from '../../../components/views'
+import { MarkdownView } from '../components'
 
 function DeferredMarkdownBase(props) {
   // the chat opens at the bottom: the tail renders markdown at once,

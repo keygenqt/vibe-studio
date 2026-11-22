@@ -6,6 +6,7 @@
  */
 export * from './AppLayout'
 export * from './BaseLayout/BaseLayout'
+export * from './components'
 export * from './OutletLayout'
 export * from './PanelLayout'
 export * from './ScrollLayout'

@@ -7,8 +7,8 @@
 import { useParams } from 'react-router'
 import { Stack } from '@mui/material'
 
-import { PageHeader } from '../../components/views'
-import { OutletLayout } from '../../components/layouts'
+import { PageHeader } from '../components/views'
+import { OutletLayout } from '../../layouts'
 import { useDefaults, useModel, useProviders } from '../../core'
 
 import { ModelForm } from './elements/ModelForm'

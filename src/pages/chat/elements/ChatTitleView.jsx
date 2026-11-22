@@ -12,7 +12,7 @@ import ArrowDownward from '@mui/icons-material/ArrowDownward'
 import Compress from '@mui/icons-material/Compress'
 import Refresh from '@mui/icons-material/Refresh'
 
-import { TooltipIconButton } from '../../../components/buttons'
+import { TooltipIconButton } from '../../components/buttons'
 import { UiMethod } from '../../../core'
 
 import { CompressDialog } from './CompressDialog'

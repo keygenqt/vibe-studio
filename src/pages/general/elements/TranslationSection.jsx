@@ -8,7 +8,7 @@ import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { MenuItem, TextField } from '@mui/material'
 
-import { GroupRow, GroupView } from '../../../components/views'
+import { GroupRow, GroupView } from '../components'
 
 import { ModelSelect } from './ModelSelect'
 

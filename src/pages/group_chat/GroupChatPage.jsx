@@ -9,8 +9,8 @@ import { useTranslation } from 'react-i18next'
 import { Stack } from '@mui/material'
 
 import { GroupChatForm } from './elements/GroupChatForm'
-import { PageHeader } from '../../components/views'
-import { OutletLayout } from '../../components/layouts'
+import { PageHeader } from '../components/views'
+import { OutletLayout } from '../../layouts'
 import { useGroupChat, useModels, useProviders } from '../../core'
 
 export function GroupChatPage() {

@@ -7,9 +7,9 @@
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 
-import { LoaderView } from '../views'
-import { DURATION_DEFAULT } from '../../constants'
-import { AppStorage, AppUtils } from '../../utils'
+import { LoaderView } from './components'
+import { DURATION_DEFAULT } from '../constants'
+import { AppStorage, AppUtils } from '../utils'
 
 export function AppLayout(props) {
   // the startup gate: the loader holds the window until the startup loads land

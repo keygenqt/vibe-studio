@@ -9,8 +9,8 @@ import { AppBar, Box, Stack, Toolbar } from '@mui/material'
 
 import { ThemeAction } from './elements/ThemeAction'
 import { RailView } from './elements/RailView'
-import { ErrorSnackbar } from '../../snackbars'
-import { UiMethod, useError } from '../../../core'
+import { ErrorSnackbar } from '../components'
+import { UiMethod, useError } from '../../core'
 
 export function BaseLayout(props) {
   // the shell owns the single error toast: the pages raise it through UiMethod

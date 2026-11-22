@@ -7,10 +7,10 @@
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 
-import { SIDE_BAR_SIZE_MAX, SIDE_BAR_SIZE_MIN } from '../../constants'
-import { useWorkspace, WorkspaceMethod } from '../../core'
-import { useDragResize } from '../../hooks'
-import { HandleView } from '../views'
+import { SIDE_BAR_SIZE_MAX, SIDE_BAR_SIZE_MIN } from '../constants'
+import { useWorkspace, WorkspaceMethod } from '../core'
+import { useDragResize } from '../hooks'
+import { HandleView } from './components'
 import { BaseLayout } from './BaseLayout/BaseLayout'
 import { ScrollLayout } from './ScrollLayout'
 

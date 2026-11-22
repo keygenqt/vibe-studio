@@ -12,7 +12,7 @@ import { Box, Button, List, ListItemButton, Stack, Typography } from '@mui/mater
 import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 
-import { DeleteDialog } from '../../../components/views'
+import { DeleteDialog } from '../../components/dialogs'
 import { AppRoutes } from '../../../constants'
 import { AppNav } from '../../../utils'
 import { GroupsChatMethod, UiMethod } from '../../../core'

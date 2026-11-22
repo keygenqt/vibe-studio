@@ -10,7 +10,7 @@ import DarkMode from '@mui/icons-material/DarkMode'
 import DesktopWindows from '@mui/icons-material/DesktopWindows'
 import LightMode from '@mui/icons-material/LightMode'
 
-import { SettingsMethod, useSettings } from '../../../../core/settings'
+import { SettingsMethod, useSettings } from '../../../core/settings'
 
 export function ThemeAction() {
   const { t } = useTranslation()

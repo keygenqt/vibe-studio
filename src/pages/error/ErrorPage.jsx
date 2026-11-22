@@ -7,8 +7,8 @@
 import { useTranslation } from 'react-i18next'
 import { Box, Typography } from '@mui/material'
 
-import { BaseLayout } from '../../components/layouts'
-import { BackIconButton } from '../../components/buttons'
+import { BaseLayout } from '../../layouts'
+import { BackIconButton } from '../components/buttons'
 
 export function ErrorPage() {
   const { t } = useTranslation()

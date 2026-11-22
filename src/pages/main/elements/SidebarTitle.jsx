@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { Stack, Typography } from '@mui/material'
 import Add from '@mui/icons-material/Add'
 
-import { TooltipIconButton } from '../../../components/buttons'
+import { TooltipIconButton } from '../../components/buttons'
 
 export function SidebarTitle(props) {
   const { t } = useTranslation()

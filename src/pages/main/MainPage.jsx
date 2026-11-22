@@ -22,8 +22,8 @@ import {
   WorkspaceMethod,
 } from '../../core'
 import { AppRoutes } from '../../constants'
-import { PanelLayout } from '../../components/layouts'
-import { TooltipIconButton } from '../../components/buttons'
+import { PanelLayout } from '../../layouts'
+import { TooltipIconButton } from '../components/buttons'
 import { AppNav } from '../../utils'
 
 import { SidebarTitle } from './elements/SidebarTitle'

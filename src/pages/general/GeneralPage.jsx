@@ -9,8 +9,8 @@ import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import { Stack } from '@mui/material'
 
-import { PageHeader } from '../../components/views'
-import { OutletLayout } from '../../components/layouts'
+import { PageHeader } from '../components/views'
+import { OutletLayout } from '../../layouts'
 import { SettingsMethod, UiMethod, useModels, useProviders, useSettings } from '../../core'
 import { AppUtils } from '../../utils'
 

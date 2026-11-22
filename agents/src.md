@@ -99,9 +99,11 @@ barrels directly.
 
 ## Structure
 
+- A component is a unit that lives its own life; its home follows its
+  consumers: shell-wide — `layouts/components/`, shared by pages —
+  `pages/components/<type>/`, a single page — `pages/<page>/components/`.
 - An element is a part of its parent (`elements/`, nesting exactly
-  one level); a component is a unit that lives its own life
-  (`components/<type>/`).
+  one level).
 - A page is `pages/<page>/<Page>.jsx`: the route entry and its
   composition; a layout page hosts children through `Outlet`.
 - Every top-level zone has an `index.js` barrel; consumers import

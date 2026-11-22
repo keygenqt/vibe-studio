@@ -10,8 +10,8 @@ import { Formik } from 'formik'
 import * as Yup from 'yup'
 import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material'
 
-import { SaveButton } from '../../../components/buttons'
-import { ErrorAlert, SuccessAlert } from '../../../components/alerts'
+import { SaveButton } from '../../components/buttons'
+import { ErrorAlert, SuccessAlert } from '../../components/alerts'
 import { AppUtils } from '../../../utils'
 import { ProvidersMethod } from '../../../core'
 

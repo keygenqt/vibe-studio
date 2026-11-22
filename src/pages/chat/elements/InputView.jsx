@@ -17,7 +17,9 @@ import Speed from '@mui/icons-material/Speed'
 import Stop from '@mui/icons-material/Stop'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
 
-import { HandleView, ModelCapability, StatsView } from '../../../components/views'
+import { HandleView } from '../../../layouts'
+import { ModelCapability } from '../../components/model'
+import { StatsView } from '../components'
 import { AppMethod, useWorkspace, WorkspaceMethod } from '../../../core'
 import { useDragResize, useElementHeight } from '../../../hooks'
 import {
