@@ -5,7 +5,7 @@
 
 use serde::Serialize;
 
-use studio_core::ModeCapabilityData;
+use studio_core::ModelCapabilityData;
 
 /// A single model as a provider host reports it, mirrored from
 /// studio-cluster; fields the provider does not report stay `None`.
@@ -43,7 +43,7 @@ pub struct ModelInfoData {
     /// Context window in tokens.
     pub context_length: Option<u64>,
     /// The full capability matrix: modalities and abilities together.
-    pub capabilities: ModeCapabilityData,
+    pub capabilities: ModelCapabilityData,
 }
 
 impl From<studio_core::ModelInfoData> for ModelInfoData {

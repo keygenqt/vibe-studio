@@ -8,13 +8,13 @@
 //! with the call — the model's catalog defaults.
 
 use anyhow::Result;
+use vibe_cluster::CancelToken;
 
-use crate::CallParamsData;
-use crate::CancelToken;
-use crate::ProviderTypeData;
-use crate::StreamAnswerData;
-use crate::StreamEvent;
-use crate::call_prompt_stream;
+use crate::data::CallParamsData;
+use crate::data::ProviderTypeData;
+use crate::data::StreamEventData;
+use crate::data::StreamResultData;
+use crate::pub_call::call_prompt_stream;
 
 // the compression instruction: the conversation becomes the sole
 // context of the next session — a working document, not a report;
@@ -101,8 +101,8 @@ pub(crate) async fn call_stream(
     params: CallParamsData,
     history: Vec<(String, String, Vec<String>)>,
     cancel: &CancelToken,
-    on_event: impl Fn(&StreamEvent) + Send + Sync + 'static,
-) -> Result<StreamAnswerData> {
+    on_event: impl Fn(&StreamEventData) + Send + Sync + 'static,
+) -> Result<StreamResultData> {
     call_prompt_stream(
         provider,
         host,

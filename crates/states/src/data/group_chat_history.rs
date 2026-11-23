@@ -159,10 +159,10 @@ impl Store {
         Ok(histories)
     }
 
-    /// Creates a history row with database defaults and activates the
+    /// Adds the history row born with the group and activates the
     /// fresh group as the single active one. Counters stay zero — the
     /// birth is not a user selection.
-    pub(crate) fn create_group_chat_history(&self, group_chat_id: i32) -> Result<GroupChatHistoryData> {
+    pub(crate) fn add_group_chat_history(&self, group_chat_id: i32) -> Result<GroupChatHistoryData> {
         let row = self.save::<_, _, GroupChatHistoryRow>(
             group_chat_history::table,
             None,

@@ -9,10 +9,10 @@
 
 use anyhow::Result;
 
-use crate::CallParamsData;
-use crate::ProviderTypeData;
-use crate::StreamStatsData;
-use crate::call_prompt;
+use crate::data::CallParamsData;
+use crate::data::ProviderTypeData;
+use crate::data::StreamStatusData;
+use crate::pub_call::call_prompt;
 
 // the summary instruction: compress the text to the same meaning in
 // fewer words; the language follows the text itself
@@ -28,7 +28,7 @@ pub(crate) async fn call(
     model: &str,
     params: CallParamsData,
     text: &str,
-) -> Result<(String, StreamStatsData)> {
+) -> Result<(String, StreamStatusData)> {
     let (summary, stats) = call_prompt(
         provider,
         host,

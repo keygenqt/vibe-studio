@@ -9,8 +9,8 @@ use diesel::prelude::*;
 
 use std::collections::HashMap;
 
-use super::attachment::ChatAttachmentData;
-use super::attachment::ChatAttachmentNewData;
+use super::chat_attachments::ChatAttachmentData;
+use super::chat_attachments::ChatAttachmentNewData;
 use crate::Store;
 
 /// The outcome status of a message. Serialized lowercase; an unknown

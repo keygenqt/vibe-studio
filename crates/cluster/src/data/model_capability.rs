@@ -9,7 +9,7 @@ use vibe_cluster::Capabilities;
 /// abilities, as the host reports them or the rules resolve them.
 /// Fields the source does not define stay `None`.
 #[derive(Debug, Clone, Default, serde::Serialize)]
-pub struct ModeCapabilityData {
+pub struct ModelCapabilityData {
     /// Accepts text prompts.
     pub input_text: Option<bool>,
     /// Accepts images.
@@ -38,9 +38,9 @@ pub struct ModeCapabilityData {
     pub decision: Option<bool>,
 }
 
-impl From<Capabilities> for ModeCapabilityData {
+impl From<Capabilities> for ModelCapabilityData {
     fn from(caps: Capabilities) -> Self {
-        ModeCapabilityData {
+        ModelCapabilityData {
             input_text: caps.input.text,
             input_vision: caps.input.vision,
             input_audio: caps.input.audio,

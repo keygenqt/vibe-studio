@@ -11,6 +11,13 @@ Rules of the Rust workspace.
   purpose, not a list of its methods.
 - One file — one entity. Table access lives next to its structure;
   the database connection stays locked inside its owning crate.
+- `lib.rs` holds imports only: the public flat functions live in
+  `pub_*.rs` files — one file per domain, each function with a doc
+  comment; the types owned by the other crates are re-exported in
+  `lib.rs`.
+- `utils/` holds self-sufficient helpers: called from anywhere,
+  stateless, no connections of their own. Subsystems with their own
+  state or external-world integrations live in `services/`.
 - Crates know nothing about src-tauri — the UI layer connecting the
   interface and Rust. The UI layer calls flat functions of the
   crates and forwards events; features never live in the UI layer.
@@ -25,10 +32,9 @@ Rules of the Rust workspace.
   and gives a single API. Built so that it can become an FFI
   interface without a significant rework: flat functions, simple
   types.
-- The crate's public surface is `lib.rs`: one function per feature,
-  each with a doc comment; heavy logic (validation, network) lives
-  in private submodules. Types owned by the other crates are
-  re-exported here.
+- The public surface is the `pub_*.rs` files, one per src-tauri
+  block; heavy logic (validation, streaming) lives in the private
+  submodules.
 - UI input is untrusted and is never fixed: an invalid value is an
   error, a valid one is stored as sent. Data cleaning is the form's
   job, not the store's.
@@ -43,9 +49,13 @@ Rules of the Rust workspace.
   `None` = not stored) with its private diesel pair — a row for
   reading, values for writing — and the `impl Store` next to it;
   methods are `pub(crate)`.
-- The public surface is flat functions in `src/lib.rs`, each
-  delegating one line into `Store`; untouched values leave as
-  `None` — the UI resolves them only where it needs a concrete value.
+- The public surface is flat functions in `pub_*.rs` — one per
+  domain, each delegating one line into `Store`; untouched values
+  leave as `None` — the UI resolves them only where it needs a
+  concrete value.
+- A data file is named after its table: one table — one file;
+  everything of the table (the types, the diesel pair, the column
+  enums) lives in it.
 - Generic query primitives live in `db/store.rs`; concrete diesel is
   allowed only where a generic cannot express the query.
 - The `Default` of a state struct is an honest zero: nothing stored,
@@ -65,3 +75,7 @@ Rules of the Rust workspace.
 - The studio layer over `vibe-cluster` — a public general-purpose
   tool connected externally. The app features missing from the
   general tool live here.
+- The public functions live in `pub_*.rs` files; the task
+  implementations — behind the tasks module root. The verb prefixes
+  the surface: `get_*` — facts and catalogs, `call_*` — the raw LLM
+  call, `task_*` — a ready task with its own prompt.

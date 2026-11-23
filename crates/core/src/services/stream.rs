@@ -13,8 +13,7 @@ use std::time::Duration;
 use std::time::Instant;
 
 use anyhow::Result;
-
-use crate::StreamEvent;
+use studio_cluster::StreamEventData;
 
 /// The shell copy refreshes at most once per this interval; the
 /// first chunk passes at once.
@@ -50,12 +49,12 @@ impl StreamGate {
 /// `on_event`. Returns the call outcome.
 pub(crate) async fn pump<T, Fut, F>(
     mut call: Fut,
-    rx: &mut tokio::sync::mpsc::UnboundedReceiver<StreamEvent>,
+    rx: &mut tokio::sync::mpsc::UnboundedReceiver<StreamEventData>,
     mut on_event: F,
 ) -> Result<T>
 where
     Fut: Future<Output = T> + Unpin,
-    F: FnMut(StreamEvent) -> Result<()>,
+    F: FnMut(StreamEventData) -> Result<()>,
 {
     // a closed channel disables the rx arm: the senders are gone and
     // the call resolves on its own — the arm must not spin on None

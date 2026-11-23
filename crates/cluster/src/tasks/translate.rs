@@ -7,14 +7,14 @@
 //! arrives with the call — the model's catalog defaults.
 
 use anyhow::Result;
+use vibe_cluster::CancelToken;
 
-use crate::CallParamsData;
-use crate::CancelToken;
-use crate::ProviderTypeData;
-use crate::StreamEvent;
-use crate::StreamStatsData;
-use crate::call_prompt;
-use crate::call_prompt_stream;
+use crate::data::CallParamsData;
+use crate::data::ProviderTypeData;
+use crate::data::StreamEventData;
+use crate::data::StreamStatusData;
+use crate::pub_call::call_prompt;
+use crate::pub_call::call_prompt_stream;
 
 // the shared prompt of both variants: `{language}` is replaced at
 // the call site
@@ -31,7 +31,7 @@ pub(crate) async fn call(
     params: CallParamsData,
     language: &str,
     text: &str,
-) -> Result<(String, StreamStatsData)> {
+) -> Result<(String, StreamStatusData)> {
     let prompt = TRANSLATE_PROMPT.replace("{language}", language);
     let (text, stats) = call_prompt(
         provider,
@@ -63,7 +63,7 @@ pub(crate) async fn call_stream(
     text: &str,
     cancel: &CancelToken,
     on_delta: impl Fn(&str) + Send + Sync + 'static,
-) -> Result<(String, StreamStatsData)> {
+) -> Result<(String, StreamStatusData)> {
     let prompt = TRANSLATE_PROMPT.replace("{language}", language);
     let result = call_prompt_stream(
         provider,
@@ -79,12 +79,12 @@ pub(crate) async fn call_stream(
         cancel,
         move |event| {
             // thinking stays out: the translation is text only
-            if let StreamEvent::Text(chunk) = event {
+            if let StreamEventData::Text(chunk) = event {
                 on_delta(chunk);
             }
         },
     )
     .await?;
-    let stats = result.stats.map(StreamStatsData::from).unwrap_or_default();
+    let stats = result.stats.map(StreamStatusData::from).unwrap_or_default();
     Ok((result.text.trim().to_string(), stats))
 }

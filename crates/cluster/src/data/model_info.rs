@@ -3,7 +3,7 @@
 // TAGS: ['facts']
 // INFO: A model as the provider host reports it, mirrored from vibe_cluster.
 
-use super::ModeCapabilityData;
+use super::ModelCapabilityData;
 use vibe_cluster::ModelInfo;
 
 /// A single model as a provider host reports it. Mirrors
@@ -40,7 +40,7 @@ pub struct ModelInfoData {
     /// Context window in tokens (/api/show → model_info.<arch>.context_length).
     pub context_length: Option<u64>,
     /// The full capability matrix: modalities and abilities together.
-    pub capabilities: ModeCapabilityData,
+    pub capabilities: ModelCapabilityData,
 }
 
 impl From<ModelInfo> for ModelInfoData {
