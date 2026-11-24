@@ -10,8 +10,8 @@ import { Box, Card, ListItemButton, Stack, Typography } from '@mui/material'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight'
 
-import { TooltipIconButton } from '../../../components/buttons'
-import { BadgeView } from '../../../components/views'
+import { TooltipIconButton } from '../../components/buttons'
+import { BadgeView } from '../../components/views'
 
 export function GroupItem(props) {
   const { t } = useTranslation()

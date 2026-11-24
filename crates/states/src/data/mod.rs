@@ -12,13 +12,13 @@
 //!
 //! # Submodules
 //!
-//! - `provider` — the `providers` table: `ProviderData` and the
+//! - `providers` — the `providers` table: `ProviderData` and the
 //!   get/save/delete API on `Store`.
-//! - `provider_model` — the `models` table: `ProviderModelData`, the
+//! - `models` — the `models` table: `ProviderModelData`, the
 //!   provider catalog with sync-owned facts and user-owned config.
-//! - `chat` — the `chats` table: `ChatData`, the auto-name pool,
+//! - `chats` — the `chats` table: `ChatData`, the auto-name pool,
 //!   the get/save/delete API on `Store`.
-//! - `group_chat` — the `groups_chat` table: `GroupChatData`, the
+//! - `groups_chat` — the `groups_chat` table: `GroupChatData`, the
 //!   get/save/delete API on `Store`.
 //! - `group_chat_history` — the `group_chat_history` table:
 //!   `GroupChatHistoryData`, the per-group life record — view state,
@@ -26,8 +26,9 @@
 //! - `chat_history` — the `chat_history` table: `ChatHistoryData`,
 //!   the chat messages with sender and status, the growing rows and
 //!   the API on `Store`.
-//! - `attachment` — the `chat_attachments` table: `ChatAttachmentData`,
-//!   the file attachments of user messages with the stored bytes.
+//! - `chat_attachments` — the `chat_attachments` table:
+//!   `ChatAttachmentData`, the file attachments of user messages
+//!   with the stored bytes.
 //! - `settings` — `SettingsData`: the user preferences as a single row.
 //! - `workspace` — the `workspace` table: `WorkspaceData`, the shell
 //!   environment as a single row (id = 1).
@@ -35,12 +36,12 @@
 //! Everything here is `pub(crate)`; the public surface is the flat
 //! API in `lib.rs`.
 
-pub(crate) mod attachment;
-pub(crate) mod chat;
+pub(crate) mod chat_attachments;
 pub(crate) mod chat_history;
-pub(crate) mod group_chat;
+pub(crate) mod chats;
 pub(crate) mod group_chat_history;
-pub(crate) mod provider;
-pub(crate) mod provider_model;
+pub(crate) mod groups_chat;
+pub(crate) mod models;
+pub(crate) mod providers;
 pub(crate) mod settings;
 pub(crate) mod workspace;

@@ -9,28 +9,25 @@ import { useTranslation } from 'react-i18next'
 import { Stack } from '@mui/material'
 
 import { ProviderCard } from './elements/ProviderCard'
-import { DashedButton } from '../../components/buttons'
-import { PageHeader } from '../../components/views'
-import { ErrorState, WaitState } from '../../components/states'
+import { DashedButton } from '../components/buttons'
+import { PageHeader } from '../components/views'
+import { OutletLayout } from '../../layouts'
 import { AppRoutes } from '../../constants'
 import { AppNav } from '../../utils'
-import { useCoreProviders } from '../../hooks'
+import { useCatalog, useProviders } from '../../core'
 
 export function ProvidersPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { catalog, providers, error, ready } = useCoreProviders()
+  const { providers, ready: providersReady, error: providersError } = useProviders()
+  const { catalog, ready: catalogReady, error: catalogError } = useCatalog()
 
-  if (error) {
-    return (
-      <WaitState ready={ready}>
-        <ErrorState text={error.message ?? String(error)} />
-      </WaitState>
-    )
-  }
+  // any resource failed: the error paints over the loader
+  const failure = providersError ?? catalogError
+  const ready = providersReady && catalogReady
 
   return (
-    <WaitState ready={ready}>
+    <OutletLayout ready={ready} error={failure}>
       <Stack spacing={2}>
         <PageHeader title={t('settings.t_providers')} subtitle={t('providers.t_subtitle')} />
         <DashedButton onClick={() => AppNav.open(navigate, AppRoutes.providerAdd())}>
@@ -40,11 +37,11 @@ export function ProvidersPage() {
           <ProviderCard
             key={`provider-${provider.id}`}
             provider={provider}
-            color={catalog?.find(info => info.provider === provider.provider)?.color}
+            color={(catalog ?? []).find(info => info.provider === provider.provider)?.color}
             onConfigure={() => AppNav.open(navigate, AppRoutes.provider(provider.id))}
           />
         ))}
       </Stack>
-    </WaitState>
+    </OutletLayout>
   )
 }

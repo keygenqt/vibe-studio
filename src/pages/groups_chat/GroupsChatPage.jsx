@@ -9,20 +9,24 @@ import { useTranslation } from 'react-i18next'
 import { Stack } from '@mui/material'
 
 import { GroupChatCard } from './elements/GroupChatCard'
-import { DashedButton } from '../../components/buttons'
-import { PageHeader } from '../../components/views'
-import { WaitState } from '../../components/states'
+import { DashedButton } from '../components/buttons'
+import { PageHeader } from '../components/views'
+import { OutletLayout } from '../../layouts'
 import { AppRoutes } from '../../constants'
 import { AppNav } from '../../utils'
-import { useCoreGroupsChat } from '../../hooks'
+import { useGroupsChat, useModels } from '../../core'
 
 export function GroupsChatPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { groupsChat, models, ready } = useCoreGroupsChat()
+  const { groupsChat, ready, error } = useGroupsChat()
+  const { models, error: modelsError } = useModels()
+
+  // any resource failed: the error paints over the loader
+  const failure = error ?? modelsError
 
   return (
-    <WaitState ready={ready}>
+    <OutletLayout ready={ready} error={failure}>
       <Stack spacing={2}>
         <PageHeader title={t('settings.t_groups_chat')} subtitle={t('groups_chat.t_subtitle')} />
         <DashedButton onClick={() => AppNav.open(navigate, AppRoutes.groupChatAdd())}>
@@ -32,11 +36,11 @@ export function GroupsChatPage() {
           <GroupChatCard
             key={`group-chat-${group.id}`}
             groupChat={group}
-            model={models?.find(model => model.id === group.model_id)}
+            model={models?.find(model => model.id === group.modelId)}
             onConfigure={() => AppNav.open(navigate, AppRoutes.groupChat(group.id))}
           />
         ))}
       </Stack>
-    </WaitState>
+    </OutletLayout>
   )
 }

@@ -17,7 +17,6 @@ export const ThemeDark = createTheme({
     ...paletteDark,
     primary: { main: '#2dd4bf', contrastText: '#0f2a2c' },
     secondary: { main: '#14b8a6', light: '#22423c', contrastText: '#fff' },
-    panel: { main: '#252525' },
   },
   typography: typography,
   transitions: transitions,

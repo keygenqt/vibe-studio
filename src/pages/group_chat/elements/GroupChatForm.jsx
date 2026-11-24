@@ -6,40 +6,38 @@
  */
 import PropTypes from 'prop-types'
 import * as React from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
 import { Box, Button, ListSubheader, MenuItem, Stack, TextField } from '@mui/material'
 
-import { SaveButton } from '../../../components/buttons'
-import { DeleteDialog } from '../../../components/views'
-import { ErrorAlert, SuccessAlert, InfoAlert } from '../../../components/alerts'
+import { SaveButton } from '../../components/buttons'
+import { DeleteDialog } from '../../components/dialogs'
+import { ErrorAlert, SuccessAlert, InfoAlert } from '../../components/alerts'
 import { AppNav, AppUtils } from '../../../utils'
 import { AppRoutes } from '../../../constants'
-import { formSuccessClear, formSuccessSet } from '../../../store/impl/app'
-import { Methods } from '../../../modules'
+import { GroupsChatMethod, UiMethod, useFormState } from '../../../core'
 
 export function GroupChatForm(props) {
   const { t } = useTranslation()
-  const dispatch = useDispatch()
   const navigate = useNavigate()
-  const formSuccess = useSelector(state => state.app.formSuccess)
+  const formikRef = React.useRef(null)
+  const { formState } = useFormState()
   const isEdit = Boolean(props.isEdit)
   const [openDelete, setOpenDelete] = React.useState(false)
-  const [savedOpen, setSavedOpen] = React.useState(false)
   const [noModelsOpen, setNoModelsOpen] = React.useState(true)
 
   React.useEffect(() => {
-    if (formSuccess) {
-      setSavedOpen(true)
-      dispatch(formSuccessClear())
+    if (formState) {
+      formikRef.current?.setStatus({ saved: true })
+      UiMethod.clearFormState()
     }
   }, [])
 
   return (
     <Formik
+      innerRef={formikRef}
       enableReinitialize
       initialValues={{
         name: props.name ?? '',
@@ -51,19 +49,19 @@ export function GroupChatForm(props) {
         modelId: Yup.number().required(t('group_chat.t_validation_required')),
         systemPrompt: Yup.string().notRequired(),
       })}
-      onSubmit={async (values, { setErrors, setSubmitting }) => {
-        const state = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
-          Methods.save_group_chat({
+      onSubmit={async (values, { setErrors, setSubmitting, setStatus }) => {
+        const saved = await AppUtils.submitForm(t, { setErrors, setSubmitting, setStatus }, () =>
+          GroupsChatMethod.saveGroupChat({
             id: props.id || null,
             name: values.name,
-            system_prompt: values.systemPrompt || null,
-            model_id: values.modelId,
+            systemPrompt: values.systemPrompt || null,
+            modelId: values.modelId,
           })
         )
-        const savedId = state?.history.find(item => item.current_is_active)?.group_chat_id
-        if (state && !isEdit && savedId) {
-          dispatch(formSuccessSet(state.groups_chat.find(group => group.id === savedId)))
-          AppNav.openWithReplace(navigate, AppRoutes.groupChat(savedId))
+        // the fresh insert opens its edit page; the plate meets it there
+        if (!isEdit && saved) {
+          UiMethod.setFormState(saved)
+          AppNav.openWithReplace(navigate, AppRoutes.groupChat(saved.id))
         }
       }}
     >
@@ -76,6 +74,8 @@ export function GroupChatForm(props) {
         handleChange,
         handleSubmit,
         setErrors,
+        status,
+        setStatus,
       }) => {
         return (
           <Box component={'form'} noValidate onSubmit={handleSubmit}>
@@ -85,7 +85,7 @@ export function GroupChatForm(props) {
               text={t('group_chat.t_delete_text')}
               onCancel={() => setOpenDelete(false)}
               onConfirm={() => {
-                Methods.delete_group_chat(props.id)
+                GroupsChatMethod.deleteGroupChat(props.id)
                   .then(() => AppNav.back(navigate))
                   .catch(error => {
                     setOpenDelete(false)
@@ -99,9 +99,9 @@ export function GroupChatForm(props) {
               onClose={() => setNoModelsOpen(false)}
             />
             <SuccessAlert
-              open={savedOpen}
+              open={Boolean(status?.saved)}
               text={t('group_chat.t_saved')}
-              onClose={() => setSavedOpen(false)}
+              onClose={() => setStatus(undefined)}
             />
             <ErrorAlert
               open={Boolean(errors.submit)}
@@ -138,16 +138,14 @@ export function GroupChatForm(props) {
                 onChange={handleChange}
               >
                 {props.providers
-                  .filter(provider => props.models.some(model => model.provider_id === provider.id))
+                  .filter(provider => props.models.some(model => model.providerId === provider.id))
                   .map(provider => [
                     <ListSubheader key={`provider-${provider.id}`}>{provider.name}</ListSubheader>,
                     ...props.models
-                      .filter(model => model.provider_id === provider.id)
+                      .filter(model => model.providerId === provider.id)
                       .map(model => (
                         <MenuItem key={`model-${model.id}`} value={model.id}>
-                          {model.display_name
-                            ? `${model.display_name} (${model.name})`
-                            : model.name}
+                          {model.displayName ? `${model.displayName} (${model.name})` : model.name}
                         </MenuItem>
                       )),
                   ])}

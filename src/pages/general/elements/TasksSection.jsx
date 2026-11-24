@@ -7,7 +7,7 @@
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 
-import { GroupRow, GroupView } from '../../../components/views'
+import { GroupRow, GroupView } from '../components'
 
 import { ModelSelect } from './ModelSelect'
 

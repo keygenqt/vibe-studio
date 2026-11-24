@@ -12,8 +12,8 @@ import ArrowDownward from '@mui/icons-material/ArrowDownward'
 import Compress from '@mui/icons-material/Compress'
 import Refresh from '@mui/icons-material/Refresh'
 
-import { TooltipIconButton } from '../../../components/buttons'
-import { ErrorSnackbar } from '../../../components/snackbars'
+import { TooltipIconButton } from '../../components/buttons'
+import { UiMethod } from '../../../core'
 
 import { CompressDialog } from './CompressDialog'
 
@@ -22,13 +22,12 @@ export function ChatTitleView(props) {
   const [renaming, setRenaming] = React.useState(false)
   const [compressOpen, setCompressOpen] = React.useState(false)
   const [compressing, setCompressing] = React.useState(false)
-  const [error, setError] = React.useState(null)
 
   const onRename = () => {
     if (renaming) return
     setRenaming(true)
     Promise.resolve(props.onRename())
-      .catch(error => setError(t(String(error))))
+      .catch(err => UiMethod.showError(t(String(err))))
       .finally(() => setRenaming(false))
   }
 
@@ -39,7 +38,7 @@ export function ChatTitleView(props) {
     setCompressOpen(false)
     setCompressing(true)
     Promise.resolve(props.onCompress(useTaskModel))
-      .catch(error => setError(t(String(error))))
+      .catch(err => UiMethod.showError(t(String(err))))
       .finally(() => setCompressing(false))
   }
 
@@ -111,7 +110,6 @@ export function ChatTitleView(props) {
         onCancel={() => setCompressOpen(false)}
         onConfirm={onCompress}
       />
-      <ErrorSnackbar text={error} onClose={() => setError(null)} />
     </>
   )
 }

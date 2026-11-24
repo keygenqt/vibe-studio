@@ -17,7 +17,7 @@ import {
   Typography,
 } from '@mui/material'
 
-import { GroupRow, GroupView } from '../../../components/views'
+import { GroupRow, GroupView } from '../components'
 import { ACCENTS } from '../../../constants'
 import { THEMES } from '../../../theme'
 

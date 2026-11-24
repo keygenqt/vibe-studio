@@ -2,12 +2,11 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['hooks']
- * INFO: The hooks zone barrel.
+ * INFO: Shared React event and external state subscriptions.
  */
-export * from './useCoreApp'
-export * from './useCoreChat'
-export * from './useCoreProviders'
-export * from './useCoreGroupsChat'
-export * from './useCoreSettings'
-export * from './useCoreWorkspace'
 export * from './useEffectFocus'
+export * from './useEffectSingle'
+export * from './useElementHeight'
+export * from './usePointerMove'
+export * from './usePointerUp'
+export * from './useDragResize'

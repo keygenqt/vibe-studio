@@ -1,0 +1,39 @@
+// SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// TAGS: ['states']
+// INFO: The fresh state of the groups chat block, assembled by Rust for JS.
+
+use serde::Serialize;
+
+use studio_core::Store;
+
+use super::chat_data::ChatData;
+use super::group_chat_data::GroupChatData;
+use super::group_chat_history_data::GroupChatHistoryData;
+
+/// The fresh state of the groups chat block, returned by every
+/// mutation of the block: Rust assembles it, JS renders it.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupsChatData {
+    pub groups_chat: Vec<GroupChatData>,
+    pub chats: Vec<ChatData>,
+    pub history: Vec<GroupChatHistoryData>,
+}
+
+impl GroupsChatData {
+    /// Assembles the fresh state of the groups chat block.
+    pub(crate) fn new(store: &Store) -> Self {
+        Self {
+            groups_chat: studio_core::get_groups_chat(store)
+                .into_iter()
+                .map(GroupChatData::from)
+                .collect(),
+            chats: studio_core::get_chats(store).into_iter().map(ChatData::from).collect(),
+            history: studio_core::get_group_chat_histories(store)
+                .into_iter()
+                .map(GroupChatHistoryData::from)
+                .collect(),
+        }
+    }
+}

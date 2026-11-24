@@ -6,7 +6,7 @@
 /// The clipboard content by its kind: the priority text → files →
 /// image is resolved on the Rust side, JS receives one variant.
 #[derive(Debug, Clone, serde::Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
+#[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ClipboardRead {
     /// Plain text.
     Text {

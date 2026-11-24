@@ -15,12 +15,10 @@ const DEFAULT_SIDE_BAR_COLLAPSED: bool = false;
 
 /// Shell environment: window and panel sizes.
 /// A single row (id = 1); a missing row falls back to `Default`.
-#[derive(Debug, Clone, PartialEq, Queryable, Identifiable, Selectable, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Queryable, Identifiable, Selectable)]
 #[diesel(table_name = workspace)]
-#[serde(default)]
 pub struct WorkspaceData {
     /// Row id — the single row is 1, JS never sees it.
-    #[serde(skip)]
     pub id: i32,
     /// Shell window width, px; `None` = the user has not touched it.
     pub window_width: Option<i32>,

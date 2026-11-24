@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { ListItem, ListItemButton, ListItemText } from '@mui/material'
 import DeleteOutline from '@mui/icons-material/DeleteOutline'
 
-import { TooltipIconButton } from '../../../components/buttons'
+import { TooltipIconButton } from '../../components/buttons'
 
 export function ChatItem(props) {
   const { t } = useTranslation()

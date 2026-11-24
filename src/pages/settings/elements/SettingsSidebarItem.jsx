@@ -7,7 +7,7 @@
 import PropTypes from 'prop-types'
 import { Card, ListItemButton, Stack, Typography } from '@mui/material'
 
-import { BadgeView } from '../../../components/views'
+import { BadgeView } from '../../components/views'
 
 export function SettingsSidebarItem(props) {
   return (

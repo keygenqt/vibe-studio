@@ -9,5 +9,5 @@ export const paletteLight = {
   success: { main: '#1e8e67' },
   error: { main: '#d32f2f' },
   inherit: { main: '#1f1f29', light: '#dcd9ec' },
-  panel: { main: 'rgba(0, 0, 0, 0.04)' },
+  panel: { main: '#eff1f0' },
 }

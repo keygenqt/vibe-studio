@@ -15,15 +15,15 @@ export const AppUtils = {
   },
 
   // the form submit pipeline: clears the submit error, shows the saved
-  // alert, maps a backend error onto the submit field;
+  // status, maps a backend error onto the submit field;
   // resolves with the Rust answer on success, undefined on error
   submitForm: async function (t, helpers, save) {
-    const { setErrors, setSubmitting, setSavedOpen } = helpers
+    const { setErrors, setSubmitting, setStatus } = helpers
     setErrors({ submit: null })
-    setSavedOpen(false)
+    setStatus(undefined)
     try {
       const saved = await save()
-      setSavedOpen(true)
+      setStatus({ saved: true })
       return saved
     } catch (error) {
       setErrors({ submit: AppUtils.backendMessage(t, error) })
@@ -73,6 +73,15 @@ export const AppUtils = {
     if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`
     if (value >= 1024) return `${Math.round(value / 1024)} KB`
     return `${value} B`
+  },
+
+  // the relative luminance of a hex color: the WCAG formula, dark below the midpoint
+  isDark: function (color) {
+    const hex = color.replace('#', '')
+    const channel = shift => parseInt(hex.slice(shift, shift + 2), 16) / 255
+    const linear = value => (value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+    const [r, g, b] = [0, 2, 4].map(shift => linear(channel(shift)))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.5
   },
 
   // the solid mix of a translucent top over a base: the tinted

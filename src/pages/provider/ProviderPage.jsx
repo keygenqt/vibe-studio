@@ -11,12 +11,13 @@ import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
 import SyncOutlined from '@mui/icons-material/SyncOutlined'
 
 import { ProviderForm } from './elements/ProviderForm'
-import { DashedButton } from '../../components/buttons'
-import { ModelCard, PageHeader } from '../../components/views'
-import { ErrorState, WaitState } from '../../components/states'
+import { DashedButton } from '../components/buttons'
+import { ModelCard } from '../components/model'
+import { PageHeader } from '../components/views'
+import { OutletLayout } from '../../layouts'
 import { AppRoutes } from '../../constants'
 import { AppNav } from '../../utils'
-import { useCoreProviders } from '../../hooks'
+import { useCatalog, useModels, useProvider } from '../../core'
 
 export function ProviderPage() {
   const navigate = useNavigate()
@@ -24,30 +25,25 @@ export function ProviderPage() {
   const { t } = useTranslation()
   const isEdit = Boolean(providerId)
   const pid = Number(providerId)
+  const { catalog, ready: catalogReady, error: catalogError } = useCatalog()
   const {
-    catalog,
     provider,
-    models,
-    error: readError,
-    ready,
-  } = useCoreProviders(isEdit ? { providerId: pid } : {})
+    ready: providerReady,
+    error: providerError,
+  } = useProvider(isEdit ? pid : undefined)
+  const { models, ready: modelsReady, error: modelsError } = useModels(isEdit ? pid : undefined)
 
-  const error = readError
-  if (error) {
-    return (
-      <WaitState ready={ready}>
-        <ErrorState text={error.message ?? String(error)} />
-      </WaitState>
-    )
-  }
+  // any resource failed: the error paints over the loader
+  const failure = catalogError ?? providerError ?? modelsError
+  const ready = catalogReady && providerReady && modelsReady
 
   return (
-    <WaitState ready={ready}>
+    <OutletLayout ready={ready} error={failure}>
       <Stack spacing={2}>
         <PageHeader
           title={
             isEdit
-              ? (catalog.find(info => info.provider === provider?.provider)?.name ??
+              ? ((catalog ?? []).find(info => info.provider === provider?.provider)?.name ??
                 t('provider.t_title'))
               : t('providers.t_add')
           }
@@ -62,7 +58,7 @@ export function ProviderPage() {
             name={provider?.name}
             provider={provider?.provider}
             host={provider?.host}
-            apiKey={provider?.api_key}
+            apiKey={provider?.apiKey}
             project={provider?.project}
           />
         ) : null}
@@ -81,11 +77,11 @@ export function ProviderPage() {
             {(models ?? []).map(model => (
               <ModelCard
                 key={`model-${model.id}`}
-                title={model.display_name ? `${model.display_name} (${model.name})` : model.name}
+                title={model.displayName ? `${model.displayName} (${model.name})` : model.name}
                 description={model.params}
                 capabilities={model.capabilities ?? undefined}
-                context={model.context_length ?? undefined}
-                color={catalog.find(info => info.provider === provider.provider)?.color}
+                context={model.contextLength ?? undefined}
+                color={(catalog ?? []).find(info => info.provider === provider.provider)?.color}
                 onClick={() => AppNav.open(navigate, AppRoutes.model(model.id))}
                 action={<ChevronRightOutlined color={'action'} />}
               />
@@ -93,6 +89,6 @@ export function ProviderPage() {
           </>
         )}
       </Stack>
-    </WaitState>
+    </OutletLayout>
   )
 }

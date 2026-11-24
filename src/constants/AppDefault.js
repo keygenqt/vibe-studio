@@ -8,10 +8,13 @@
 // Collapsed chat bubble: the preview height of the clamped content.
 export const CHAT_COLLAPSE_HEIGHT = 120
 
-// Composer height: user-dragged between min and max.
+// Composer height: user-dragged, at least the minimum.
 export const CHAT_INPUT_SIZE_MIN = 132
-export const CHAT_INPUT_SIZE_MAX = 285
 export const CHAT_INPUT_SIZE_DEFAULT = 132
+
+// The composer grows with its content: the overflow check raises the
+// height up to the cap, sending folds it back to the minimum.
+export const CHAT_INPUT_SIZE_AUTO_MAX = 400
 
 // Sidebar width: user-dragged, shared by chat and settings sidebars.
 export const SIDE_BAR_SIZE_MIN = 200
@@ -33,5 +36,9 @@ export const ACCENTS = ['default', 'wave', 'moss', 'twilight', 'sunset']
 export const ACCENT_DEFAULT = ACCENTS[0]
 
 // Settings UI defaults: applied to the untouched (null) stored values.
+export const THEME_DEFAULT = 'system'
+export const LOCALE_DEFAULT = 'ru'
+export const CHAT_STREAMING_DEFAULT = true
+export const NOTIFICATIONS_DEFAULT = true
 export const CHAT_FONT_SIZE_DEFAULT = 15
 export const TRANSLATE_LOCALE_DEFAULT = 'ru'

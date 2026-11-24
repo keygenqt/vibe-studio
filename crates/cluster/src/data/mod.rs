@@ -7,26 +7,30 @@
 //!
 //! # Submodules
 //!
-//! - `capability` — the full capability matrix of a model.
+//! - `model_capability` — the full capability matrix of a model.
 //! - `model_info` — a model as a provider host reports it.
 //! - `provider_type` — the provider kind.
 //! - `call_params` — the provider-agnostic call config and its
 //!   family wire mapping.
 //! - `provider_info` — a static catalog row of a provider kind.
-//! - `stream` — the stream delta events and the aggregated answer.
+//! - `stream_event` — a live delta of a model answer.
+//! - `stream_status` — the token and timing report of a call.
+//! - `stream_result` — the aggregated answer of a stream call.
 
 mod call_params;
-mod capability;
+mod model_capability;
 mod model_info;
 mod provider_info;
 mod provider_type;
-mod stream;
+mod stream_event;
+mod stream_result;
+mod stream_status;
 
 pub use call_params::CallParamsData;
-pub use capability::ModeCapabilityData;
+pub use model_capability::ModelCapabilityData;
 pub use model_info::ModelInfoData;
 pub use provider_info::ProviderInfoData;
 pub use provider_type::ProviderTypeData;
-pub use stream::StreamAnswerData;
-pub use stream::StreamEvent;
-pub use stream::StreamStatsData;
+pub use stream_event::StreamEventData;
+pub use stream_result::StreamResultData;
+pub use stream_status::StreamStatusData;

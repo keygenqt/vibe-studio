@@ -5,20 +5,18 @@
  * INFO: Model form: display name, system prompt, parameters.
  */
 import PropTypes from 'prop-types'
-import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
 import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material'
 
-import { SaveButton } from '../../../components/buttons'
-import { ErrorAlert, SuccessAlert } from '../../../components/alerts'
+import { SaveButton } from '../../components/buttons'
+import { ErrorAlert, SuccessAlert } from '../../components/alerts'
 import { AppUtils } from '../../../utils'
-import { Methods } from '../../../modules'
+import { ProvidersMethod } from '../../../core'
 
 export function ModelForm(props) {
   const { t } = useTranslation()
-  const [savedOpen, setSavedOpen] = React.useState(false)
 
   // the bounds come from the model's spec: a missing bound adds no rule
   const bounded = (spec, base) => {
@@ -35,19 +33,19 @@ export function ModelForm(props) {
     <Formik
       enableReinitialize
       initialValues={{
-        name: props.model.display_name,
-        systemPrompt: props.model.system_prompt,
+        name: props.model.displayName,
+        systemPrompt: props.model.systemPrompt,
         temperature: props.model.temperature,
         seed: props.model.seed,
-        topP: props.model.top_p,
-        topK: props.model.top_k,
-        minP: props.model.min_p,
+        topP: props.model.topP,
+        topK: props.model.topK,
+        minP: props.model.minP,
         stop: props.model.stop.join('\n'),
-        numCtx: props.model.num_ctx,
-        numPredict: props.model.num_predict,
+        numCtx: props.model.numCtx,
+        numPredict: props.model.numPredict,
         // the sentinel reads as the provider default
         effort: props.model.effort ?? 'default',
-        reasoningMaxTokens: props.model.reasoning_max_tokens ?? '',
+        reasoningMaxTokens: props.model.reasoningMaxTokens ?? '',
         // null reads as the server default: thinking on
         think: String(props.model.think ?? true),
       }}
@@ -60,44 +58,43 @@ export function ModelForm(props) {
         ),
         temperature: bounded(props.defaults?.temperature, Yup.number()),
         seed: bounded(props.defaults?.seed, Yup.number().integer()),
-        topP: bounded(props.defaults?.top_p, Yup.number()),
-        topK: bounded(props.defaults?.top_k, Yup.number().integer()),
-        minP: bounded(props.defaults?.min_p, Yup.number()),
-        numCtx: bounded(props.defaults?.num_ctx, Yup.number().integer()),
-        numPredict: bounded(props.defaults?.num_predict, Yup.number().integer()),
+        topP: bounded(props.defaults?.topP, Yup.number()),
+        topK: bounded(props.defaults?.topK, Yup.number().integer()),
+        minP: bounded(props.defaults?.minP, Yup.number()),
+        numCtx: bounded(props.defaults?.numCtx, Yup.number().integer()),
+        numPredict: bounded(props.defaults?.numPredict, Yup.number().integer()),
         // the select is constrained by its items; the empty value passes
         effort: Yup.string(),
-        reasoningMaxTokens: bounded(props.defaults?.reasoning_max_tokens, Yup.number().integer()),
+        reasoningMaxTokens: bounded(props.defaults?.reasoningMaxTokens, Yup.number().integer()),
         think: Yup.string(),
       })}
-      onSubmit={async (values, { setErrors, setSubmitting }) => {
-        const saved = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
-          Methods.save_provider_model(props.model, {
-            display_name: values.name,
-            system_prompt: values.systemPrompt,
+      onSubmit={async (values, { setErrors, setSubmitting, setStatus }) => {
+        await AppUtils.submitForm(t, { setErrors, setSubmitting, setStatus }, () => {
+          ProvidersMethod.saveProviderModel(props.model, {
+            displayName: values.name,
+            systemPrompt: values.systemPrompt,
             temperature: Number(values.temperature),
             seed: Number(values.seed),
-            top_p: Number(values.topP),
-            top_k: Number(values.topK),
-            min_p: Number(values.minP),
+            topP: Number(values.topP),
+            topK: Number(values.topK),
+            minP: Number(values.minP),
             stop: values.stop
               .split('\n')
               .map(line => line.trim())
               .filter(Boolean),
-            num_ctx: Number(values.numCtx),
-            num_predict: Number(values.numPredict),
+            numCtx: Number(values.numCtx),
+            numPredict: Number(values.numPredict),
             // the knobs ride their families only: think is Ollama's,
             // effort — the cloud schemas
             effort: props.kind !== 'ollama' && values.effort !== 'default' ? values.effort : null,
-            reasoning_max_tokens:
+            reasoningMaxTokens:
               values.reasoningMaxTokens === '' ? null : Number(values.reasoningMaxTokens),
             think:
               props.kind === 'ollama' && props.model.capabilities?.effort === true
                 ? values.think === 'true'
                 : null,
           })
-        )
-        if (saved) props.onSaved?.(saved)
+        })
       }}
     >
       {({
@@ -109,12 +106,14 @@ export function ModelForm(props) {
         handleChange,
         handleSubmit,
         setErrors,
+        status,
+        setStatus,
       }) => (
         <Box component={'form'} noValidate onSubmit={handleSubmit}>
           <SuccessAlert
-            open={savedOpen}
+            open={Boolean(status?.saved)}
             text={t('model.t_saved')}
-            onClose={() => setSavedOpen(false)}
+            onClose={() => setStatus(undefined)}
           />
           <ErrorAlert
             open={Boolean(errors.submit)}
@@ -175,7 +174,7 @@ export function ModelForm(props) {
                   slotProps={{ htmlInput: { step: 0.1 } }}
                 />
               )}
-              {shown(props.defaults?.top_p) && (
+              {shown(props.defaults?.topP) && (
                 <TextField
                   type={'number'}
                   label={t('model.t_top_p')}
@@ -190,7 +189,7 @@ export function ModelForm(props) {
                   slotProps={{ htmlInput: { step: 0.05 } }}
                 />
               )}
-              {shown(props.defaults?.min_p) && (
+              {shown(props.defaults?.minP) && (
                 <TextField
                   type={'number'}
                   label={t('model.t_min_p')}
@@ -205,7 +204,7 @@ export function ModelForm(props) {
                   slotProps={{ htmlInput: { step: 0.05 } }}
                 />
               )}
-              {shown(props.defaults?.top_k) && (
+              {shown(props.defaults?.topK) && (
                 <TextField
                   type={'number'}
                   label={t('model.t_top_k')}
@@ -235,7 +234,7 @@ export function ModelForm(props) {
                   slotProps={{ htmlInput: { step: 1 } }}
                 />
               )}
-              {shown(props.defaults?.num_ctx) && (
+              {shown(props.defaults?.numCtx) && (
                 <TextField
                   type={'number'}
                   label={t('model.t_num_ctx')}
@@ -250,7 +249,7 @@ export function ModelForm(props) {
                   slotProps={{ htmlInput: { step: 1 } }}
                 />
               )}
-              {shown(props.defaults?.num_predict) && (
+              {shown(props.defaults?.numPredict) && (
                 <TextField
                   type={'number'}
                   label={t('model.t_num_predict')}
@@ -317,7 +316,7 @@ export function ModelForm(props) {
                   <MenuItem value={'false'}>{t('model.t_off')}</MenuItem>
                 </TextField>
               )}
-              {shown(props.defaults?.reasoning_max_tokens) && (
+              {shown(props.defaults?.reasoningMaxTokens) && (
                 <TextField
                   type={'number'}
                   label={t('model.t_reasoning_max_tokens')}
@@ -358,18 +357,18 @@ ModelForm.propTypes = {
   model: PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
-    display_name: PropTypes.string.isRequired,
-    system_prompt: PropTypes.string.isRequired,
+    displayName: PropTypes.string.isRequired,
+    systemPrompt: PropTypes.string.isRequired,
     temperature: PropTypes.number.isRequired,
     seed: PropTypes.number.isRequired,
-    top_p: PropTypes.number.isRequired,
-    top_k: PropTypes.number.isRequired,
-    min_p: PropTypes.number.isRequired,
+    topP: PropTypes.number.isRequired,
+    topK: PropTypes.number.isRequired,
+    minP: PropTypes.number.isRequired,
     stop: PropTypes.arrayOf(PropTypes.string).isRequired,
-    num_ctx: PropTypes.number.isRequired,
-    num_predict: PropTypes.number.isRequired,
+    numCtx: PropTypes.number.isRequired,
+    numPredict: PropTypes.number.isRequired,
     effort: PropTypes.string,
-    reasoning_max_tokens: PropTypes.number,
+    reasoningMaxTokens: PropTypes.number,
     think: PropTypes.bool,
     // the capability matrix of the model: flat keys, `effort` gates
     // the reasoning knobs
@@ -380,17 +379,16 @@ ModelForm.propTypes = {
   defaults: PropTypes.shape({
     temperature: specShape,
     seed: specShape,
-    top_p: specShape,
-    top_k: specShape,
-    min_p: specShape,
+    topP: specShape,
+    topK: specShape,
+    minP: specShape,
     stop: PropTypes.bool,
-    num_ctx: specShape,
-    num_predict: specShape,
-    reasoning_max_tokens: specShape,
+    numCtx: specShape,
+    numPredict: specShape,
+    reasoningMaxTokens: specShape,
     effort: PropTypes.shape({
       default: PropTypes.string,
       values: PropTypes.arrayOf(PropTypes.string).isRequired,
     }),
   }),
-  onSaved: PropTypes.func,
 }

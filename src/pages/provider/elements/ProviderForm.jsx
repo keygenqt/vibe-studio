@@ -6,46 +6,44 @@
  */
 import PropTypes from 'prop-types'
 import * as React from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
 import { Box, Button, MenuItem, Stack, TextField } from '@mui/material'
 
-import { SaveButton } from '../../../components/buttons'
-import { DeleteDialog } from '../../../components/views'
-import { ErrorAlert, SuccessAlert } from '../../../components/alerts'
+import { SaveButton } from '../../components/buttons'
+import { DeleteDialog } from '../../components/dialogs'
+import { ErrorAlert, SuccessAlert } from '../../components/alerts'
 import { AppNav, AppUtils } from '../../../utils'
 import { AppRoutes } from '../../../constants'
-import { formSuccessClear, formSuccessSet } from '../../../store/impl/app'
-import { Methods } from '../../../modules'
+import { ProvidersMethod, UiMethod, useFormState } from '../../../core'
 
 export function ProviderForm(props) {
   const { t } = useTranslation()
   const { catalog } = props
-  const dispatch = useDispatch()
   const navigate = useNavigate()
-  const formSuccess = useSelector(state => state.app.formSuccess)
+  const formikRef = React.useRef(null)
+  const { formState } = useFormState()
   const isEdit = Boolean(props.isEdit)
   const [openDelete, setOpenDelete] = React.useState(false)
-  const [savedOpen, setSavedOpen] = React.useState(false)
   const current = catalog.find(info => info.provider === props.provider) ?? catalog[0]
 
   React.useEffect(() => {
-    if (formSuccess) {
-      setSavedOpen(true)
-      dispatch(formSuccessClear())
+    if (formState) {
+      formikRef.current?.setStatus({ saved: true })
+      UiMethod.clearFormState()
     }
   }, [])
 
   return (
     <Formik
+      innerRef={formikRef}
       enableReinitialize
       initialValues={{
         provider: current.provider,
         name: props.name ?? current.name,
-        host: props.host ?? current.default_host ?? '',
+        host: props.host ?? current.defaultHost ?? '',
         apiKey: props.apiKey ?? '',
         project: props.project ?? '',
       }}
@@ -57,20 +55,21 @@ export function ProviderForm(props) {
         apiKey: Yup.string().notRequired(),
         project: Yup.string().notRequired(),
       })}
-      onSubmit={async (values, { setErrors, setSubmitting }) => {
-        const state = await AppUtils.submitForm(t, { setErrors, setSubmitting, setSavedOpen }, () =>
-          Methods.save_provider({
+      onSubmit={async (values, { setErrors, setSubmitting, setStatus }) => {
+        const saved = await AppUtils.submitForm(t, { setErrors, setSubmitting, setStatus }, () =>
+          ProvidersMethod.saveProvider({
             id: props.id || null,
             name: values.name,
             provider: values.provider,
             host: values.host,
-            api_key: values.apiKey,
+            apiKey: values.apiKey,
             project: values.project || null,
           })
         )
-        const saved = state?.provider
-        if (saved && !isEdit) {
-          dispatch(formSuccessSet(saved))
+
+        // the fresh insert opens its edit page; the plate meets it there
+        if (!isEdit && saved) {
+          UiMethod.setFormState(saved)
           AppNav.openWithReplace(navigate, AppRoutes.provider(saved.id))
         }
       }}
@@ -85,6 +84,8 @@ export function ProviderForm(props) {
         handleSubmit,
         setErrors,
         setFieldValue,
+        status,
+        setStatus,
       }) => {
         const infoOf = kind => catalog.find(info => info.provider === kind)
         return (
@@ -95,7 +96,7 @@ export function ProviderForm(props) {
               text={t('provider.t_delete_text')}
               onCancel={() => setOpenDelete(false)}
               onConfirm={() => {
-                Methods.delete_provider(props.id)
+                ProvidersMethod.deleteProvider(props.id)
                   .then(() => AppNav.back(navigate))
                   .catch(error => {
                     setOpenDelete(false)
@@ -104,9 +105,9 @@ export function ProviderForm(props) {
               }}
             />
             <SuccessAlert
-              open={savedOpen}
+              open={Boolean(status?.saved)}
               text={t('provider.t_saved')}
-              onClose={() => setSavedOpen(false)}
+              onClose={() => setStatus(undefined)}
             />
             <ErrorAlert
               open={Boolean(errors.submit)}
@@ -131,7 +132,7 @@ export function ProviderForm(props) {
                         setFieldValue(field, newDefault)
                       }
                     }
-                    prefill('host', prev?.default_host, next?.default_host ?? '')
+                    prefill('host', prev?.defaultHost, next?.defaultHost ?? '')
                     prefill('name', prev?.name, next?.name)
                     setFieldValue('project', '')
                     handleChange(e)

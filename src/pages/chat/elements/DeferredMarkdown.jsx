@@ -8,7 +8,7 @@ import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Box, Typography } from '@mui/material'
 
-import { MarkdownView } from '../../../components/views'
+import { MarkdownView } from '../components'
 
 function DeferredMarkdownBase(props) {
   // the chat opens at the bottom: the tail renders markdown at once,
@@ -26,9 +26,9 @@ function DeferredMarkdownBase(props) {
         if (!entries.some(entry => entry.isIntersecting)) return
         setVisible(true)
       },
-      // the chat history scroller; the margin warms the messages just
-      // outside the viewport
-      { root: document.querySelector('[data-scroll-key="chat.history"]'), rootMargin: '200px' }
+      // the chat history scroller; the key is per-chat, the prefix
+      // matches the one mounted area
+      { root: document.querySelector('[data-scroll-key^="chat.history"]'), rootMargin: '200px' }
     )
     observer.observe(ref.current)
     return () => observer.disconnect()

@@ -1,0 +1,60 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * TAGS: ['states']
+ * INFO: Providers Tauri commands and its state event channel.
+ */
+import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
+
+import store from '../store'
+import { providersStateSet } from './store'
+
+export const ProvidersTauri = {
+  getProvidersCatalog: async function () {
+    return invoke('get_providers_catalog', {})
+  },
+  getProviders: async function () {
+    return invoke('get_providers', {})
+  },
+  getProvider: async function (id) {
+    return invoke('get_provider', { id })
+  },
+  saveProvider: async function (provider) {
+    return invoke('save_provider', { provider })
+  },
+  deleteProvider: async function (id) {
+    return invoke('delete_provider', { id })
+  },
+  getProviderModelsByType: async function (provider) {
+    return invoke('get_provider_models_by_type', {
+      kind: provider.provider,
+      host: provider.host,
+      apiKey: provider.apiKey,
+      project: provider.project,
+    })
+  },
+  getProviderModels: async function (providerId) {
+    return invoke('get_provider_models', { providerId })
+  },
+  getProviderModel: async function (id) {
+    return invoke('get_provider_model', { id })
+  },
+  getModelDefaults: async function (provider, name) {
+    return invoke('get_model_defaults', { provider, name })
+  },
+  saveProviderModel: async function (model, config) {
+    return invoke('save_provider_model', { model: { ...model, ...config } })
+  },
+  saveProviderModels: async function (providerId, checked) {
+    return invoke('save_provider_models', { providerId, checked })
+  },
+  onState: async function () {
+    return listen('event-providers', event => {
+      // the fresh block state assembled by Rust: catalog, providers, models
+      if (event.payload.key === 'providers-update') {
+        store.dispatch(providersStateSet(event.payload.value))
+      }
+    })
+  },
+}
