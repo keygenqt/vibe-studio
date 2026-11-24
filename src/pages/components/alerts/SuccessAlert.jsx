@@ -19,12 +19,11 @@ export function SuccessAlert(props) {
     return () => clearTimeout(timer)
   }, [props.open])
 
-  // the plate lives at the top of the form: scroll the area to the top
+  // the plate lives at the top: scroll the area to the top
   React.useEffect(() => {
     if (props.open) {
       const scroller = ref.current?.closest('.ScrollArea')
-      const form = ref.current?.closest('form')
-      if (scroller && form) {
+      if (scroller) {
         scroller.scrollTo({ top: 0, behavior: 'smooth' })
       }
     }

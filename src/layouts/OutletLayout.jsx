@@ -17,14 +17,14 @@ export const OutletLayout = React.forwardRef(function OutletLayout(props, ref) {
   }
   if (!props.ready) {
     return (
-      <Stack height={1} sx={{ justifyContent: 'center', alignItems: 'center' }}>
+      <Stack sx={{ height: 1, justifyContent: 'center', alignItems: 'center' }}>
         <LoaderView delay={LOADER_FADE_MS} />
       </Stack>
     )
   }
   // the ready root: a neutral box carrying the caller's ref and styles
   return (
-    <Box ref={ref} sx={props.sx}>
+    <Box ref={ref} sx={{ height: 1, ...props.sx }}>
       {props.children}
     </Box>
   )

@@ -47,6 +47,10 @@
       {
         "name": "glm-5.3-flash",
         "effort": { "default": "max", "values": ["low", "high", "max"] }
+      },
+      {
+        "name": "glm-5.4",
+        "effort": { "default": "max", "values": ["low", "high", "max"] }
       }
     ]
   },
