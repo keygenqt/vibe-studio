@@ -35,7 +35,13 @@ pub fn run() {
 
             // The window is built by hand (`create: false` in the
             // config) to show it only when the page is loaded.
-            let config = app.config().app.windows.first().unwrap().clone();
+            let mut config = app.config().app.windows.first().unwrap().clone();
+            // Linux: the shell draws the frame itself — no native
+            // decorations; transparency is for the rounded corners
+            if std::env::consts::OS == "linux" {
+                config.decorations = false;
+                config.transparent = true;
+            }
             let window = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?
                 .on_page_load(|window, payload| {
                     if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {

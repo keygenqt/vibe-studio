@@ -3,6 +3,7 @@ body,
 #root {
   height: 100%;
   margin: 0;
+  border-radius: 8px;
 }
 
 body {
@@ -19,6 +20,11 @@ body {
 }
 .WindowUnfocus {
   opacity: 0.8;
+}
+
+/* Linux: the plain frameless window reads the dim stronger */
+.AppLinux .WindowUnfocus {
+  opacity: 0.9;
 }
 
 /* scroll areas: thin scrollbar, right padding only while content overflows */

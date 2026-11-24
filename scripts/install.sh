@@ -42,7 +42,7 @@ case "$(uname -s)" in
     npm run tauri build -- --bundles deb --config '{"identifier": "com.keygenqt.vibe-studio"}'
 
     print_pretty "Install deb package..." "info"
-    sudo dpkg -i src-tauri/target/release/bundle/deb/*.deb
+    sudo dpkg -i target/release/bundle/deb/*.deb
     ;;
   *)
     print_pretty "Unsupported platform: $(uname -s)" "error"

@@ -76,9 +76,7 @@ export function MainPage() {
         <TooltipIconButton
           title={t('main.t_settings')}
           onClick={() =>
-            AppNav.open(navigate, AppRoutes.settings(), {
-              viewTransition: true,
-            })
+            AppNav.open(navigate, AppRoutes.settings())
           }
         >
           <Settings />

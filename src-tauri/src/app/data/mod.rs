@@ -7,7 +7,7 @@
 //!
 //! # Submodules
 //!
-//! - `app_info` — `AppInfoData`: the app version and debug flag.
+//! - `app_info` — `AppInfoData`: the app version, debug flag and OS.
 //! - `attachment_stat` — `AttachmentStatData`: the draft facts of a
 //!   dropped path.
 //! - `clipboard_read` — `ClipboardRead`: the kind-tagged clipboard

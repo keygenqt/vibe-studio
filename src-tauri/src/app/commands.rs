@@ -19,12 +19,13 @@ pub fn init(store: State<Store>) -> Result<(), String> {
     studio_core::init(&store).map_err(|e| e.to_string())
 }
 
-/// Serves the app version and debug flag to the shell.
+/// Serves the app version, debug flag and OS to the shell.
 #[tauri::command]
 pub fn get_app_info(app: AppHandle) -> AppInfoData {
     AppInfoData {
         version: app.package_info().version.to_string(),
         is_debug: cfg!(debug_assertions),
+        os: std::env::consts::OS.to_string(),
     }
 }
 

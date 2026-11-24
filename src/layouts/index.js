@@ -4,7 +4,7 @@
  * TAGS: ['components']
  * INFO: The layouts zone barrel.
  */
-export * from './AppLayout'
+export * from './AppLayout/AppLayout'
 export * from './BaseLayout/BaseLayout'
 export * from './components'
 export * from './OutletLayout'

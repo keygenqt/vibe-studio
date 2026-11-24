@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['hooks', 'facts']
- * INFO: App facts read: the mount load, the version and debug copy.
+ * INFO: App facts read: the mount load, the version, debug and OS copy.
  */
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
@@ -15,6 +15,7 @@ import { AppTauri } from '../tauri'
 export function useInfo() {
   const version = useSelector(s => s.app.version)
   const isDebug = useSelector(s => s.app.isDebug)
+  const os = useSelector(s => s.app.os)
   const [error, setError] = useState(null)
 
   useEffectSingle({
@@ -33,6 +34,7 @@ export function useInfo() {
   return {
     version,
     isDebug,
+    os,
     error,
   }
 }
