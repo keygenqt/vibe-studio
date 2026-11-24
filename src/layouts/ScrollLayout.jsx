@@ -37,7 +37,16 @@ export function ScrollLayout(props) {
             boxSizing: 'border-box',
           }}
         >
-          <OutletLayout ready={props.ready ?? true} error={props.error}>
+          <OutletLayout
+            ready={props.ready ?? true}
+            error={props.error}
+            sx={{
+              minHeight: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              '& > *': { flexGrow: 1 },
+            }}
+          >
             {props.children}
           </OutletLayout>
         </Box>

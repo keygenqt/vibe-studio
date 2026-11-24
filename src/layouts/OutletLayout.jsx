@@ -24,7 +24,7 @@ export const OutletLayout = React.forwardRef(function OutletLayout(props, ref) {
   }
   // the ready root: a neutral box carrying the caller's ref and styles
   return (
-    <Box ref={ref} sx={{ height: 1, ...props.sx }}>
+    <Box ref={ref} sx={props.sx}>
       {props.children}
     </Box>
   )

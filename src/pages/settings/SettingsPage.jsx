@@ -35,7 +35,7 @@ export function SettingsPage() {
           minHeight: 1,
           display: 'flex',
           flexDirection: 'column',
-          '> *': { flexGrow: 1 },
+          '& > *': { flexGrow: 1 },
         }}
       >
         <Outlet />
