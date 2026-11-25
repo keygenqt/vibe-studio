@@ -21,8 +21,11 @@ export function ProviderCard(props) {
               fontWeight: 600,
             }}
           >
-            <Box component={'span'} sx={{ position: 'relative', top: '1px' }}>
-              {provider.name.charAt(0)}
+            <Box
+              component={'span'}
+              sx={{ fontSize: 20 }}
+            >
+              {provider.name.charAt(0).toUpperCase()}
             </Box>
           </Avatar>
           <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
@@ -33,7 +36,7 @@ export function ProviderCard(props) {
               alignItems={'center'}
               flexWrap={'wrap'}
             >
-              <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
+              <Typography noWrap sx={{ minWidth: 0 }}>
                 {provider.name}
               </Typography>
               {provider.name.toLowerCase() !== provider.provider.toLowerCase() && (

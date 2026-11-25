@@ -6,7 +6,7 @@
  */
 export const typography = {
   fontSize: 14,
-  fontFamily: ['Ubuntu', 'sans-serif'].join(','),
+  fontFamily: ['Open Sans', 'Ubuntu', 'Segoe UI', 'sans-serif'].join(','),
   h5: {
     fontSize: 20,
     fontWeight: 'bold',

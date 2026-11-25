@@ -23,7 +23,7 @@ export function SidebarTitle(props) {
         justifyContent: 'space-between',
       }}
     >
-      <Typography variant={'h5'} fontWeight={500} color={'text.primary'}>
+      <Typography variant={'h5'} color={'text.primary'}>
         {t('main.t_assistants')}
       </Typography>
       {props.canAdd && (

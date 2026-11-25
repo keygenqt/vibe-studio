@@ -54,9 +54,11 @@ pub fn clipboard_clear() -> Result<(), String> {
     studio_core::clipboard_clear().map_err(|e| e.to_string())
 }
 
-/// The clipboard content by priority: text → files → image; `null`
+/// The clipboard content by priority: files → text → image; `null`
 /// when the clipboard is empty or unsupported.
-#[tauri::command]
+// off the main thread: after a webview copy this process owns the
+// clipboard and serves the read on its main loop — sync would deadlock
+#[tauri::command(async)]
 pub fn clipboard_read() -> Option<ClipboardRead> {
     studio_core::clipboard_read().map(ClipboardRead::from)
 }

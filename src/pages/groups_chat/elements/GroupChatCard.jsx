@@ -17,15 +17,17 @@ export function GroupChatCard(props) {
             sx={{
               bgcolor: 'secondary.main',
               color: 'secondary.contrastText',
-              fontWeight: 600,
             }}
           >
-            <Box component={'span'} sx={{ position: 'relative', top: '1px' }}>
-              {props.groupChat.name.charAt(0)}
+            <Box
+              component={'span'}
+              sx={{ fontSize: 20 }}
+            >
+              {props.groupChat.name.charAt(0).toUpperCase()}
             </Box>
           </Avatar>
           <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
-            <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
+            <Typography noWrap sx={{ minWidth: 0 }}>
               {props.groupChat.name}
             </Typography>
             <Typography variant={'body2'} noWrap sx={{ fontFamily: 'monospace' }}>

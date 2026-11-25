@@ -83,16 +83,15 @@ pub(crate) fn read_files() -> Vec<PathBuf> {
     }
     // the text fallback counts as files only when the targets exist
     if let Ok(text) = ctx.get_text() {
-        let paths = parse_uri_list(&text);
-        if !paths.is_empty() && paths.iter().any(|path| path.exists()) {
+        if let Some(paths) = file_targets(&text) {
             return paths;
         }
     }
     Vec::new()
 }
 
-/// The clipboard content by priority: text → files → image. A text
-/// that decodes to existing file targets reads as files.
+/// The clipboard content by priority: files → text → image. A text
+/// whose every line is an existing absolute path reads as files.
 pub(crate) fn read_all() -> Option<ClipboardRead> {
     // a file manager puts a text twin (the file name) next to the
     // native file list — the files must win over the text
@@ -102,15 +101,23 @@ pub(crate) fn read_all() -> Option<ClipboardRead> {
     }
     if let Some(raw) = read_text() {
         if !raw.is_empty() {
-            // text that decodes to existing file targets reads as files
-            let decoded = parse_uri_list(&raw);
-            if !decoded.is_empty() && decoded.iter().any(|path| path.exists()) {
-                return Some(ClipboardRead::Files { paths: decoded });
+            if let Some(paths) = file_targets(&raw) {
+                return Some(ClipboardRead::Files { paths });
             }
             return Some(ClipboardRead::Text { text: raw });
         }
     }
     read_image().map(|png| ClipboardRead::Image { png })
+}
+
+/// Text as file targets: every line must be an existing absolute
+/// path — listings like tree and prose stay text.
+fn file_targets(text: &str) -> Option<Vec<PathBuf>> {
+    let paths = parse_uri_list(text);
+    if !paths.is_empty() && paths.iter().all(|path| path.is_absolute() && path.exists()) {
+        return Some(paths);
+    }
+    None
 }
 
 /// Parses text/uri-list (or plain path lines) into paths: skips

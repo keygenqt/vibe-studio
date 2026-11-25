@@ -24,13 +24,12 @@ export function ModelCard(props) {
         sx={{
           bgcolor: props.color ?? 'secondary.main',
           color: 'secondary.contrastText',
-          fontWeight: 600,
         }}
       >
         {props.title.charAt(0).toUpperCase()}
       </Avatar>
       <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
-        <Typography fontWeight={600} noWrap sx={{ minWidth: 0 }}>
+        <Typography noWrap sx={{ minWidth: 0 }}>
           {props.title}
         </Typography>
         <ModelCapability capabilities={props.capabilities} />

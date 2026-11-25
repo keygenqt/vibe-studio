@@ -28,7 +28,7 @@ export function SettingsSidebarItem(props) {
         >
           <BadgeView active={props.active}>{props.icon}</BadgeView>
           <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
-            <Typography fontWeight={600} noWrap color={'text.primary'} sx={{ minWidth: 0 }}>
+            <Typography noWrap color={'text.primary'} sx={{ minWidth: 0 }}>
               {props.title}
             </Typography>
             <Typography variant={'body2'} noWrap color={'text.secondary'}>

@@ -13,7 +13,7 @@ export function GroupView(props) {
       <Typography
         variant={'body2'}
         color={'primary.main'}
-        sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, pl: 0.5 }}
+        sx={{ textTransform: 'uppercase', letterSpacing: 1, pl: 0.5 }}
       >
         {props.title}
       </Typography>

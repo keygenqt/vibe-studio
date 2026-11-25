@@ -31,7 +31,6 @@ export function ModelForm(props) {
 
   return (
     <Formik
-      enableReinitialize
       initialValues={{
         name: props.model.displayName,
         systemPrompt: props.model.systemPrompt,
@@ -43,8 +42,8 @@ export function ModelForm(props) {
         stop: props.model.stop.join('\n'),
         numCtx: props.model.numCtx,
         numPredict: props.model.numPredict,
-        // the sentinel reads as the provider default
-        effort: props.model.effort ?? 'default',
+        // the value is always concrete where effort is settable
+        effort: props.model.effort,
         reasoningMaxTokens: props.model.reasoningMaxTokens ?? '',
         // null reads as the server default: thinking on
         think: String(props.model.think ?? true),
@@ -85,8 +84,11 @@ export function ModelForm(props) {
             numCtx: Number(values.numCtx),
             numPredict: Number(values.numPredict),
             // the knobs ride their families only: think is Ollama's,
-            // effort — the cloud schemas
-            effort: props.kind !== 'ollama' && values.effort !== 'default' ? values.effort : null,
+            // effort — the cloud schemas, concrete wherever settable
+            effort:
+              props.model.capabilities?.effort === true && props.kind !== 'ollama'
+                ? values.effort
+                : null,
             reasoningMaxTokens:
               values.reasoningMaxTokens === '' ? null : Number(values.reasoningMaxTokens),
             think:
@@ -280,9 +282,9 @@ export function ModelForm(props) {
                   sx={{ gridColumn: '1 / -1' }}
                 />
               )}
-              {/* the reasoning knobs paint for the models whose
-                  capability matrix carries effort */}
-              {props.model.capabilities?.effort === true && props.kind !== 'ollama' && (
+              {/* the reasoning knobs paint for the models whose capability
+                  matrix carries effort; the select waits for its steps */}
+              {props.model.capabilities?.effort === true && props.kind !== 'ollama' && props.defaults?.effort && (
                 <TextField
                   select
                   label={t('model.t_effort')}
@@ -293,7 +295,6 @@ export function ModelForm(props) {
                   onBlur={handleBlur}
                   onChange={handleChange}
                 >
-                  <MenuItem value={'default'}>{t('model.t_default')}</MenuItem>
                   {props.defaults?.effort?.values.map(value => (
                     <MenuItem key={value} value={value}>
                       {value.charAt(0).toUpperCase() + value.slice(1)}

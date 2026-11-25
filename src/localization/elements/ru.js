@@ -195,7 +195,6 @@ export const ruLocalization = {
       t_num_predict: 'Num Predict',
       t_stop: 'Стоп-последовательности',
       t_effort: 'Усилие (effort)',
-      t_default: 'По умолчанию',
       t_think: 'Рассуждения (think)',
       t_on: 'Вкл',
       t_off: 'Выкл',

@@ -197,7 +197,6 @@ export const enLocalization = {
       t_num_predict: 'Num predict',
       t_stop: 'Stop sequences',
       t_effort: 'Reasoning effort',
-      t_default: 'Default',
       t_think: 'Reasoning (think)',
       t_on: 'On',
       t_off: 'Off',

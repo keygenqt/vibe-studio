@@ -21,6 +21,7 @@ import {
   useChat,
   useComposer,
   useGroupsChat,
+  useModels,
   useSettings,
   useStream,
   useTranslate,
@@ -43,7 +44,8 @@ export function ChatPage() {
   const { t, i18n } = useTranslation()
   const cid = Number(chatId)
   const { ready: chatsReady } = useChats()
-  const { groupsChat, models, ready: groupsReady } = useGroupsChat()
+  const { groupsChat, ready: groupsReady } = useGroupsChat()
+  const { models } = useModels()
   const { settings } = useSettings()
   const { chat, stats, history, ready: chatReady, error: chatError } = useChat({ chatId: cid })
   const { draft, chatAttachments } = useComposer()
@@ -58,7 +60,11 @@ export function ChatPage() {
   const removeAttachment = index => ChatMethod.removeAttachment(index)
   const send = translate => {
     setSending(true)
+    // clear input data
     WorkspaceMethod.save({ chatInputSize: CHAT_INPUT_SIZE_MIN })
+    // scroll to bottom chat
+    scrollToBottom(scrollKey)
+    // send data
     ChatMethod.sendMessage(cid, draft, translate, chatAttachments)
       .catch(err => UiMethod.showError(String(err)))
       .finally(() => setSending(false))
@@ -207,7 +213,17 @@ export function ChatPage() {
             ready={chatReady}
             sx={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 150 }}
           >
-            <Stack spacing={1.5}>
+            <Stack
+              spacing={1.5}
+              sx={{
+                WebkitUserSelect: 'text !important',
+                userSelect: 'text !important',
+                '& *': {
+                  WebkitUserSelect: 'text !important',
+                  userSelect: 'text !important',
+                },
+              }}
+            >
               {compressAttempt ? (
                 // the running compress: the history hides, the attempt shows
                 renderMessage(compressAttempt, 'message-compress', true)

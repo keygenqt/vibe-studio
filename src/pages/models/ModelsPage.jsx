@@ -135,7 +135,6 @@ export function ModelsPage() {
                   variant={'body2'}
                   color={'text.secondary'}
                   sx={{
-                    fontWeight: 600,
                     textTransform: 'uppercase',
                     letterSpacing: 1,
                   }}

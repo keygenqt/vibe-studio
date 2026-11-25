@@ -15,7 +15,7 @@ export function ChatEmptyPage() {
     <Box height={1} sx={{ backgroundColor: 'background.paper', borderRadius: 2 }}>
       <Stack height={1} spacing={2} sx={{ justifyContent: 'center', alignItems: 'center' }}>
         <ChatBubbleOutline sx={{ fontSize: 48, color: 'text.secondary' }} />
-        <Typography variant={'h6'} fontWeight={500} color={'text.primary'}>
+        <Typography variant={'h6'} color={'text.primary'}>
           {t('chat_empty.t_no_chat')}
         </Typography>
       </Stack>

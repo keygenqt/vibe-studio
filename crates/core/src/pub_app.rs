@@ -67,7 +67,7 @@ pub fn clipboard_clear() -> Result<()> {
     clipboard::clear()
 }
 
-/// The clipboard content by priority: text → files → image; `None`
+/// The clipboard content by priority: files → text → image; `None`
 /// when the clipboard is empty or unsupported.
 pub fn clipboard_read() -> Option<ClipboardRead> {
     clipboard::read_all()

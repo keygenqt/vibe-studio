@@ -34,7 +34,7 @@ export function GroupRow(props) {
       sx={{ p: 2 }}
     >
       <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
-        <Typography fontWeight={600}>{props.title}</Typography>
+        <Typography color={'text.primary'}>{props.title}</Typography>
         {props.description && (
           <Typography variant={'body2'} color={'text.secondary'}>
             {props.description}

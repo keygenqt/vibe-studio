@@ -22,7 +22,7 @@ export function SettingsPage() {
       scrollPageKey={'settings.content'}
       scrollSidebarKey={'settings.nav'}
       sidebarTitle={
-        <Typography variant={'h5'} fontWeight={500} color={'text.primary'}>
+        <Typography variant={'h5'} color={'text.primary'}>
           {t('main.t_settings')}
         </Typography>
       }

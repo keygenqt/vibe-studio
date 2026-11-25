@@ -266,7 +266,7 @@ export function InputView(props) {
               <CircularProgress size={14} color={'inherit'} />
             ) : (
               <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                {/* the untouched knob hides: the provider default applies */}
+                {/* the knob rides the settable models: effort is born concrete there */}
                 {groupModel?.effort && (
                   <Tooltip title={t('chat.t_effort')}>
                     <Button

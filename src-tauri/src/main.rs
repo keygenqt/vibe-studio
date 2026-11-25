@@ -7,5 +7,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
+    // Safe: main thread, before any threads and GTK/WebKit init
+    unsafe { std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1") };
+
     vibe_studio::run()
 }

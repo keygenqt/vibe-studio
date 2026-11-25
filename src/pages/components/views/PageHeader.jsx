@@ -10,7 +10,7 @@ import { Stack, Typography } from '@mui/material'
 export function PageHeader(props) {
   return (
     <Stack spacing={1} sx={{ flexShrink: 0 }}>
-      <Typography variant={'h4'} fontWeight={500} color={'text.primary'}>
+      <Typography variant={'h4'} color={'text.primary'}>
         {props.title}
       </Typography>
       {props.subtitle && (

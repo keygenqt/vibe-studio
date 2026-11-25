@@ -379,7 +379,6 @@ function MarkdownViewBase(props) {
         color: 'text.primary',
         // the thin body reads on the dark only, the light theme
         // keeps the regular weight
-        fontWeight: theme => (theme.palette.mode === 'dark' ? 300 : 400),
         lineHeight: 1.5,
         '& > *:first-child': { marginTop: 0 },
         '& > *:last-child': { marginBottom: 0 },

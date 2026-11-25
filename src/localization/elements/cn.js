@@ -194,7 +194,6 @@ export const cnLocalization = {
       t_num_predict: 'Num Predict',
       t_stop: '停止序列',
       t_effort: '推理力度',
-      t_default: '默认',
       t_think: '推理 (think)',
       t_on: '开',
       t_off: '关',

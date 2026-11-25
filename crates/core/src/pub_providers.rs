@@ -217,14 +217,20 @@ pub async fn save_provider_models(
             // a fresh row is born with its catalog defaults
             None => {
                 let spec = models::resolve(kind, &model.name);
-                // think is born on for a reasoning-capable Ollama
-                // model: the UI carries only the on/off choice
-                let think =
-                    if matches!(kind, ProviderTypeData::Ollama) && matches!(model.capabilities.effort, Some(true)) {
-                        Some(true)
-                    } else {
-                        None
-                    };
+                // the reasoning knobs are born where they are settable:
+                // think on for a reasoning-capable Ollama model, effort
+                // with the catalog default for a reasoning cloud model
+                let settable = matches!(model.capabilities.effort, Some(true));
+                let think = if matches!(kind, ProviderTypeData::Ollama) && settable {
+                    Some(true)
+                } else {
+                    None
+                };
+                let effort = if !matches!(kind, ProviderTypeData::Ollama) && settable {
+                    spec.effort.as_ref().map(|spec| spec.default.clone())
+                } else {
+                    None
+                };
                 ProviderModelData {
                     id: None,
                     provider_id,
@@ -242,10 +248,9 @@ pub async fn save_provider_models(
                     stop: Vec::new(),
                     num_ctx: spec.num_ctx.map(|spec| spec.default as i32).unwrap_or(0),
                     num_predict: spec.num_predict.map(|spec| spec.default as i32).unwrap_or(0),
-                    // effort is born with the catalog default of the
-                    // model; reasoning_max_tokens stays untouched — the
-                    // provider defaults apply until the user picks
-                    effort: spec.effort.as_ref().map(|spec| spec.default.clone()),
+                    effort,
+                    // reasoning_max_tokens rides its family spec; a
+                    // family without the parameter stays empty
                     reasoning_max_tokens: spec.reasoning_max_tokens.map(|spec| spec.default as i32),
                     think,
                 }

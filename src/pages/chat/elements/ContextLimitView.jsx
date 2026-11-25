@@ -13,7 +13,7 @@ export function ContextLimitView(props) {
   return (
     <Stack direction={'row'} spacing={1} alignItems={'center'} sx={{ paddingY: 1 }}>
       <Divider sx={{ flexGrow: 1, borderColor: 'warning.main', borderStyle: 'dashed' }} />
-      <Typography variant={'caption'} fontWeight={700} noWrap color={'warning.main'}>
+      <Typography variant={'caption'} noWrap color={'warning.main'}>
         {t('chat.t_context_limit_reached', { limit: props.limit })}
       </Typography>
       <Divider sx={{ flexGrow: 1, borderColor: 'warning.main', borderStyle: 'dashed' }} />

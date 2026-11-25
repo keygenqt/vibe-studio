@@ -31,13 +31,13 @@ export function GroupItem(props) {
           <BadgeView active={props.active}>
             <Box
               component={'span'}
-              sx={{ position: 'relative', top: '1px', fontSize: 20, fontWeight: 600 }}
+              sx={{ fontSize: 20 }}
             >
-              {props.name.charAt(0)}
+              {props.name.charAt(0).toUpperCase()}
             </Box>
           </BadgeView>
           <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
-            <Typography fontWeight={600} noWrap color={'text.primary'} sx={{ minWidth: 0 }}>
+            <Typography noWrap color={'text.primary'} sx={{ minWidth: 0 }}>
               {props.name}
             </Typography>
             <Typography
