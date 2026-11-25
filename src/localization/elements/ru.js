@@ -204,6 +204,7 @@ export const ruLocalization = {
     },
     error: {
       t_text: 'Хм, такой страницы не существует.',
+      t_crash: 'Что-то пошло не так.',
     },
     // -- errors
     'Unknown provider.': 'Неизвестный провайдер.',

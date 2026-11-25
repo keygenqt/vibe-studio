@@ -8,6 +8,7 @@ export const components = {
   MuiToolbar: {
     styleOverrides: {
       root: {
+        // the bar strip height; the boot overlay in AppLayout offsets by it
         minHeight: '33px !important',
         paddingLeft: '6px !important',
         paddingRight: '6px !important',

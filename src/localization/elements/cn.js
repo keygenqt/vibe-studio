@@ -203,6 +203,7 @@ export const cnLocalization = {
     },
     error: {
       t_text: '嗯，此页面不存在。',
+      t_crash: '出了点问题。',
     },
     // -- errors
     'Unknown provider.': '未知提供商。',

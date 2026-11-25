@@ -13,6 +13,7 @@ import {
   ChatEmptyPage,
   ChatPage,
   ErrorPage,
+  ErrorRoutePage,
   GeneralPage,
   GroupChatPage,
   GroupsChatPage,
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
         <Outlet />
       </PageFade>
     ),
+    errorElement: <ErrorRoutePage />,
     children: [
       {
         path: AppRoutes.main(),

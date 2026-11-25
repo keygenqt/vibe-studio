@@ -31,7 +31,6 @@ import { CHAT_INPUT_SIZE_MIN } from '../../constants'
 import { AppUtils } from '../../utils'
 import { scrollToBottom, watchBottom } from '../../init'
 
-import { ChatEmptyPage } from '../chat_empty/ChatEmptyPage'
 import { ChatTitleView } from './elements/ChatTitleView'
 import { ContextLimitView } from './elements/ContextLimitView'
 import { CompressBubble } from './elements/CompressBubble'
@@ -184,7 +183,7 @@ export function ChatPage() {
 
   return (
     <OutletLayout
-      ready={groupsReady && chatsReady}
+      ready={groupsReady && chatsReady && chatReady}
       error={chatReady ? null : chatError}
       sx={{
         flexGrow: 1,
@@ -195,155 +194,153 @@ export function ChatPage() {
         gap: '10px',
       }}
     >
-      {chat ? (
+      {chat && (
         <>
-          <ChatTitleView
-            name={t(chat.name)}
-            canScrollDown={!atBottom}
-            onScrollDown={() => scrollToBottom(scrollKey)}
-            canRename={(history ?? []).length > 0 && settings.tasksModelLight !== null}
-            onRename={() => GroupsChatMethod.chatRegenerateName(cid)}
-            canCompress={(history ?? []).length > 0}
-            hasTaskModel={settings.tasksModelHeavy !== null}
-            onCompress={useTaskModel => ChatMethod.compressMessage(cid, useTaskModel)}
-          />
-          <ScrollLayout
-            scrollKey={scrollKey}
-            follow
-            ready={chatReady}
-            sx={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 150 }}
-          >
-            <Stack
-              spacing={1.5}
-              sx={{
+        <ChatTitleView
+          name={t(chat.name)}
+          canScrollDown={!atBottom}
+          onScrollDown={() => scrollToBottom(scrollKey)}
+          canRename={(history ?? []).length > 0 && settings.tasksModelLight !== null}
+          onRename={() => GroupsChatMethod.chatRegenerateName(cid)}
+          canCompress={(history ?? []).length > 0}
+          hasTaskModel={settings.tasksModelHeavy !== null}
+          onCompress={useTaskModel => ChatMethod.compressMessage(cid, useTaskModel)}
+        />
+        <ScrollLayout
+          scrollKey={scrollKey}
+          follow
+          ready={chatReady}
+          sx={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 150 }}
+        >
+          <Stack
+            spacing={1.5}
+            sx={{
+              WebkitUserSelect: 'text !important',
+              userSelect: 'text !important',
+              '& *': {
                 WebkitUserSelect: 'text !important',
                 userSelect: 'text !important',
-                '& *': {
-                  WebkitUserSelect: 'text !important',
-                  userSelect: 'text !important',
-                },
-              }}
-            >
-              {compressAttempt ? (
-                // the running compress: the history hides, the attempt shows
-                renderMessage(compressAttempt, 'message-compress', true)
-              ) : (
-                <>
-                  {/* the progress row renders only uncovered by the live
-                      bubble — the gap and the duplicate are both gone */}
-                  {(history ?? [])
-                    .filter(message => message.status !== 'progress' || !stream)
-                    .map((message, index, list) => (
-                      <React.Fragment key={`message-${message.id}`}>
-                        {renderMessage(
-                          message,
-                          `message-${message.id}`,
-                          index >= list.length - VISIBLE_TAIL
-                        )}
-                        {message.id === contextLimitId && (
-                          <ContextLimitView limit={settings.chatContextLimit} />
-                        )}
-                      </React.Fragment>
-                    ))}
-                  {stream &&
-                    progressRow &&
-                    renderMessage(
-                      {
-                        id: progressRow?.id ?? -1,
-                        messageType: 'assistant',
-                        provider: progressRow?.provider ?? null,
-                        model: progressRow?.model ?? null,
-                        status: 'progress',
-                        showType: progressRow?.showType ?? 'text',
-                        text: stream.text,
-                        thinking: stream.thinking,
-                        createdAt: progressRow?.createdAt ?? Date.now(),
-                      },
-                      'message-stream',
-                      true
-                    )}
-                </>
-              )}
+              },
+            }}
+          >
+            {compressAttempt ? (
+              // the running compress: the history hides, the attempt shows
+              renderMessage(compressAttempt, 'message-compress', true)
+            ) : (
+              <>
+                {/* the progress row renders only uncovered by the live
+                    bubble — the gap and the duplicate are both gone */}
+                {(history ?? [])
+                  .filter(message => message.status !== 'progress' || !stream)
+                  .map((message, index, list) => (
+                    <React.Fragment key={`message-${message.id}`}>
+                      {renderMessage(
+                        message,
+                        `message-${message.id}`,
+                        index >= list.length - VISIBLE_TAIL
+                      )}
+                      {message.id === contextLimitId && (
+                        <ContextLimitView limit={settings.chatContextLimit} />
+                      )}
+                    </React.Fragment>
+                  ))}
+                {stream &&
+                  progressRow &&
+                  renderMessage(
+                    {
+                      id: progressRow?.id ?? -1,
+                      messageType: 'assistant',
+                      provider: progressRow?.provider ?? null,
+                      model: progressRow?.model ?? null,
+                      status: 'progress',
+                      showType: progressRow?.showType ?? 'text',
+                      text: stream.text,
+                      thinking: stream.thinking,
+                      createdAt: progressRow?.createdAt ?? Date.now(),
+                    },
+                    'message-stream',
+                    true
+                  )}
+              </>
+            )}
+          </Stack>
+        </ScrollLayout>
+
+        <InputView
+          draft={draft}
+          setDraft={setDraft}
+          send={translate => {
+            // the running compress owns the chat: the send waits
+            if (!compressAttempt) send(translate)
+          }}
+          sending={sending}
+          streaming={streaming}
+          stop={stop}
+          onAttach={onAttach}
+          addAttachments={addAttachments}
+          chatAttachments={chatAttachments}
+          canTranslate={canTranslate}
+          groupModel={groupModel}
+          stats={stats}
+          contextLimit={settings.chatContextLimit}
+        />
+
+        {chatAttachments.length > 0 && (
+          // the attachments bar under the composer: the shape of the title bar
+          <Box
+            sx={{
+              flexShrink: 0,
+              borderRadius: 2,
+              backgroundColor: 'background.paper',
+              boxSizing: 'border-box',
+              padding: 1.5,
+            }}
+          >
+            <Stack direction={'row'} spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              {chatAttachments.map((attachment, index) => (
+                <AttachmentChip
+                  key={index}
+                  attachment={
+                    attachment.kind === 'file'
+                      ? {
+                          name: attachment.path.split('/').pop(),
+                          mime: attachment.mime ?? null,
+                          size: attachment.size ?? null,
+                          dir: attachment.dir === true,
+                        }
+                      : {
+                          name: 'image.png',
+                          mime: 'image/png',
+                          size: Math.round((attachment.png.length * 3) / 4),
+                        }
+                  }
+                  onDelete={() => removeAttachment(index)}
+                />
+              ))}
             </Stack>
-          </ScrollLayout>
-
-          <InputView
-            draft={draft}
-            setDraft={setDraft}
-            send={translate => {
-              // the running compress owns the chat: the send waits
-              if (!compressAttempt) send(translate)
-            }}
-            sending={sending}
-            streaming={streaming}
-            stop={stop}
-            onAttach={onAttach}
-            addAttachments={addAttachments}
-            chatAttachments={chatAttachments}
-            canTranslate={canTranslate}
-            groupModel={groupModel}
-            stats={stats}
-            contextLimit={settings.chatContextLimit}
-          />
-
-          {chatAttachments.length > 0 && (
-            // the attachments bar under the composer: the shape of the title bar
-            <Box
-              sx={{
-                flexShrink: 0,
-                borderRadius: 2,
-                backgroundColor: 'background.paper',
-                boxSizing: 'border-box',
-                padding: 1.5,
-              }}
-            >
-              <Stack direction={'row'} spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-                {chatAttachments.map((attachment, index) => (
-                  <AttachmentChip
-                    key={index}
-                    attachment={
-                      attachment.kind === 'file'
-                        ? {
-                            name: attachment.path.split('/').pop(),
-                            mime: attachment.mime ?? null,
-                            size: attachment.size ?? null,
-                            dir: attachment.dir === true,
-                          }
-                        : {
-                            name: 'image.png',
-                            mime: 'image/png',
-                            size: Math.round((attachment.png.length * 3) / 4),
-                          }
-                    }
-                    onDelete={() => removeAttachment(index)}
-                  />
-                ))}
-              </Stack>
-            </Box>
+          </Box>
+        )}
+        <DeleteDialog
+          open={confirm !== null}
+          title={t(
+            confirm?.action === 'resend'
+              ? 'chat.t_message_resend_title'
+              : 'chat.t_message_delete_title'
           )}
-          <DeleteDialog
-            open={confirm !== null}
-            title={t(
-              confirm?.action === 'resend'
-                ? 'chat.t_message_resend_title'
-                : 'chat.t_message_delete_title'
-            )}
-            text={t(
-              confirm?.action === 'resend'
-                ? 'chat.t_message_resend_text'
-                : 'chat.t_message_delete_text'
-            )}
-            confirmText={confirm?.action === 'resend' ? t('chat.t_message_resend') : undefined}
-            onCancel={() => setConfirm(null)}
-            onConfirm={() => {
-              if (confirm?.action === 'resend') resend(confirm.messageId)
-              if (confirm?.action === 'delete') remove(confirm.messageId)
-              setConfirm(null)
-            }}
-          />
+          text={t(
+            confirm?.action === 'resend'
+              ? 'chat.t_message_resend_text'
+              : 'chat.t_message_delete_text'
+          )}
+          confirmText={confirm?.action === 'resend' ? t('chat.t_message_resend') : undefined}
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => {
+            if (confirm?.action === 'resend') resend(confirm.messageId)
+            if (confirm?.action === 'delete') remove(confirm.messageId)
+            setConfirm(null)
+          }}
+        />
         </>
-      ) : (
-        <ChatEmptyPage />
       )}
     </OutletLayout>
   )

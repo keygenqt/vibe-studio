@@ -5,15 +5,41 @@
  * INFO: The Linux title bar: window controls, drag region and the theme action.
  */
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { AppBar, Box, IconButton, Stack, Toolbar } from '@mui/material'
+import { useTranslation } from 'react-i18next'
+import { AppBar, Box, IconButton, Stack, Toolbar, Tooltip } from '@mui/material'
 import Close from '@mui/icons-material/Close'
 import CropSquare from '@mui/icons-material/CropSquare'
+import DarkMode from '@mui/icons-material/DarkMode'
+import DesktopWindows from '@mui/icons-material/DesktopWindows'
+import LightMode from '@mui/icons-material/LightMode'
 import Minimize from '@mui/icons-material/Minimize'
 
-import { ThemeAction } from './ThemeAction'
+import { SettingsMethod, useSettings } from '../../../core/settings'
+
+// the persistent circle of the bar actions; hover is explicit because the global IconButton hover repaints the base
+// light steps a token up: the default base (4% black) is too faint on a light background
+const circleSx = {
+  p: '4px',
+  bgcolor: (theme) => {
+    return theme.palette.mode === 'dark' ? theme.palette.action.hover : theme.palette.action.selected
+  },
+  '&:hover': {
+    bgcolor: (theme) => {
+      return theme.palette.mode === 'dark' ? theme.palette.action.selected : theme.palette.action.focus
+    }
+  },
+}
 
 export function LinuxBar() {
   const appWindow = getCurrentWindow()
+  const { t } = useTranslation()
+  const { settings } = useSettings()
+  const theme = settings.appearanceTheme
+  // the cycle persists the choice; the resolved mode re-derives on the event
+  const onCycle = () => {
+    const next = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'
+    SettingsMethod.save({ appearanceTheme: next }).catch(console.error)
+  }
   return (
     <AppBar
       position="static"
@@ -29,31 +55,41 @@ export function LinuxBar() {
     >
       <Toolbar data-tauri-drag-region>
         <Stack direction={'row'} sx={{ marginLeft: '-6px' }}>
-          <ThemeAction />
+          <Tooltip title={t('main.t_theme')}>
+            <IconButton size="small" sx={circleSx} onClick={onCycle}>
+              {theme === 'light' ? (
+                <LightMode sx={{ fontSize: 14 }} />
+              ) : theme === 'dark' ? (
+                <DarkMode sx={{ fontSize: 14 }} />
+              ) : (
+                <DesktopWindows sx={{ fontSize: 14 }} />
+              )}
+            </IconButton>
+          </Tooltip>
         </Stack>
         <Box sx={{ flexGrow: 1 }} data-tauri-drag-region />
         {/* the desktop order: minimize, maximize, close in the corner */}
         <Stack direction={'row'} spacing={1} sx={{ marginRight: '-6px' }}>
           <IconButton
             size="small"
-            sx={{ p: '2px' }}
+            sx={circleSx}
             onClick={() => appWindow.minimize().catch(console.error)}
           >
-            <Minimize sx={{ fontSize: 16 }} />
+            <Minimize sx={{ fontSize: 14 }} />
           </IconButton>
           <IconButton
             size="small"
-            sx={{ p: '2px' }}
+            sx={circleSx}
             onClick={() => appWindow.toggleMaximize().catch(console.error)}
           >
-            <CropSquare sx={{ fontSize: 16 }} />
+            <CropSquare sx={{ fontSize: 14 }} />
           </IconButton>
           <IconButton
             size="small"
-            sx={{ p: '2px' }}
+            sx={circleSx}
             onClick={() => appWindow.close().catch(console.error)}
           >
-            <Close sx={{ fontSize: 16 }} />
+            <Close sx={{ fontSize: 14 }} />
           </IconButton>
         </Stack>
       </Toolbar>

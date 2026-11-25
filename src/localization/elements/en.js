@@ -206,6 +206,7 @@ export const enLocalization = {
     },
     error: {
       t_text: 'Hmm, this page does not exist.',
+      t_crash: 'Something went wrong.',
     },
   },
 }
