@@ -127,6 +127,7 @@ UserBubble.propTypes = {
       PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string.isRequired,
+        path: PropTypes.string,
         mime: PropTypes.string,
         size: PropTypes.number,
       })

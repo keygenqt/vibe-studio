@@ -13,7 +13,7 @@ use anyhow::Result;
 
 use crate::ClipboardRead;
 use crate::services::attachment;
-use crate::services::attachment::AttachmentStatData;
+use crate::services::attachment::AttachmentItemData;
 use crate::services::clipboard;
 use crate::services::theme;
 use crate::services::theme::ThemeChoice;
@@ -79,8 +79,8 @@ pub fn open_in_browser(url: &str) -> Result<()> {
     utils::open_in_browser(url)
 }
 
-/// The draft facts of a dropped path: the directory flag, the image
-/// MIME sniffed from the header, the byte size.
-pub fn attachment_stat(path: &str) -> AttachmentStatData {
-    attachment::stat(path)
+/// The draft items of the dropped paths: the file list of the send
+/// as the shell sees it — directories expanded, duplicates gone.
+pub fn attachment_items(paths: &[String]) -> Vec<AttachmentItemData> {
+    attachment::items(paths)
 }

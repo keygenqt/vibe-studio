@@ -35,6 +35,10 @@ export const enLocalization = {
       t_chat_rename: 'Update chat name',
       t_chat_compress: 'Compress',
       t_attach_file: 'Attach file',
+      t_attachments_clear: 'Clear all',
+      t_attachments_clear_title: 'Clear all attachments?',
+      t_attachments_clear_text:
+        'All attachments will be dropped from the draft. The message is not sent yet.',
       t_translate: 'Translate',
       t_scroll_down: 'Scroll to bottom',
       t_generating: 'Thinking...',

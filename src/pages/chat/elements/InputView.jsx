@@ -151,7 +151,7 @@ export function InputView(props) {
           // the cursor restores after the controlled update paints
           requestAnimationFrame(() => input?.setSelectionRange(cursor, cursor))
         } else if (content.kind === 'files') {
-          addAttachments(content.paths.map(path => ({ kind: 'file', path })))
+          return AppMethod.attachmentItems(content.paths).then(addAttachments)
         } else {
           addAttachments([{ kind: 'image', png: content.png }])
         }
@@ -184,18 +184,10 @@ export function InputView(props) {
         pos.x >= rect.left && pos.x <= rect.right && pos.y >= rect.top && pos.y <= rect.bottom
       if (payload.type === 'drop') {
         setDragOver(false)
-        // the draft carries the Rust facts: the chip paints the
-        // folder, the image kind and the size; the wire carries
-        // the path only
+        // the wire answers with the ready draft items: dirs expanded,
+        // duplicates and missing paths already gone
         if (inside)
-          Promise.all(
-            payload.paths.map(async path => {
-              const stat = await AppMethod.attachmentStat(path)
-              return stat.dir
-                ? { kind: 'file', path, dir: true }
-                : { kind: 'file', path, mime: stat.mime, size: stat.size }
-            })
-          )
+          AppMethod.attachmentItems(payload.paths)
             .then(addAttachmentsRef.current)
             .catch(console.error)
       } else {

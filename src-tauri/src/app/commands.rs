@@ -9,7 +9,7 @@ use tauri::State;
 use studio_core::Store;
 
 use crate::app::data::app_info::AppInfoData;
-use crate::app::data::attachment_stat::AttachmentStatData;
+use crate::app::data::attachment_item::AttachmentItemData;
 use crate::app::data::clipboard_read::ClipboardRead;
 
 /// The startup order: a killed process leaves `Progress` rows behind,
@@ -69,9 +69,12 @@ pub fn open_in_browser(url: String) -> Result<(), String> {
     studio_core::open_in_browser(&url).map_err(|e| e.to_string())
 }
 
-/// The draft facts of a dropped path: the directory flag, the image
-/// MIME sniffed from the header, the byte size.
+/// The draft items of the dropped paths: the file list of the send
+/// as the shell sees it — directories expanded, duplicates gone.
 #[tauri::command]
-pub fn attachment_stat(path: String) -> Result<AttachmentStatData, String> {
-    Ok(AttachmentStatData::from(studio_core::attachment_stat(&path)))
+pub fn attachment_items(paths: Vec<String>) -> Vec<AttachmentItemData> {
+    studio_core::attachment_items(&paths)
+        .into_iter()
+        .map(AttachmentItemData::from)
+        .collect()
 }

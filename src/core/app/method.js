@@ -25,8 +25,8 @@ export const AppMethod = {
   dialogOpenFiles: function () {
     return AppTauri.dialogOpenFiles()
   },
-  attachmentStat: function (path) {
-    return AppTauri.attachmentStat(path)
+  attachmentItems: function (paths) {
+    return AppTauri.attachmentItems(paths)
   },
   openInBrowser: function (url) {
     return AppTauri.openInBrowser(url)

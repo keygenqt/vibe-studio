@@ -35,6 +35,10 @@ export const ruLocalization = {
       t_chat_rename: 'Обновить название чата',
       t_chat_compress: 'Сжать',
       t_attach_file: 'Прикрепить файл',
+      t_attachments_clear: 'Очистить всё',
+      t_attachments_clear_title: 'Очистить все вложения?',
+      t_attachments_clear_text:
+        'Все вложения будут убраны из черновика. Сообщение ещё не отправлено.',
       t_translate: 'Перевод',
       t_scroll_down: 'Прокрутить вниз',
       t_generating: 'Думаю...',

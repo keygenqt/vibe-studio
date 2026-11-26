@@ -83,7 +83,7 @@ pub fn run() {
             app::commands::clipboard_clear,
             app::commands::clipboard_read,
             app::commands::open_in_browser,
-            app::commands::attachment_stat,
+            app::commands::attachment_items,
             // workspace: the shell environment
             workspace::commands::get_workspace,
             workspace::commands::save_workspace,

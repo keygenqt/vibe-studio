@@ -1,12 +1,14 @@
 // SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // TAGS: ['states']
-// INFO: Attachment validation and preparation: the UI input becomes the stored rows and prompt parts.
+// INFO: Attachment preparation: the UI input becomes draft facts, stored rows and prompt parts.
 
 //! Attachment preparation: the untrusted UI input is read, sniffed
-//! and validated into the rows ready to store, plus the prompt
-//! parts. The files are classified by content, never by extension.
+//! and validated into the draft facts, the rows ready to store and
+//! the prompt parts. The files are classified by content, never by
+//! extension.
 
+use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -45,12 +47,12 @@ pub enum ChatAttachmentInput {
     },
 }
 
-/// The draft facts of a dropped path: the directory flag, the image
-/// MIME sniffed from the header, the byte size — the chip paints by them.
+/// The draft facts of one file: the path as sent, the image MIME by
+/// the header sniff, the byte size.
 #[derive(Debug)]
-pub struct AttachmentStatData {
-    /// `true` = a directory, expands into its files at the send.
-    pub dir: bool,
+pub struct AttachmentItemData {
+    /// The absolute path as sent.
+    pub path: String,
     /// The image MIME by the header sniff; `None` = not an image.
     pub mime: Option<String>,
     /// The size on disk, bytes.
@@ -74,10 +76,13 @@ pub(crate) struct PreparedAttachments {
 /// Reads, classifies and validates every attachment. All-or-nothing:
 /// one unsupported file fails the whole send with the names listed.
 /// A directory input expands into its files recursively; the bytes
-/// of one send are capped together.
+/// of one send are capped together. The files are identified by
+/// their direct paths: a file already in the send is not
+/// duplicated, a file gone from disk is silently skipped.
 pub(crate) fn prepare(attachments: &[ChatAttachmentInput]) -> Result<PreparedAttachments> {
     let mut prepared = PreparedAttachments::default();
     let mut rejected: Vec<String> = Vec::new();
+    let mut seen: HashSet<PathBuf> = HashSet::new();
     for input in attachments {
         match input {
             ChatAttachmentInput::File { path } => {
@@ -91,10 +96,10 @@ pub(crate) fn prepare(attachments: &[ChatAttachmentInput]) -> Result<PreparedAtt
                     let mut files = Vec::new();
                     expand_dir(path, &mut files).map_err(|_| anyhow!("File cannot be read: {name}."))?;
                     for file in files {
-                        prepare_file(&file, &mut prepared, &mut rejected)?;
+                        prepare_file(&file, &mut seen, &mut prepared, &mut rejected)?;
                     }
                 } else {
-                    prepare_file(path, &mut prepared, &mut rejected)?;
+                    prepare_file(path, &mut seen, &mut prepared, &mut rejected)?;
                 }
             }
             ChatAttachmentInput::Image { png } => {
@@ -136,14 +141,53 @@ fn expand_dir(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-/// The draft facts of one dropped path: the metadata and the header
-/// sniff — never the whole file.
-pub(crate) fn stat(path: &str) -> AttachmentStatData {
-    let meta = std::fs::metadata(path).ok();
-    let dir = meta.as_ref().map(|meta| meta.is_dir()).unwrap_or(false);
-    let size = meta.as_ref().map(|meta| meta.len() as i64).unwrap_or(0);
-    let mime = if dir { None } else { sniff_header(path) };
-    AttachmentStatData { dir, mime, size }
+/// The draft items of the dropped paths: the shell's view of what
+/// the send will carry. A directory expands into its files like at
+/// the send; a path that cannot be resolved on disk is skipped; the
+/// direct path is the identity — one file lands once.
+pub(crate) fn items(paths: &[String]) -> Vec<AttachmentItemData> {
+    let mut seen: HashSet<PathBuf> = HashSet::new();
+    let mut resolved: Vec<AttachmentItemData> = Vec::new();
+    for path in paths {
+        // a dropped directory expands into its files, each
+        // through the usual facts — no special path
+        if std::fs::metadata(path).map(|meta| meta.is_dir()).unwrap_or(false) {
+            let mut files = Vec::new();
+            if expand_dir(Path::new(path), &mut files).is_err() {
+                continue;
+            }
+            for file in files {
+                item(&file, &mut seen, &mut resolved);
+            }
+        } else {
+            item(Path::new(path), &mut seen, &mut resolved);
+        }
+    }
+    resolved
+}
+
+/// One file's draft facts: skipped when its direct path is already
+/// taken or cannot be resolved on disk.
+fn item(path: &Path, seen: &mut HashSet<PathBuf>, resolved: &mut Vec<AttachmentItemData>) {
+    let Ok(direct) = std::fs::canonicalize(path) else {
+        // gone or unresolvable on disk: the draft goes on without it
+        return;
+    };
+    // the direct path is the identity: the same file through its
+    // directory or an earlier entry lands once
+    if !seen.insert(direct) {
+        return;
+    }
+    let Ok(meta) = std::fs::metadata(path) else {
+        return;
+    };
+    let full = path.to_string_lossy().into_owned();
+    let mime = sniff_header(&full);
+    resolved.push(AttachmentItemData {
+        path: full,
+        mime,
+        size: meta.len() as i64,
+    });
 }
 
 /// The image MIME of a file header: the four signatures need at
@@ -156,13 +200,30 @@ fn sniff_header(path: &str) -> Option<String> {
 }
 
 /// Reads and classifies one file from disk; the name comes from the
-/// path. A read failure names the file — unsupported content is the
-/// only rejection path left.
-fn prepare_file(path: &PathBuf, prepared: &mut PreparedAttachments, rejected: &mut Vec<String>) -> Result<()> {
+/// path. The direct path is the identity: a file already in the send
+/// or gone from disk is skipped. A read failure names the file —
+/// unsupported content is the only rejection path left.
+fn prepare_file(
+    path: &PathBuf,
+    seen: &mut HashSet<PathBuf>,
+    prepared: &mut PreparedAttachments,
+    rejected: &mut Vec<String>,
+) -> Result<()> {
     let name = path
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
         .unwrap_or_else(|| "file".to_string());
+    let direct = match std::fs::canonicalize(path) {
+        Ok(direct) => direct,
+        // the file is gone from disk: the send goes on without it
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(_) => anyhow::bail!("File cannot be read: {name}."),
+    };
+    // the direct path is the identity: the same file through its
+    // directory or an earlier entry lands once
+    if !seen.insert(direct) {
+        return Ok(());
+    }
     let full = path.to_string_lossy().into_owned();
     let bytes = read_capped(path, &name)?;
     prepare_bytes(&name, Some(&full), &bytes, prepared, rejected)?;

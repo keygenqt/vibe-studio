@@ -7,7 +7,8 @@
 import * as React from 'react'
 import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Box, Stack } from '@mui/material'
+import { Box, Chip, Stack } from '@mui/material'
+import DeleteSweep from '@mui/icons-material/DeleteSweep'
 
 import { AttachmentChip } from './components'
 import { DeleteDialog } from '../components/dialogs'
@@ -53,10 +54,13 @@ export function ChatPage() {
   const [sending, setSending] = React.useState(false)
   // the pending confirmation: {action: 'delete' | 'resend', messageId}
   const [confirm, setConfirm] = React.useState(null)
+  // the clear-all confirmation: the wipe touches the whole draft set
+  const [confirmClear, setConfirmClear] = React.useState(false)
   // the composer writes live in the block; the send is a page gesture
   const setDraft = value => ChatMethod.setDraft(value)
   const addAttachments = items => ChatMethod.addAttachments(items)
   const removeAttachment = index => ChatMethod.removeAttachment(index)
+  const clearAttachments = () => ChatMethod.clearAttachments()
   const send = translate => {
     setSending(true)
     // clear input data
@@ -77,7 +81,7 @@ export function ChatPage() {
   // the picker answers with the selected paths or null on the cancel
   const onAttach = () =>
     AppMethod.dialogOpenFiles()
-      .then(paths => paths && addAttachments(paths.map(path => ({ kind: 'file', path }))))
+      .then(paths => paths && AppMethod.attachmentItems(paths).then(addAttachments))
       .catch(console.error)
   // the group's model: the capability badges paint near the quick actions
   const group = (groupsChat ?? []).find(item => item.id === chat?.groupChatId) ?? null
@@ -297,6 +301,12 @@ export function ChatPage() {
             }}
           >
             <Stack direction={'row'} spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              <Chip
+                size={'small'}
+                icon={<DeleteSweep sx={{ fontSize: 14 }} />}
+                label={t('chat.t_attachments_clear')}
+                onClick={() => setConfirmClear(true)}
+              />
               {chatAttachments.map((attachment, index) => (
                 <AttachmentChip
                   key={index}
@@ -304,9 +314,9 @@ export function ChatPage() {
                     attachment.kind === 'file'
                       ? {
                           name: attachment.path.split('/').pop(),
+                          path: attachment.path,
                           mime: attachment.mime ?? null,
                           size: attachment.size ?? null,
-                          dir: attachment.dir === true,
                         }
                       : {
                           name: 'image.png',
@@ -338,6 +348,17 @@ export function ChatPage() {
             if (confirm?.action === 'resend') resend(confirm.messageId)
             if (confirm?.action === 'delete') remove(confirm.messageId)
             setConfirm(null)
+          }}
+        />
+        <DeleteDialog
+          open={confirmClear}
+          title={t('chat.t_attachments_clear_title')}
+          text={t('chat.t_attachments_clear_text')}
+          confirmText={t('chat.t_attachments_clear')}
+          onCancel={() => setConfirmClear(false)}
+          onConfirm={() => {
+            clearAttachments()
+            setConfirmClear(false)
           }}
         />
         </>

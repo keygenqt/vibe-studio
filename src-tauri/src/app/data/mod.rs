@@ -8,11 +8,11 @@
 //! # Submodules
 //!
 //! - `app_info` — `AppInfoData`: the app version, debug flag and OS.
-//! - `attachment_stat` — `AttachmentStatData`: the draft facts of a
-//!   dropped path.
+//! - `attachment_item` — `AttachmentItemData`: the draft items of
+//!   the dropped paths.
 //! - `clipboard_read` — `ClipboardRead`: the kind-tagged clipboard
 //!   read answer.
 
 pub(crate) mod app_info;
-pub(crate) mod attachment_stat;
+pub(crate) mod attachment_item;
 pub(crate) mod clipboard_read;

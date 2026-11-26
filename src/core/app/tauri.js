@@ -32,8 +32,8 @@ export const AppTauri = {
   dialogOpenFiles: async function () {
     return open({ multiple: true })
   },
-  attachmentStat: async function (path) {
-    return invoke('attachment_stat', { path })
+  attachmentItems: async function (paths) {
+    return invoke('attachment_items', { paths })
   },
   openInBrowser: async function (url) {
     return invoke('open_in_browser', { url })
