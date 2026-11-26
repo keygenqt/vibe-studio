@@ -36,6 +36,13 @@
     "category": "DeveloperTool",
     "targets": ["deb", "dmg"],
     "licenseFile": "LICENSE",
+    "resources": {
+      "../src/assets/fonts/arimo/OFL.txt": "fonts/arimo/",
+      "../src/assets/fonts/montserrat/OFL.txt": "fonts/montserrat/",
+      "../src/assets/fonts/nunito/OFL.txt": "fonts/nunito/",
+      "../src/assets/fonts/open_sans/OFL.txt": "fonts/open_sans/",
+      "../src/assets/fonts/rubik/OFL.txt": "fonts/rubik/"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
