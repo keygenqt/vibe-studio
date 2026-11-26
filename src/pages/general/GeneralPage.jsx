@@ -38,6 +38,7 @@ function Autosave(props) {
         appearanceTheme: props.values.theme,
         appearanceLocale: props.values.language,
         appearanceAccent: props.values.accent,
+        appearanceFont: props.values.font,
         appearanceChatFontSize: props.values.fontSize,
         tasksModelLight: props.values.taskModelLight,
         tasksModelHeavy: props.values.taskModelHeavy,
@@ -74,6 +75,7 @@ export function GeneralPage() {
         initialValues={{
           theme: settings.settings.appearanceTheme,
           accent: settings.settings.appearanceAccent,
+          font: settings.settings.appearanceFont,
           language: settings.settings.appearanceLocale,
           fontSize: settings.settings.appearanceChatFontSize,
           taskModelLight: settings.settings.tasksModelLight,

@@ -2,6 +2,7 @@ CREATE TABLE settings (
     id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1),
     appearance_theme TEXT NOT NULL DEFAULT 'system',
     appearance_locale TEXT NOT NULL DEFAULT 'ru',
+    appearance_font TEXT,
     appearance_accent TEXT,
     appearance_chat_font_size INTEGER,
     tasks_model_light INTEGER,

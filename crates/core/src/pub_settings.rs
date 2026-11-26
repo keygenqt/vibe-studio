@@ -20,7 +20,7 @@ pub fn get_settings(store: &Store) -> SettingsData {
 
 /// Persists the user preferences as the single row. The UI is not
 /// trusted: a set model id must exist, the context limit stays in
-/// bounds; theme, locale and accent are stored as sent.
+/// bounds; theme, locale, accent and font are stored as sent.
 pub fn save_settings(store: &Store, settings: &SettingsData) -> Result<SettingsData> {
     for id in [
         settings.tasks_model_light,

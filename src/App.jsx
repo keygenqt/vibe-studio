@@ -7,23 +7,23 @@
 import { ThemeProvider } from '@mui/material'
 
 import { AppRoute } from './AppRoute'
-import { THEMES } from './theme'
+import { resolveTheme } from './theme'
 import { useEffectFocus } from './hooks'
 import { useAppReady, useTheme } from './core'
-import { ACCENT_DEFAULT } from './constants'
+import { ACCENT_DEFAULT, FONT_DEFAULT } from './constants'
 import { AppLayout } from './layouts'
 
 function App() {
   const isFocus = useEffectFocus()
   const { ready } = useAppReady()
   // the persisted choice with `system` resolved to the detected OS theme;
-  // the accent picks the theme pair, an unknown name falls back to the default
-  const { mode, accent } = useTheme()
+  // the accent and the font pick the theme pair, a stale name falls back to the default
+  const { mode, accent, font } = useTheme()
   // the theme resolves only when the startup loads land: the loader
-  // phase paints on the default accent pair until the settings come
+  // phase paints on the default pair until the settings come
   const theme = ready
-    ? (THEMES[accent] ?? THEMES[ACCENT_DEFAULT])[mode]
-    : THEMES[ACCENT_DEFAULT].light
+    ? resolveTheme(accent, mode, font)
+    : resolveTheme(ACCENT_DEFAULT, 'light', FONT_DEFAULT)
 
   return (
     <ThemeProvider theme={theme}>

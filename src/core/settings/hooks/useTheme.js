@@ -7,9 +7,8 @@
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
-import { ACCENT_DEFAULT } from '../../../constants'
 import { useEffectSingle } from '../../../hooks'
-import { THEMES } from '../../../theme'
+import { resolveTheme } from '../../../theme'
 import { AppStorage } from '../../../utils'
 import store from '../../store'
 import { systemThemeSet } from '../store'
@@ -36,16 +35,16 @@ export function useTheme() {
   // the persisted choice with `system` resolved to the detected OS theme
   const mode = settings.appearanceTheme === 'system' ? systemTheme : settings.appearanceTheme
   const accent = settings.appearanceAccent
+  const font = settings.appearanceFont
   const ready = settings.appearanceTheme !== 'system' || systemTheme !== null
 
   // the bootstrap background cache: index.html paints it before the app loads
   if (ready && mode) {
-    const themePair = (THEMES[accent] ?? THEMES[ACCENT_DEFAULT])[mode]
-    const color = themePair.palette.background.default
+    const color = resolveTheme(accent, mode, font).palette.background.default
     if (AppStorage.readWindowBackground() !== color) {
       AppStorage.writeWindowBackground(color)
     }
   }
 
-  return { mode, accent, ready, error }
+  return { mode, accent, font, ready, error }
 }

@@ -16,6 +16,8 @@ pub struct SettingsData {
     pub appearance_theme: String,
     /// UI locale: `"ru"`, `"en"`, `"cn"`.
     pub appearance_locale: String,
+    /// App font name, e.g. "oswald"; the font stacks are UI-owned.
+    pub appearance_font: Option<String>,
     /// Accent color as a hex string; `None` = not touched.
     pub appearance_accent: Option<String>,
     /// Chat message font size, px; `None` = not touched.
@@ -46,6 +48,7 @@ impl Default for SettingsData {
         Self {
             appearance_theme: String::from("system"),
             appearance_locale: String::from("ru"),
+            appearance_font: None,
             appearance_accent: None,
             appearance_chat_font_size: None,
             tasks_model_light: None,
@@ -66,6 +69,7 @@ impl From<studio_core::SettingsData> for SettingsData {
         Self {
             appearance_theme: data.appearance_theme,
             appearance_locale: data.appearance_locale,
+            appearance_font: data.appearance_font,
             appearance_accent: data.appearance_accent,
             appearance_chat_font_size: data.appearance_chat_font_size,
             tasks_model_light: data.tasks_model_light,
@@ -86,6 +90,7 @@ impl From<&SettingsData> for studio_core::SettingsData {
         Self {
             appearance_theme: data.appearance_theme.clone(),
             appearance_locale: data.appearance_locale.clone(),
+            appearance_font: data.appearance_font.clone(),
             appearance_accent: data.appearance_accent.clone(),
             appearance_chat_font_size: data.appearance_chat_font_size,
             tasks_model_light: data.tasks_model_light,

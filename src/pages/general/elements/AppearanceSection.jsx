@@ -18,8 +18,8 @@ import {
 } from '@mui/material'
 
 import { GroupRow, GroupView } from '../components'
-import { ACCENTS } from '../../../constants'
-import { THEMES } from '../../../theme'
+import { ACCENTS, FONTS } from '../../../constants'
+import { ACCENT_COLORS, FONT_STACKS } from '../../../theme'
 
 // native titles: language names are not translated
 const LANGUAGES = [
@@ -55,7 +55,7 @@ export function AppearanceSection(props) {
               key={`accent-${name}`}
               onClick={() => onChange('accent', name)}
               sx={theme => {
-                const color = THEMES[name][theme.palette.mode].palette.primary.main
+                const color = ACCENT_COLORS[name][theme.palette.mode].primary.main
                 return {
                   width: 28,
                   height: 28,
@@ -70,6 +70,23 @@ export function AppearanceSection(props) {
             />
           ))}
         </Stack>
+      </GroupRow>
+      <GroupRow title={t('general.t_font')} description={t('general.t_font_description')}>
+        <TextField
+          select
+          size="small"
+          hiddenLabel
+          variant={'filled'}
+          value={values.font}
+          onChange={e => onChange('font', e.target.value)}
+          sx={{ width: 250 }}
+        >
+          {FONTS.map(name => (
+            <MenuItem key={`font-${name}`} value={name} sx={{ fontFamily: FONT_STACKS[name] }}>
+              {FONT_STACKS[name].split(',')[0]}
+            </MenuItem>
+          ))}
+        </TextField>
       </GroupRow>
       <GroupRow title={t('general.t_language')} description={t('general.t_language_description')}>
         <TextField

@@ -10,6 +10,7 @@ import {
   ACCENT_DEFAULT,
   CHAT_FONT_SIZE_DEFAULT,
   CHAT_STREAMING_DEFAULT,
+  FONT_DEFAULT,
   LOCALE_DEFAULT,
   NOTIFICATIONS_DEFAULT,
   THEME_DEFAULT,
@@ -21,6 +22,7 @@ const settingsSlice = createSlice({
   initialState: {
     appearanceTheme: THEME_DEFAULT,
     appearanceLocale: LOCALE_DEFAULT,
+    appearanceFont: FONT_DEFAULT,
     appearanceAccent: ACCENT_DEFAULT,
     appearanceChatFontSize: CHAT_FONT_SIZE_DEFAULT,
     tasksModelLight: null,
@@ -39,6 +41,7 @@ const settingsSlice = createSlice({
       Object.assign(state, action.payload)
       state.appearanceTheme = state.appearanceTheme ?? THEME_DEFAULT
       state.appearanceLocale = state.appearanceLocale ?? LOCALE_DEFAULT
+      state.appearanceFont = state.appearanceFont ?? FONT_DEFAULT
       state.appearanceAccent = state.appearanceAccent ?? ACCENT_DEFAULT
       state.appearanceChatFontSize = state.appearanceChatFontSize ?? CHAT_FONT_SIZE_DEFAULT
       state.chatStreaming = state.chatStreaming ?? CHAT_STREAMING_DEFAULT

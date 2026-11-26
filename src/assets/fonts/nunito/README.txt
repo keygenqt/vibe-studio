@@ -1,23 +1,34 @@
-Oswald Variable Font
+Nunito Variable Font
 ====================
 
-This download contains Oswald as both a variable font and static fonts.
+This download contains Nunito as both variable fonts and static fonts.
 
-Oswald is a variable font with this axis:
+Nunito is a variable font with this axis:
   wght
 
-This means all the styles are contained in a single file:
-  Oswald/Oswald-VariableFont_wght.ttf
+This means all the styles are contained in these files:
+  Nunito/Nunito-VariableFont_wght.ttf
+  Nunito/Nunito-Italic-VariableFont_wght.ttf
 
 If your app fully supports variable fonts, you can now pick intermediate styles
 that aren’t available as static fonts. Not all apps support variable fonts, and
-in those cases you can use the static font files for Oswald:
-  Oswald/static/Oswald-ExtraLight.ttf
-  Oswald/static/Oswald-Light.ttf
-  Oswald/static/Oswald-Regular.ttf
-  Oswald/static/Oswald-Medium.ttf
-  Oswald/static/Oswald-SemiBold.ttf
-  Oswald/static/Oswald-Bold.ttf
+in those cases you can use the static font files for Nunito:
+  Nunito/static/Nunito-ExtraLight.ttf
+  Nunito/static/Nunito-Light.ttf
+  Nunito/static/Nunito-Regular.ttf
+  Nunito/static/Nunito-Medium.ttf
+  Nunito/static/Nunito-SemiBold.ttf
+  Nunito/static/Nunito-Bold.ttf
+  Nunito/static/Nunito-ExtraBold.ttf
+  Nunito/static/Nunito-Black.ttf
+  Nunito/static/Nunito-ExtraLightItalic.ttf
+  Nunito/static/Nunito-LightItalic.ttf
+  Nunito/static/Nunito-Italic.ttf
+  Nunito/static/Nunito-MediumItalic.ttf
+  Nunito/static/Nunito-SemiBoldItalic.ttf
+  Nunito/static/Nunito-BoldItalic.ttf
+  Nunito/static/Nunito-ExtraBoldItalic.ttf
+  Nunito/static/Nunito-BlackItalic.ttf
 
 Get started
 -----------

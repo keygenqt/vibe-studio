@@ -100,6 +100,8 @@ export const enLocalization = {
       t_theme_system: 'System',
       t_accent: 'Accent color',
       t_accent_description: 'Buttons, switches and highlighting',
+      t_font: 'App font',
+      t_font_description: 'The typeface of the interface and chat',
       t_language: 'Interface language',
       t_language_description: 'Applied after saving',
       t_font_size: 'Chat font size',

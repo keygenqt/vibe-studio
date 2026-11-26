@@ -30,6 +30,8 @@ pub struct SettingsData {
     pub appearance_theme: String,
     /// UI locale: `"ru"`, `"en"`, `"cn"`.
     pub appearance_locale: String,
+    /// App font name, e.g. "oswald"; the font stacks are UI-owned.
+    pub appearance_font: Option<String>,
     /// Accent color as a hex string, e.g. "#1b7f5c"; the palette is UI-owned.
     pub appearance_accent: Option<String>,
     /// Chat message font size, px.
@@ -62,6 +64,7 @@ impl Default for SettingsData {
             id: SETTINGS_ID,
             appearance_theme: DEFAULT_APPEARANCE_THEME.to_string(),
             appearance_locale: DEFAULT_APPEARANCE_LOCALE.to_string(),
+            appearance_font: None,
             appearance_accent: None,
             appearance_chat_font_size: None,
             tasks_model_light: None,
@@ -83,6 +86,7 @@ impl Default for SettingsData {
 struct SettingsNewData {
     appearance_theme: String,
     appearance_locale: String,
+    appearance_font: Option<String>,
     appearance_accent: Option<String>,
     appearance_chat_font_size: Option<i32>,
     tasks_model_light: Option<i32>,
@@ -102,6 +106,7 @@ impl From<&SettingsData> for SettingsNewData {
         SettingsNewData {
             appearance_theme: data.appearance_theme.clone(),
             appearance_locale: data.appearance_locale.clone(),
+            appearance_font: data.appearance_font.clone(),
             appearance_accent: data.appearance_accent.clone(),
             appearance_chat_font_size: data.appearance_chat_font_size,
             tasks_model_light: data.tasks_model_light,
@@ -122,6 +127,7 @@ diesel::table! {
         id -> Integer,
         appearance_theme -> Text,
         appearance_locale -> Text,
+        appearance_font -> Nullable<Text>,
         appearance_accent -> Nullable<Text>,
         appearance_chat_font_size -> Nullable<Integer>,
         tasks_model_light -> Nullable<Integer>,

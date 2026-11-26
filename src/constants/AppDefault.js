@@ -35,6 +35,10 @@ export const COMPACT_PAGE_WIDTH = 480
 export const ACCENTS = ['default', 'wave', 'moss', 'twilight', 'sunset']
 export const ACCENT_DEFAULT = ACCENTS[0]
 
+// App font names: each resolves to its font stack in the theme zone.
+export const FONTS = ['default', 'arimo', 'montserrat', 'nunito', 'rubik']
+export const FONT_DEFAULT = FONTS[0]
+
 // Settings UI defaults: applied to the untouched (null) stored values.
 export const THEME_DEFAULT = 'system'
 export const LOCALE_DEFAULT = 'ru'
