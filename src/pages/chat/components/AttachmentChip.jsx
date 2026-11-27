@@ -19,11 +19,7 @@ export function AttachmentChip(props) {
       size={'small'}
       label={
         <Stack direction={'row'} spacing={0.5} alignItems={'center'}>
-          {isImage ? (
-            <ImageIcon sx={{ fontSize: 14 }} />
-          ) : (
-            <AttachFile sx={{ fontSize: 14 }} />
-          )}
+          {isImage ? <ImageIcon sx={{ fontSize: 14 }} /> : <AttachFile sx={{ fontSize: 14 }} />}
           <Typography variant={'caption'} noWrap color={'text.primary'} sx={{ maxWidth: 180 }}>
             {attachment.name}
           </Typography>

@@ -21,10 +21,7 @@ export function ProviderCard(props) {
               fontWeight: 600,
             }}
           >
-            <Box
-              component={'span'}
-              sx={{ fontSize: 20 }}
-            >
+            <Box component={'span'} sx={{ fontSize: 20 }}>
               {provider.name.charAt(0).toUpperCase()}
             </Box>
           </Avatar>

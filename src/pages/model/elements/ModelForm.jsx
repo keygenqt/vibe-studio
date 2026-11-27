@@ -284,24 +284,26 @@ export function ModelForm(props) {
               )}
               {/* the reasoning knobs paint for the models whose capability
                   matrix carries effort; the select waits for its steps */}
-              {props.model.capabilities?.effort === true && props.kind !== 'ollama' && props.defaults?.effort && (
-                <TextField
-                  select
-                  label={t('model.t_effort')}
-                  name={'effort'}
-                  variant={'filled'}
-                  value={values.effort}
-                  disabled={isSubmitting}
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                >
-                  {props.defaults?.effort?.values.map(value => (
-                    <MenuItem key={value} value={value}>
-                      {value.charAt(0).toUpperCase() + value.slice(1)}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
+              {props.model.capabilities?.effort === true &&
+                props.kind !== 'ollama' &&
+                props.defaults?.effort && (
+                  <TextField
+                    select
+                    label={t('model.t_effort')}
+                    name={'effort'}
+                    variant={'filled'}
+                    value={values.effort}
+                    disabled={isSubmitting}
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                  >
+                    {props.defaults?.effort?.values.map(value => (
+                      <MenuItem key={value} value={value}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
               {props.model.capabilities?.effort === true && props.kind === 'ollama' && (
                 <TextField
                   select

@@ -41,6 +41,8 @@ export function GroupChatPage() {
             name={groupChat?.name}
             systemPrompt={groupChat?.systemPrompt}
             modelId={groupChat?.modelId}
+            icon={groupChat?.icon}
+            iconColor={groupChat?.iconColor}
             providers={providers ?? []}
             models={models ?? []}
           />

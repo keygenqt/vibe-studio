@@ -37,11 +37,7 @@ export function ErrorRoutePage() {
           </Typography>
           {/* the thrown internals: dev eyes only */}
           {import.meta.env.DEV && (
-            <Typography
-              variant={'body2'}
-              color={'text.secondary'}
-              sx={{ fontFamily: 'monospace' }}
-            >
+            <Typography variant={'body2'} color={'text.secondary'} sx={{ fontFamily: 'monospace' }}>
               {String(error)}
             </Typography>
           )}

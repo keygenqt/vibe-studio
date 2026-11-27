@@ -10,17 +10,22 @@ import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
+import { useTheme } from '@mui/material/styles'
 import { Box, Button, ListSubheader, MenuItem, Stack, TextField } from '@mui/material'
 
 import { SaveButton } from '../../components/buttons'
 import { DeleteDialog } from '../../components/dialogs'
 import { ErrorAlert, SuccessAlert, InfoAlert } from '../../components/alerts'
 import { AppNav, AppUtils } from '../../../utils'
+import { ACCENT_COLORS } from '../../../theme'
+import { ACCENTS } from '../../../constants'
+import { GROUP_ICONS } from '../../components'
 import { AppRoutes } from '../../../constants'
 import { GroupsChatMethod, UiMethod, useFormState } from '../../../core'
 
 export function GroupChatForm(props) {
   const { t } = useTranslation()
+  const theme = useTheme()
   const navigate = useNavigate()
   const formikRef = React.useRef(null)
   const { formState } = useFormState()
@@ -43,6 +48,8 @@ export function GroupChatForm(props) {
         name: props.name ?? '',
         modelId: props.modelId ?? '',
         systemPrompt: props.systemPrompt ?? '',
+        icon: props.icon ?? 'letter',
+        iconColor: props.iconColor ?? 'accent',
       }}
       validationSchema={Yup.object().shape({
         name: Yup.string().trim().required(t('group_chat.t_validation_required')),
@@ -56,6 +63,9 @@ export function GroupChatForm(props) {
             name: values.name,
             systemPrompt: values.systemPrompt || null,
             modelId: values.modelId,
+            // 'accent' and 'letter' are the UI default markers, stored as null
+            icon: values.icon === 'letter' ? null : values.icon,
+            iconColor: values.iconColor === 'accent' ? null : values.iconColor,
           })
         )
         // the fresh insert opens its edit page; the plate meets it there
@@ -109,6 +119,56 @@ export function GroupChatForm(props) {
               onClose={() => setErrors({ submit: null })}
             />
             <Stack spacing={2}>
+              <TextField
+                select
+                fullWidth
+                label={t('group_chat.t_color')}
+                name={'iconColor'}
+                variant={'filled'}
+                value={values.iconColor}
+                disabled={isSubmitting}
+                onBlur={handleBlur}
+                onChange={handleChange}
+              >
+                <MenuItem value={'accent'}>{t('group_chat.t_default')}</MenuItem>
+                {ACCENTS.map(key => (
+                  <MenuItem key={`color-${key}`} value={key}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 14,
+                          height: 14,
+                          flexShrink: 0,
+                          borderRadius: '50%',
+                          bgcolor: ACCENT_COLORS[key][theme.palette.mode].secondary.main,
+                        }}
+                      />
+                      {t(`group_chat.t_color_${key}`)}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                fullWidth
+                label={t('group_chat.t_icon')}
+                name={'icon'}
+                variant={'filled'}
+                value={values.icon}
+                disabled={isSubmitting}
+                onBlur={handleBlur}
+                onChange={handleChange}
+              >
+                <MenuItem value={'letter'}>{t('group_chat.t_default')}</MenuItem>
+                {Object.entries(GROUP_ICONS).map(([key, { Icon, name }]) => (
+                  <MenuItem key={`icon-${key}`} value={key}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Icon sx={{ fontSize: 20 }} />
+                      {name}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </TextField>
               <TextField
                 fullWidth
                 required
@@ -185,6 +245,8 @@ GroupChatForm.propTypes = {
   name: PropTypes.string,
   systemPrompt: PropTypes.string,
   modelId: PropTypes.number,
+  icon: PropTypes.string,
+  iconColor: PropTypes.string,
   providers: PropTypes.array.isRequired,
   models: PropTypes.array.isRequired,
 }

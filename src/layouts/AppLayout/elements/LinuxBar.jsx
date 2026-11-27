@@ -20,13 +20,17 @@ import { SettingsMethod, useSettings } from '../../../core/settings'
 // light steps a token up: the default base (4% black) is too faint on a light background
 const circleSx = {
   p: '4px',
-  bgcolor: (theme) => {
-    return theme.palette.mode === 'dark' ? theme.palette.action.hover : theme.palette.action.selected
+  bgcolor: theme => {
+    return theme.palette.mode === 'dark'
+      ? theme.palette.action.hover
+      : theme.palette.action.selected
   },
   '&:hover': {
-    bgcolor: (theme) => {
-      return theme.palette.mode === 'dark' ? theme.palette.action.selected : theme.palette.action.focus
-    }
+    bgcolor: theme => {
+      return theme.palette.mode === 'dark'
+        ? theme.palette.action.selected
+        : theme.palette.action.focus
+    },
   },
 }
 

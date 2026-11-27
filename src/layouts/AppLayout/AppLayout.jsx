@@ -73,9 +73,7 @@ export function AppLayout(props) {
       >
         {/* the bar follows the platform: window controls on Linux, traffic lights on macOS */}
         {os === 'linux' ? <LinuxBar /> : <MacosBar />}
-        {props.ready ? (
-          <Box sx={{ flexGrow: 1, minHeight: 0 }}>{props.children}</Box>
-        ) : null}
+        {props.ready ? <Box sx={{ flexGrow: 1, minHeight: 0 }}>{props.children}</Box> : null}
       </Box>
       {/* the same loader screen rides over the frame: the shell builds underneath */}
       {booting && (
@@ -98,9 +96,7 @@ export function AppLayout(props) {
           <LoaderView
             // empty on a first run: the loader paints the default light pair
             textColor={
-              AppUtils.isDark(
-                AppStorage.readWindowBackground() ?? theme.palette.background.default
-              )
+              AppUtils.isDark(AppStorage.readWindowBackground() ?? theme.palette.background.default)
                 ? 'common.white'
                 : 'common.black'
             }

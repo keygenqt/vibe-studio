@@ -6,12 +6,12 @@
  */
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
-import { Box, Card, ListItemButton, Stack, Typography } from '@mui/material'
+import { Card, ListItemButton, Stack, Typography } from '@mui/material'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight'
 
 import { TooltipIconButton } from '../../components/buttons'
-import { BadgeView } from '../../components/views'
+import { GroupAvatar } from '../../components'
 
 export function GroupItem(props) {
   const { t } = useTranslation()
@@ -28,14 +28,12 @@ export function GroupItem(props) {
           alignItems={'center'}
           sx={{ flexGrow: 1, minWidth: 0 }}
         >
-          <BadgeView active={props.active}>
-            <Box
-              component={'span'}
-              sx={{ fontSize: 20 }}
-            >
-              {props.name.charAt(0).toUpperCase()}
-            </Box>
-          </BadgeView>
+          <GroupAvatar
+            name={props.name}
+            icon={props.icon}
+            color={props.color}
+            active={props.active}
+          />
           <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography noWrap color={'text.primary'} sx={{ minWidth: 0 }}>
               {props.name}
@@ -69,6 +67,8 @@ export function GroupItem(props) {
 
 GroupItem.propTypes = {
   name: PropTypes.string.isRequired,
+  icon: PropTypes.string,
+  color: PropTypes.string,
   model: PropTypes.string,
   active: PropTypes.bool,
   collapsed: PropTypes.bool,

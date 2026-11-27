@@ -59,12 +59,7 @@ export function ChatTitleView(props) {
         }}
       >
         <Stack direction={'row'} spacing={1} alignItems={'center'} sx={{ minWidth: 0, mr: 1 }}>
-          <Typography
-            variant={'h5'}
-            color={'text.primary'}
-            noWrap
-            sx={{ minWidth: 0 }}
-          >
+          <Typography variant={'h5'} color={'text.primary'} noWrap sx={{ minWidth: 0 }}>
             {props.name}
           </Typography>
           {props.canRename && (

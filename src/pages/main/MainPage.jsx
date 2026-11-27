@@ -75,9 +75,7 @@ export function MainPage() {
       railFooter={
         <TooltipIconButton
           title={t('main.t_settings')}
-          onClick={() =>
-            AppNav.open(navigate, AppRoutes.settings())
-          }
+          onClick={() => AppNav.open(navigate, AppRoutes.settings())}
         >
           <Settings />
         </TooltipIconButton>

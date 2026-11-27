@@ -24,6 +24,10 @@ pub struct GroupChatData {
     /// Id of the model the group runs on. The link is not guarded.
     // @todo: model link integrity (deletion of a referenced model) — a future task.
     pub model_id: i32,
+    /// User-owned avatar icon name; `None` = the first letter.
+    pub icon: Option<String>,
+    /// User-owned icon color scheme key; `None` = the accent color.
+    pub icon_color: Option<String>,
 }
 
 diesel::table! {
@@ -32,6 +36,8 @@ diesel::table! {
         name -> Text,
         system_prompt -> Nullable<Text>,
         model_id -> Integer,
+        icon -> Nullable<Text>,
+        icon_color -> Nullable<Text>,
     }
 }
 
@@ -44,15 +50,20 @@ struct GroupChatRow {
     name: String,
     system_prompt: Option<String>,
     model_id: i32,
+    icon: Option<String>,
+    icon_color: Option<String>,
 }
 
-/// Insert or update values: the id is owned by SQLite.
+/// Insert values: the id is owned by SQLite. `AsChangeset` only
+/// satisfies the generic `save` signature — update goes concrete.
 #[derive(Debug, Clone, Insertable, AsChangeset)]
 #[diesel(table_name = groups_chat)]
 struct GroupChatNewData {
     name: String,
     system_prompt: Option<String>,
     model_id: i32,
+    icon: Option<String>,
+    icon_color: Option<String>,
 }
 
 /// Maps the stored row to the public type: the id becomes `Some`.
@@ -63,17 +74,21 @@ impl From<GroupChatRow> for GroupChatData {
             name: row.name,
             system_prompt: row.system_prompt,
             model_id: row.model_id,
+            icon: row.icon,
+            icon_color: row.icon_color,
         }
     }
 }
 
-/// Drops the id: insert and update values never carry it.
+/// Drops the id: insert values never carry it.
 impl From<&GroupChatData> for GroupChatNewData {
     fn from(data: &GroupChatData) -> Self {
         GroupChatNewData {
             name: data.name.clone(),
             system_prompt: data.system_prompt.clone(),
             model_id: data.model_id,
+            icon: data.icon.clone(),
+            icon_color: data.icon_color.clone(),
         }
     }
 }
@@ -97,11 +112,29 @@ impl Store {
     }
 
     /// Inserts a new group (`id = None`) or updates the one with the
-    /// given id; returns the stored row.
+    /// given id; returns the stored row. Update goes through the
+    /// concrete setter tuple: `None` fields write NULL, the generic
+    /// `AsChangeset` would silently skip them.
     pub(crate) fn save_group_chat(&self, group_chat: &GroupChatData) -> Result<GroupChatData> {
-        let values = GroupChatNewData::from(group_chat);
-        let row: GroupChatRow = self.save(groups_chat::table, group_chat.id, values)?;
-        Ok(GroupChatData::from(row))
+        match group_chat.id {
+            Some(id) => {
+                diesel::update(groups_chat::table.find(id))
+                    .set((
+                        groups_chat::name.eq(group_chat.name.clone()),
+                        groups_chat::system_prompt.eq(group_chat.system_prompt.clone()),
+                        groups_chat::model_id.eq(group_chat.model_id),
+                        groups_chat::icon.eq(group_chat.icon.clone()),
+                        groups_chat::icon_color.eq(group_chat.icon_color.clone()),
+                    ))
+                    .execute(&mut *self.lock())?;
+                self.get_group_chat(id)
+            }
+            None => {
+                let values = GroupChatNewData::from(group_chat);
+                let row: GroupChatRow = self.save(groups_chat::table, None, values)?;
+                Ok(GroupChatData::from(row))
+            }
+        }
     }
 
     /// Deletes the group with the given id, returns affected rows.

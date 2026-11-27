@@ -59,6 +59,8 @@ export function SidebarView(props) {
             <React.Fragment key={`group-${group.id}`}>
               <GroupItem
                 name={group.name}
+                icon={group.icon}
+                color={group.iconColor}
                 model={props.models?.find(model => model.id === group.modelId)?.name ?? null}
                 active={props.activeId === group.id}
                 collapsed={isCollapsed}
@@ -160,7 +162,7 @@ SidebarView.propTypes = {
   models: PropTypes.array,
   history: PropTypes.array,
   activeId: PropTypes.number,
-  onActivate: PropTypes.func.isRequired,
   activeChatId: PropTypes.number,
+  onActivate: PropTypes.func.isRequired,
   onActivateChat: PropTypes.func.isRequired,
 }

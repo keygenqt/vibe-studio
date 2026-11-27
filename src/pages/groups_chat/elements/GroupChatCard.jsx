@@ -5,27 +5,21 @@
  * INFO: A group row card: name, model, chevron.
  */
 import PropTypes from 'prop-types'
-import { Avatar, Box, Card, CardActionArea, Stack, Typography } from '@mui/material'
+import { Card, CardActionArea, Stack, Typography } from '@mui/material'
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
+
+import { GroupAvatar } from '../../components'
 
 export function GroupChatCard(props) {
   return (
     <Card variant={'outlined'} sx={{ borderRadius: 2, flexShrink: 0 }}>
       <CardActionArea onClick={props.onConfigure}>
         <Stack direction={'row'} spacing={2} alignItems={'center'} sx={{ p: 2 }}>
-          <Avatar
-            sx={{
-              bgcolor: 'secondary.main',
-              color: 'secondary.contrastText',
-            }}
-          >
-            <Box
-              component={'span'}
-              sx={{ fontSize: 20 }}
-            >
-              {props.groupChat.name.charAt(0).toUpperCase()}
-            </Box>
-          </Avatar>
+          <GroupAvatar
+            name={props.groupChat.name}
+            icon={props.groupChat.icon}
+            color={props.groupChat.iconColor}
+          />
           <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography noWrap sx={{ minWidth: 0 }}>
               {props.groupChat.name}
@@ -44,6 +38,8 @@ export function GroupChatCard(props) {
 GroupChatCard.propTypes = {
   groupChat: PropTypes.shape({
     name: PropTypes.string.isRequired,
+    icon: PropTypes.string,
+    iconColor: PropTypes.string,
   }).isRequired,
   model: PropTypes.shape({
     name: PropTypes.string.isRequired,

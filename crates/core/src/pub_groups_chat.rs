@@ -25,8 +25,9 @@ pub fn get_group_chat(store: &Store, id: i32) -> Result<GroupChatData> {
 
 /// Validates and persists the group. The UI is not trusted: a blank
 /// name is an error, the model must exist; everything else is stored
-/// as sent. A fresh group is born into the history active, an update
-/// counts.
+/// as sent — `icon` and `icon_color` are UI keys, resolved at render;
+/// `null` falls back to the letter and the accent. A fresh group is
+/// born into the history active, an update counts.
 pub fn save_group_chat(store: &Store, group_chat: &GroupChatData) -> Result<GroupChatData> {
     if group_chat.name.trim().is_empty() {
         anyhow::bail!("Name must not be blank.");
