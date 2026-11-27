@@ -12,21 +12,6 @@ body {
   user-select: none;
 }
 
-/* window focus: dim the content when the window loses focus,
-   the window background stays solid */
-.WindowFocus,
-.WindowUnfocus {
-  transition: opacity 100ms ease;
-}
-.WindowUnfocus {
-  opacity: 0.8;
-}
-
-/* Linux: the plain frameless window reads the dim stronger */
-.AppLinux .WindowUnfocus {
-  opacity: 0.9;
-}
-
 /* scroll areas: thin scrollbar, right padding only while content overflows */
 .ScrollArea {
   overflow-y: auto;

@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Vitaliy Zarubin <keygenqt@yandex.ru>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  * TAGS: ['components', 'theme']
- * INFO: The app window frame: the startup gate, the title bar and the focus dim.
+ * INFO: The app window frame: the startup gate and the title bar.
  */
 import { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
@@ -66,11 +66,7 @@ export function AppLayout(props) {
         '--duration-default': `${DURATION_DEFAULT}ms`,
       })}
     >
-      {/* the dim sits on the content: the window background stays solid */}
-      <Box
-        className={props.isFocus ? 'WindowFocus' : 'WindowUnfocus'}
-        sx={{ height: 1, display: 'flex', flexDirection: 'column' }}
-      >
+      <Box sx={{ height: 1, display: 'flex', flexDirection: 'column' }}>
         {/* the bar follows the platform: window controls on Linux, traffic lights on macOS */}
         {os === 'linux' ? <LinuxBar /> : <MacosBar />}
         {props.ready ? <Box sx={{ flexGrow: 1, minHeight: 0 }}>{props.children}</Box> : null}
@@ -109,6 +105,5 @@ export function AppLayout(props) {
 
 AppLayout.propTypes = {
   ready: PropTypes.bool.isRequired,
-  isFocus: PropTypes.bool.isRequired,
   children: PropTypes.node,
 }

@@ -8,13 +8,11 @@ import { ThemeProvider } from '@mui/material'
 
 import { AppRoute } from './AppRoute'
 import { resolveTheme } from './theme'
-import { useEffectFocus } from './hooks'
 import { useAppReady, useTheme } from './core'
 import { ACCENT_DEFAULT, FONT_DEFAULT } from './constants'
 import { AppLayout } from './layouts'
 
 function App() {
-  const isFocus = useEffectFocus()
   const { ready } = useAppReady()
   // the persisted choice with `system` resolved to the detected OS theme;
   // the accent and the font pick the theme pair, a stale name falls back to the default
@@ -27,7 +25,7 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <AppLayout ready={ready} isFocus={isFocus}>
+      <AppLayout ready={ready}>
         <AppRoute />
       </AppLayout>
     </ThemeProvider>
