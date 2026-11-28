@@ -31,7 +31,7 @@ export function MessageBubble(props) {
     })
   }
 
-  // the tone serves both the fill and the clamp gradient
+  // the tone serves the border and the clamp gradient
   const colorOf = theme => (typeof props.tone === 'function' ? props.tone(theme) : props.tone)
 
   // the copy button leads the primary row when the view gave a handler
@@ -49,13 +49,15 @@ export function MessageBubble(props) {
   return (
     <Stack spacing={1}>
       <Box
-        sx={{
+        sx={theme => ({
           paddingX: 1.5,
           paddingTop: 1,
           paddingBottom: 1.5,
           borderRadius: 2,
-          backgroundColor: props.tone,
-        }}
+          backgroundColor: 'transparent',
+          border: '3px solid',
+          borderColor: colorOf(theme),
+        })}
       >
         <Stack
           direction={'row'}
@@ -103,7 +105,7 @@ export function MessageBubble(props) {
                     position: 'absolute',
                     inset: 0,
                     pointerEvents: 'none',
-                    background: `linear-gradient(0deg, ${colorOf(theme)} 0%, rgba(0, 0, 0, 0) 100%)`,
+                    background: `linear-gradient(0deg, ${theme.palette.background.paper} 0%, rgba(0, 0, 0, 0) 100%)`,
                   },
                 }
               : undefined

@@ -27,10 +27,24 @@ let translateSeq = 0
 const runStream = async (chatId, invoke) => {
   const seq = ++streamSeq
   store.dispatch(chatStreamStart({ seq, chatId }))
+  // the answer phase flips the bubble once per stream: when the text
+  // begins, the thinking view of the live row gives way — the fresh
+  // state rides the command's own event
+  let sawText = false
   try {
     await invoke(chunk => {
       if (seq !== streamSeq) return
       store.dispatch(chatStreamAppend({ seq, chatId, kind: chunk.kind, text: chunk.text }))
+      if (chunk.kind === 'text' && !sawText) {
+        sawText = true
+        const { history, historyChatId } = store.getState().chat
+        const row = historyChatId === chatId
+          ? (history ?? []).findLast(item => item.status === 'progress')
+          : null
+        if (row?.showType === 'thinking') {
+          ChatTauri.setMessageShowType(chatId, row.id, 'text').catch(console.error)
+        }
+      }
     })
   } finally {
     if (seq === streamSeq) {

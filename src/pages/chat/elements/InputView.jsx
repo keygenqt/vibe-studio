@@ -19,7 +19,7 @@ import { getCurrentWebview } from '@tauri-apps/api/webview'
 
 import { HandleView } from '../../../layouts'
 import { ModelCapability } from '../../components/model'
-import { StatsView } from '../components'
+import { StatsView, Timer } from '../components'
 import { AppMethod, useWorkspace, WorkspaceMethod } from '../../../core'
 import { useDragResize, useElementHeight } from '../../../hooks'
 import {
@@ -255,7 +255,10 @@ export function InputView(props) {
               </Box>
             </Stack>
             {streaming ? (
-              <CircularProgress size={14} color={'inherit'} />
+              <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                <Timer />
+                <CircularProgress size={14} color={'inherit'} />
+              </Stack>
             ) : (
               <Stack direction={'row'} spacing={1} alignItems={'center'}>
                 {/* the knob rides the settable models: effort is born concrete there */}

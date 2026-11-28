@@ -12,6 +12,7 @@ import Psychology from '@mui/icons-material/Psychology'
 
 import { MessageBubble } from '../components'
 import { AppMethod, UiMethod } from '../../../core'
+import { useThinkingPreview } from '../hooks/useThinkingPreview'
 
 import { DeferredMarkdown } from './DeferredMarkdown'
 
@@ -54,12 +55,15 @@ export function CompressBubble(props) {
 
   // the copy takes the shown view: the thinking or the base
   const shownText = showType === 'thinking' ? message.thinking : message.text
+  // the live preview: the last complete sentence of the growing
+  // attempt, at most one change per second
+  const thinkingPreview = useThinkingPreview(isProgress ? message.thinking : undefined)
   // the caption is fixed: the base is the context, not a speaker
   const caption = [t('chat.t_compress_author'), message.time].join(' · ')
 
   return (
     <MessageBubble
-      tone={theme => theme.palette.panel.main}
+      tone={theme => theme.palette.bubble.main}
       caption={caption}
       collapsed={message.collapsed}
       onToggleCollapse={!isProgress && props.onSetCollapsed ? onClickCollapse : undefined}
@@ -81,10 +85,18 @@ export function CompressBubble(props) {
       {showType === 'thinking' && !message.collapsed ? (
         <Typography
           variant={'body2'}
-          color={'text.secondary'}
+          color={'text.primary'}
           sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
         >
           {message.thinking}
+        </Typography>
+      ) : isProgress && !message.text && thinkingPreview ? (
+        <Typography
+          variant={'body2'}
+          color={'text.secondary'}
+          sx={{ fontStyle: 'italic', fontSize: props.fontSize }}
+        >
+          {`🤔 ${thinkingPreview}`}
         </Typography>
       ) : isProgress && !message.text ? (
         <Typography variant={'body2'} color={'text.secondary'}>

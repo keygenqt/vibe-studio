@@ -51,6 +51,18 @@ export const AppUtils = {
     }
   },
 
+  // the last complete sentence: letterless debris (numbering,
+  // dividers) is skipped, a long one is capped with an ellipsis
+  lastSentence: function (thinking, maxLength = 100) {
+    const parts = thinking.match(/[^.!?…。？！]+[.!?…。？！]+/g) ?? []
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const sentence = parts[i].trim()
+      if (!/\p{L}/u.test(sentence)) continue
+      return sentence.length > maxLength ? `${sentence.slice(0, maxLength)}...` : sentence
+    }
+    return ''
+  },
+
   // the chat message time: "03:23"
   formatTime: function (language, createdAt) {
     return new Intl.DateTimeFormat(this.locales[language] ?? 'en', {

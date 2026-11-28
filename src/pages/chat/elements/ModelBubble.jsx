@@ -15,6 +15,7 @@ import Translate from '@mui/icons-material/Translate'
 import { DeferredMarkdown } from './DeferredMarkdown'
 import { MessageBubble } from '../components'
 import { AppMethod, UiMethod } from '../../../core'
+import { useThinkingPreview } from '../hooks/useThinkingPreview'
 
 export function ModelBubble(props) {
   const { t } = useTranslation()
@@ -123,11 +124,16 @@ export function ModelBubble(props) {
       },
   ].filter(Boolean)
 
+  // the live preview: the last complete sentence of the growing
+  // thoughts, at most one change per second — the full reasoning
+  // stays on the toggle
+  const thinkingPreview = useThinkingPreview(isProgress ? message.thinking : undefined)
+
   return (
     <MessageBubble
-      tone={theme => (isError ? theme.palette.error.main : theme.palette.panel.main)}
+      tone={theme => (isError ? theme.palette.error.main : theme.palette.bubble.main)}
       caption={[message.author, message.time].filter(Boolean).join(' · ')}
-      captionColor={isError ? 'error.contrastText' : undefined}
+      captionColor={isError ? 'error.main' : undefined}
       collapsed={message.collapsed}
       onToggleCollapse={isFinal && props.onSetCollapsed ? onClickCollapse : undefined}
       onCopy={!isProgress && shownText ? onClickCopy : undefined}
@@ -135,13 +141,13 @@ export function ModelBubble(props) {
       toggles={toggles}
     >
       {isError ? (
-        <Typography variant={'body2'} color={'error.contrastText'}>
+        <Typography variant={'body2'} color={'error.main'}>
           {message.text}
         </Typography>
       ) : showType === 'summary' ? (
         <Typography
           variant={'body2'}
-          color={'text.secondary'}
+          color={'text.primary'}
           sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
         >
           {message.summary ?? t('chat.t_summarizing')}
@@ -154,27 +160,27 @@ export function ModelBubble(props) {
             immediate={props.immediate}
           />
         ) : (
-          <Typography variant={'body2'} color={'text.secondary'}>
+          <Typography variant={'body2'} color={'text.primary'}>
             {t('chat.t_translating')}
           </Typography>
         )
       ) : showType === 'thinking' ? (
         <Typography
           variant={'body2'}
-          color={'text.secondary'}
+          color={'text.primary'}
           sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
         >
           {message.thinking}
         </Typography>
       ) : isCancelled ? (
         <>
-          <Typography variant={'body2'} color={'text.secondary'}>
+          <Typography variant={'body2'} color={'text.primary'}>
             {t('chat.t_cancelled')}
           </Typography>
           {message.text && (
             <Typography
               variant={'body2'}
-              color={'text.secondary'}
+              color={'text.primary'}
               sx={{ fontStyle: 'italic', whiteSpace: 'pre-line' }}
             >
               {message.text}
@@ -187,8 +193,16 @@ export function ModelBubble(props) {
           fontSize={props.fontSize}
           immediate={props.immediate}
         />
+      ) : thinkingPreview ? (
+        <Typography
+          variant={'body2'}
+          color={'text.secondary'}
+          sx={{ fontStyle: 'italic', fontSize: props.fontSize }}
+        >
+          {`🤔 ${thinkingPreview}`}
+        </Typography>
       ) : (
-        <Typography variant={'body2'} color={'text.secondary'}>
+        <Typography variant={'body2'} color={'text.primary'}>
           {/* the growing answer shows the placeholder until the first text */}
           {message.status === 'progress' ? t('chat.t_generating') : t('chat.t_empty_answer')}
         </Typography>

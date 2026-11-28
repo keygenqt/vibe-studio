@@ -70,11 +70,7 @@ export function ChatPage() {
     // send data
     ChatMethod.sendMessage(cid, draft, translate, chatAttachments)
       .catch(err => UiMethod.showError(String(err)))
-      .finally(() => {
-        setSending(false)
-        // scroll to bottom chat final send
-        scrollToBottom(scrollKey)
-      })
+      .finally(() => setSending(false))
   }
   const stop = () => ChatMethod.cancelSend(cid)
   const remove = messageId => ChatMethod.deleteMessage(cid, messageId)

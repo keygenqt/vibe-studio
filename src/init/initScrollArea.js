@@ -8,10 +8,6 @@
 // scroll positions are a pure UI detail — module map, no re-renders
 const positions = new Map()
 
-// the smooth flight cap: the flight state lives no longer than this,
-// whatever the scroll events did on the way
-const FLIGHT_MS = 1000
-
 // the watched areas: module map — the components subscribe, no re-renders
 const watched = new Map()
 
@@ -41,7 +37,7 @@ export function scrollToBottom(key, smooth = true) {
     if (smooth) {
       // the smooth flight: the flight state keeps the at-bottom flips
       // quiet on the way; the user input cancels the flight
-      state.flightUntil = performance.now() + FLIGHT_MS
+      state.flightUntil = performance.now()
       state.el.scrollTo({ top: state.el.scrollHeight, behavior: 'smooth' })
     } else {
       state.el.scrollTop = state.el.scrollHeight

@@ -57,7 +57,7 @@ export function UserBubble(props) {
 
   return (
     <MessageBubble
-      tone={theme => AppUtils.mix(theme.palette.primary.main, theme.palette.background.paper, 0.15)}
+      tone={theme => AppUtils.mix(theme.palette.primary.main, theme.palette.background.paper, 0.3)}
       caption={[props.message.author, props.message.time].join(' · ')}
       collapsed={props.message.collapsed}
       onToggleCollapse={props.onSetCollapsed ? onClickCollapse : undefined}
@@ -83,7 +83,7 @@ export function UserBubble(props) {
       {props.message.showType === 'summary' ? (
         <Typography
           variant={'body2'}
-          color={'text.secondary'}
+          color={'text.primary'}
           sx={{ whiteSpace: 'pre-line', fontSize: props.fontSize }}
         >
           {props.message.summary ?? t('chat.t_summarizing')}

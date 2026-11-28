@@ -10,4 +10,5 @@ export const paletteDark = {
   error: { main: '#ac2b29' },
   inherit: { main: '#f7f7f7', light: '#4a4a55' },
   panel: { main: '#252525' },
+  bubble: { main: '#494949' },
 }
